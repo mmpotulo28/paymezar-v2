@@ -1,6 +1,9 @@
 import { Card, CardHeader, CardBody } from "@heroui/react";
+import { Button } from "@heroui/button";
+import Link from "next/link";
 import { Badge } from "@heroui/badge";
 import { iTransaction } from "@/types";
+import { ChevronRight } from "lucide-react";
 
 export interface Transaction {
 	id: string;
@@ -34,7 +37,21 @@ export function RecentTransactions({ transactions, className = "" }: RecentTrans
 	});
 	return (
 		<Card className={`w-full ${className}`}>
-			<CardHeader className="text-xl font-bold">Recent Transactions</CardHeader>
+			<CardHeader className="flex items-center justify-between">
+				<span className="text-xl font-bold">Recent Transactions</span>
+
+				<Button
+					href="/account/transactions"
+					as="a"
+					size="sm"
+					color="primary"
+					variant="light"
+					radius="full">
+					<span className="flex items-center gap-1 justify-center">
+						View All <ChevronRight size={18} />
+					</span>
+				</Button>
+			</CardHeader>
 			<CardBody>
 				<div className="flex flex-col gap-3">
 					{transactions.length === 0 && (
