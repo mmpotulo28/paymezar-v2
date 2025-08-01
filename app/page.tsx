@@ -7,18 +7,15 @@ import { Card, CardBody, CardHeader } from "@heroui/react";
 import { Badge } from "@heroui/badge";
 import { Tabs, Tab } from "@heroui/tabs";
 import { Avatar } from "@heroui/avatar";
+
 import { HeartFilledIcon, GithubIcon } from "@/components/icons";
 import { siteConfig } from "@/config/site";
 import { title, subtitle } from "@/components/primitives";
+import { dummyUser } from "@/lib/dummy-user";
+import { UserProfileCard } from "@/components/user-profile-card";
 
 export default function Home() {
-	// Dummy user and transaction data for landing
-	const user = {
-		name: "Jane Doe",
-		address: "0x1234...abcd",
-		balance: 12500.75,
-		avatar: "https://i.pravatar.cc/150?img=5",
-	};
+	// Use dummyUser from lib
 	const transactions = [
 		{
 			id: 1,
@@ -88,32 +85,7 @@ export default function Home() {
 			</div>
 
 			{/* User summary preview */}
-			<Card className="w-full max-w-xl shadow-md">
-				<CardBody className="flex items-center gap-4">
-					<Avatar src={user.avatar} size="md" />
-					<div className="flex-1">
-						<div className="font-semibold">{user.name}</div>
-						<Snippet
-							hideCopyButton
-							hideSymbol
-							variant="bordered"
-							className="text-xs mt-1">
-							<span>
-								<Code color="primary">{user.address}</Code>
-							</span>
-						</Snippet>
-						<div className="mt-2 text-lg font-bold">
-							{user.balance.toLocaleString("en-ZA", {
-								style: "currency",
-								currency: "ZAR",
-							})}
-							<Badge color="success" className="ml-2">
-								ZAR
-							</Badge>
-						</div>
-					</div>
-				</CardBody>
-			</Card>
+			<UserProfileCard user={dummyUser} className="max-w-2xl w-full" />
 
 			{/* App Features */}
 			<div className="w-full max-w-2xl grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">

@@ -7,27 +7,21 @@ import { Tabs, Tab } from "@heroui/tabs";
 import { UserProfileCard } from "@/components/user-profile-card";
 import { RecentTransactions } from "@/components/recent-transactions";
 import { dummyTransactions as transactions } from "@/lib/dummy-transactions";
+import { dummyUser } from "@/lib/dummy-user";
 
-const user = {
-	name: "Jane Doe",
-	email: "jane.doe@email.com",
-	address: "0x1234...abcd",
-	balance: 12500.75,
-	avatar: "https://i.pravatar.cc/150?img=5",
-};
+// const user = {
+// 	name: "Jane Doe",
+// 	email: "jane.doe@email.com",
+// 	address: "0x1234...abcd",
+// 	balance: 12500.75,
+// 	avatar: "https://i.pravatar.cc/150?img=5",
+// };
 
 export default function AccountPage() {
 	return (
 		<section className="flex flex-col items-center min-h-[70vh] py-8 gap-8 w-full">
 			{/* User Profile */}
-			<UserProfileCard
-				name={user.name}
-				email={user.email}
-				address={user.address}
-				balance={user.balance}
-				avatar={user.avatar}
-				className="max-w-2xl"
-			/>
+			<UserProfileCard user={dummyUser} className="max-w-2xl" />
 
 			{/* Account Management Tabs */}
 			<Tabs className=" max-w-2xl w-full" variant="underlined">
@@ -41,7 +35,7 @@ export default function AccountPage() {
 										Wallet Address
 									</div>
 									<Input
-										value={user.address}
+										value={dummyUser.publicKey || "-"}
 										readOnly
 										size="sm"
 										className="w-full"
@@ -52,10 +46,8 @@ export default function AccountPage() {
 										Balance
 									</div>
 									<div className="text-2xl font-mono text-primary font-bold">
-										{user.balance.toLocaleString("en-ZA", {
-											style: "currency",
-											currency: "ZAR",
-										})}
+										{/* Balance not in dummyUser, add if needed */}
+										N/A
 									</div>
 								</div>
 							</div>
@@ -65,7 +57,7 @@ export default function AccountPage() {
 										Email
 									</div>
 									<Input
-										value={user.email}
+										value={dummyUser.email}
 										readOnly
 										size="sm"
 										className="w-full"

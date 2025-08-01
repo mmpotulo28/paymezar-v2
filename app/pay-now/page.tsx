@@ -8,18 +8,14 @@ import { Tabs, Tab } from "@heroui/tabs";
 import { Snippet } from "@heroui/snippet";
 import { Code } from "@heroui/code";
 import { HeartFilledIcon } from "@/components/icons";
+
 import { UserProfileCard } from "@/components/user-profile-card";
 import { RecentTransactions } from "@/components/recent-transactions";
 import { dummyTransactions } from "@/lib/dummy-transactions";
+import { dummyUser } from "@/lib/dummy-user";
 
 export default function PayNowPage() {
-	// Dummy user and transaction data
-	const user = {
-		name: "Jane Doe",
-		address: "0x1234...abcd",
-		balance: 12500.75,
-		avatar: "https://i.pravatar.cc/150?img=5",
-	};
+	// Use dummyUser from lib
 	const [recipient, setRecipient] = useState("");
 	const [amount, setAmount] = useState("");
 	const [note, setNote] = useState("");
@@ -39,20 +35,14 @@ export default function PayNowPage() {
 	return (
 		<section className="flex flex-col items-center justify-center min-h-[70vh] py-8 gap-8 w-full">
 			{/* User summary card */}
-			<UserProfileCard
-				name={user.name}
-				address={user.address}
-				balance={user.balance}
-				avatar={user.avatar}
-				className="max-w-2xl"
-			/>
+			<UserProfileCard user={dummyUser} className="max-w-2xl" />
 
 			{/* Tabs for Send/Transactions */}
 			<Tabs
 				selectedKey={tab}
 				onSelectionChange={(key) => setTab(String(key))}
 				className="w-full max-w-2xl">
-				<Tab key="send" title="Send Payment">
+				<Tab key="send" title="Send Payment" className="w-full">
 					<Card className="w-full">
 						<CardHeader className="text-xl font-bold">Send ZAR Stablecoin</CardHeader>
 						<CardBody>
@@ -93,7 +83,7 @@ export default function PayNowPage() {
 						</CardFooter>
 					</Card>
 				</Tab>
-				<Tab key="transactions" title="Recent Transactions">
+				<Tab key="transactions" title="Recent Transactions" className="w-full">
 					<RecentTransactions transactions={dummyTransactions} />
 				</Tab>
 			</Tabs>
