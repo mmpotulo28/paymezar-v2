@@ -32,3 +32,15 @@ import { SVGProps } from "react";
 export type IconSvgProps = SVGProps<SVGSVGElement> & {
 	size?: number;
 };
+
+// Bank Account type for user bank accounts
+export interface iBankAccount {
+	id: string;
+	userId: string;
+	accountHolder: string;
+	accountNumber: string;
+	branchCode: string;
+	bank: string;
+	createdAt: string;
+	updatedAt: string;
+}

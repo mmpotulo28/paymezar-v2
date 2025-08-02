@@ -103,7 +103,6 @@ export default function SignUpPage() {
 		setLiskError(null);
 		try {
 			const result = await createLiskAccount({
-				apiKey: userInfo.apiKey || "",
 				email: userInfo.email || "",
 				firstName: userInfo.firstName || "",
 				lastName: userInfo.lastName || "",
