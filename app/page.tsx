@@ -3,7 +3,7 @@ import { Link } from "@heroui/link";
 import { Snippet } from "@heroui/snippet";
 import { Code } from "@heroui/code";
 import { button as buttonStyles } from "@heroui/theme";
-import { Card, CardBody, CardHeader } from "@heroui/react";
+import { Button, Card, CardBody, CardHeader } from "@heroui/react";
 import { Badge } from "@heroui/badge";
 import { Tabs, Tab } from "@heroui/tabs";
 import { Avatar } from "@heroui/avatar";
@@ -13,6 +13,8 @@ import { siteConfig } from "@/config/site";
 import { title, subtitle } from "@/components/primitives";
 import { dummyUser } from "@/lib/dummy-user";
 import { UserProfileCard } from "@/components/user-profile-card";
+import { useSession } from "@/context/SessionManager";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
 	// Use dummyUser from lib
@@ -42,6 +44,9 @@ export default function Home() {
 			direction: "in",
 		},
 	];
+
+	const { isAuthenticated, user } = useSession();
+	const router = useRouter();
 
 	return (
 		<section className="flex flex-col items-center justify-center gap-8 py-10 w-full min-h-[80vh]">
@@ -84,8 +89,9 @@ export default function Home() {
 				</Link>
 			</div>
 
-			{/* User summary preview */}
-			<UserProfileCard user={dummyUser} className="max-w-2xl w-full" />
+			{/* User summary preview or Login button */}
+
+			<UserProfileCard user={user} className="max-w-2xl w-full" />
 
 			{/* App Features */}
 			<div className="w-full max-w-2xl grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
