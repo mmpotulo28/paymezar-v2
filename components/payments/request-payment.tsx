@@ -5,8 +5,8 @@ import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { dummyUser } from "@/lib/dummy-user";
 import { postApi } from "@/lib/helpers";
+import { useSession } from "@/context/SessionManager";
 
 // Dynamically import QRCodeCanvas for SSR safety
 const QRCode = dynamic(() => import("qrcode.react").then((mod) => mod.QRCodeCanvas), {
@@ -17,6 +17,7 @@ export default function RequestPayment() {
 	const [requestAmount, setRequestAmount] = useState("");
 	const [qrVisible, setQrVisible] = useState(false);
 	const [qrValue, setQrValue] = useState("");
+	const { user } = useSession();
 	const [requestLoading, setRequestLoading] = useState(false);
 
 	const isInvalidRequestAmount = (amount: string) => {
@@ -28,7 +29,7 @@ export default function RequestPayment() {
 		if (isInvalidRequestAmount(requestAmount)) return;
 		const payload = JSON.stringify({
 			type: "paymezar-request",
-			recipient: dummyUser.paymentIdentifier,
+			recipient: user?.paymentIdentifier,
 			amount: Number(requestAmount),
 			timestamp: Date.now(),
 		});

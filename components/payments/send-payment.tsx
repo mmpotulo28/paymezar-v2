@@ -1,13 +1,12 @@
 "use client";
 import { useState } from "react";
-import axios from "axios";
 import { Card, CardBody, CardHeader, CardFooter } from "@heroui/react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { HeartFilledIcon } from "@/components/icons";
 import { AlertCircleIcon, QrCode as QrCodeIcon } from "lucide-react";
 import QrCodeScanner from "@/components/qr-code-scanner";
-import { dummyUser } from "@/lib/dummy-user";
+import { useSession } from "@/context/SessionManager";
 import { postApi } from "@/lib/helpers";
 
 export default function SendPayment() {
@@ -20,14 +19,17 @@ export default function SendPayment() {
 	const [recipientInfo, setRecipientInfo] = useState<any>(null);
 	const [scanModalOpen, setScanModalOpen] = useState(false);
 
+	const { user, accessToken } = useSession();
+
 	const fetchRecipient = async (recipientId: string) => {
 		try {
 			const result = await postApi(
 				`https://seal-app-qp9cc.ondigitalocean.app/api/v1/recipient/${encodeURIComponent(recipientId)}`,
 				{},
 				{
-					Authorization: "YOUR_SECRET_TOKEN", //TODO: Replace with real token in production
+					Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
 				},
+				"GET",
 			);
 			if (!result.error) {
 				setRecipientInfo(result.data);
@@ -53,17 +55,28 @@ export default function SendPayment() {
 		setRecipientInfo(null);
 		try {
 			await fetchRecipient(recipient);
+
+			if (!user?.id) throw new Error("You must be logged in to send payments.");
+
 			const res = await postApi(
-				"/api/transfer",
+				`https://seal-app-qp9cc.ondigitalocean.app/api/v1/transfer/${encodeURIComponent(user.id)}`,
 				{
-					userId: dummyUser.id,
 					transactionAmount: Number(amount),
 					transactionRecipient: recipient,
 					transactionNotes: note,
 				},
-				{ "Content-Type": "application/json" },
+				{
+					"Content-Type": "application/json",
+					Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
+				},
+				"POST",
 			);
-			setResponseMsg(res.message || "Transfer executed successfully");
+
+			if (!res.error) {
+				setResponseMsg(res.message || "Transfer executed successfully");
+			} else {
+				throw new Error(res.message || "Transfer failed");
+			}
 		} catch (err: any) {
 			setError(err.message || "Transfer failed");
 		} finally {
