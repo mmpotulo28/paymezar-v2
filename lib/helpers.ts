@@ -8,27 +8,68 @@ export const statusColorMap: Record<string, ChipProps["color"]> = {
 };
 
 /**
+ * Makes a POST request to the given URL with the provided data and headers.
+ * Returns a consistent object: { error, message, data, status }
+ */
+export async function postApi<T = any>(
+	url: string,
+	data: any,
+	headers: Record<string, string> = {},
+): Promise<{ error: boolean; message: string; data: T | null; status: number }> {
+	try {
+		const response = await axios.post(url, data, { headers });
+		console.log("API Response:", response.data);
+		return {
+			error: false,
+			message: response.data?.message || "Success",
+			data: response.data,
+			status: response.status,
+		};
+	} catch (error: any) {
+		return {
+			error: true,
+			message:
+				error?.response?.data?.message || error?.message || "An unexpected error occurred",
+			data: null,
+			status: error?.response?.status || 500,
+		};
+	}
+}
+
+/**
  * Creates a new API token for the authenticated user.
- * @param {string} secretToken - Your existing secret token for authentication.
- * @param {string} [description] - Optional human-friendly token description.
- * @returns {Promise<{ id: string; token: string }>} The new API token object.
- * @throws Error if the request fails.
  */
 export async function createApiToken(secretToken: string, description?: string) {
-	const options = {
-		method: "POST",
-		url: "https://seal-app-qp9cc.ondigitalocean.app/api/v1/tokens",
-		headers: {
+	return await postApi<{ id: string; token: string }>(
+		"https://seal-app-qp9cc.ondigitalocean.app/api/v1/tokens",
+		description ? { description } : {},
+		{
 			"Content-Type": "application/json",
 			Authorization: secretToken,
 		},
-		data: description ? { description } : {},
-	};
+	);
+}
 
-	try {
-		const { data } = await axios.request(options);
-		return data as { id: string; token: string };
-	} catch (error: any) {
-		throw new Error(error?.response?.data?.message || "Failed to create API token");
-	}
+/**
+ * Creates a Lisk user account using the stablecoin API.
+ */
+export async function createLiskAccount({
+	apiKey,
+	email,
+	firstName,
+	lastName,
+}: {
+	apiKey: string;
+	email: string;
+	firstName: string;
+	lastName: string;
+}) {
+	return await postApi(
+		"https://seal-app-qp9cc.ondigitalocean.app/api/v1/users",
+		{ email, firstName, lastName },
+		{
+			"Content-Type": "application/json",
+			Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
+		},
+	);
 }

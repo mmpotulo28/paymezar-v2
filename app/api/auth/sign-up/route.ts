@@ -39,11 +39,11 @@ export async function POST(req: NextRequest) {
 		let apiKey: string | null = null;
 		let apiKeyRow: any = null;
 		try {
-			const apiTokenRes = await createApiToken(
+			const results = await createApiToken(
 				stablecoinSecretToken,
 				`User ${user.email} API Key`,
 			);
-			apiKey = apiTokenRes.token;
+			apiKey = results.data?.token || null;
 
 			// 3. Store API key in api_keys table
 			const { data: apiKeyInsert, error: apiKeyInsertError } = await supabase

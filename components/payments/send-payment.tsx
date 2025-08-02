@@ -8,6 +8,7 @@ import { HeartFilledIcon } from "@/components/icons";
 import { AlertCircleIcon, QrCode as QrCodeIcon } from "lucide-react";
 import QrCodeScanner from "@/components/qr-code-scanner";
 import { dummyUser } from "@/lib/dummy-user";
+import { postApi } from "@/lib/helpers";
 
 export default function SendPayment() {
 	const [recipient, setRecipient] = useState("");
@@ -21,21 +22,26 @@ export default function SendPayment() {
 
 	const fetchRecipient = async (recipientId: string) => {
 		try {
-			const { data } = await axios.get(
+			const result = await postApi(
 				`https://seal-app-qp9cc.ondigitalocean.app/api/v1/recipient/${encodeURIComponent(recipientId)}`,
+				{},
 				{
-					headers: {
-						Authorization: "YOUR_SECRET_TOKEN", //TODO: Replace with real token in production
-					},
+					Authorization: "YOUR_SECRET_TOKEN", //TODO: Replace with real token in production
 				},
 			);
-			setRecipientInfo(data);
-			return data;
+			if (!result.error) {
+				setRecipientInfo(result.data);
+				return result.data;
+			} else {
+				setRecipientInfo(null);
+				throw new Error(
+					result.message || "Recipient not found or invalid recipient identifier.",
+				);
+			}
 		} catch (error: any) {
 			setRecipientInfo(null);
 			throw new Error(
-				error?.response?.data?.message ||
-					"Recipient not found or invalid recipient identifier.",
+				error.message || "Recipient not found or invalid recipient identifier.",
 			);
 		}
 	};
@@ -47,7 +53,7 @@ export default function SendPayment() {
 		setRecipientInfo(null);
 		try {
 			await fetchRecipient(recipient);
-			const res = await axios.post(
+			const res = await postApi(
 				"/api/transfer",
 				{
 					userId: dummyUser.id,
@@ -55,11 +61,9 @@ export default function SendPayment() {
 					transactionRecipient: recipient,
 					transactionNotes: note,
 				},
-				{
-					headers: { "Content-Type": "application/json" },
-				},
+				{ "Content-Type": "application/json" },
 			);
-			setResponseMsg(res.data.message || "Transfer executed successfully");
+			setResponseMsg(res.message || "Transfer executed successfully");
 		} catch (err: any) {
 			setError(err.message || "Transfer failed");
 		} finally {

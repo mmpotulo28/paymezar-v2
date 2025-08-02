@@ -5,7 +5,7 @@ import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
 import { AlertCircleIcon, ShieldCheck, Lock, CheckCircle2, LogIn, KeyRound } from "lucide-react";
-import axios from "axios";
+import { postApi } from "@/lib/helpers";
 import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
@@ -27,12 +27,15 @@ export default function SignInPage() {
 		setLoading(true);
 		setError(null);
 		try {
-			// Replace with your TableCoin API endpoint
-			await axios.post("/api/auth/sign-in", form);
-			setSuccess(true);
-			router.push("/account");
+			const result = await postApi("/api/auth/sign-in", form);
+			if (!result.error) {
+				setSuccess(true);
+				router.push("/account");
+			} else {
+				setError(result.message || "Sign in failed");
+			}
 		} catch (err: any) {
-			setError(err?.response?.data?.message || "Sign in failed");
+			setError(err.message || "Sign in failed");
 		} finally {
 			setLoading(false);
 		}

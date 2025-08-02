@@ -6,6 +6,7 @@ import { Button } from "@heroui/button";
 import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { dummyUser } from "@/lib/dummy-user";
+import { postApi } from "@/lib/helpers";
 
 // Dynamically import QRCodeCanvas for SSR safety
 const QRCode = dynamic(() => import("qrcode.react").then((mod) => mod.QRCodeCanvas), {

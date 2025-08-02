@@ -7,6 +7,7 @@ import { Link } from "@heroui/link";
 import { AlertCircleIcon, ShieldCheck, Lock, CheckCircle2, UserPlus, KeyRound } from "lucide-react";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { createLiskAccount, postApi } from "@/lib/helpers";
 
 export default function SignUpPage() {
 	const [form, setForm] = useState({
@@ -25,7 +26,11 @@ export default function SignUpPage() {
 		lastName: string;
 		apiKey?: string;
 		apiKeyRow?: any;
+		liskId?: string;
 	} | null>(null);
+	const [liskLoading, setLiskLoading] = useState(false);
+	const [liskError, setLiskError] = useState<string | null>(null);
+	const [liskUser, setLiskUser] = useState<any>(null);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setForm({ ...form, [e.target.name]: e.target.value });
@@ -36,17 +41,55 @@ export default function SignUpPage() {
 		setLoading(true);
 		setError(null);
 		try {
-			const { data } = await axios.post("/api/auth/sign-up", { user: form });
-			if (data.user) {
-				Cookies.set("paymezar_user", JSON.stringify(data.user), { expires: 7 });
-				setUserInfo(data.user);
+			const result = await postApi("/api/auth/sign-up", { user: form });
+			if (!result.error && result.data?.user) {
+				Cookies.set("paymezar_user", JSON.stringify(result.data.user), { expires: 7 });
+				setUserInfo(result.data.user);
+				setSuccess(true);
+				setStep(2);
+			} else {
+				setError(result.message || "Sign up failed");
 			}
-			setSuccess(true);
-			setStep(2);
 		} catch (err: any) {
-			setError(err?.response?.data?.message || "Sign up failed");
+			setError(err.message || "Sign up failed");
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const handleCreateLiskAccount = async () => {
+		if (!userInfo?.apiKey) return;
+		setLiskLoading(true);
+		setLiskError(null);
+		try {
+			const result = await createLiskAccount({
+				apiKey: userInfo.apiKey,
+				email: userInfo.email,
+				firstName: userInfo.firstName,
+				lastName: userInfo.lastName,
+			});
+
+			console.log("Create Lisk Account Result:", result);
+
+			if (!result.error && result.data) {
+				setLiskUser(result.data);
+				const linkResult = await postApi("/api/auth/link-lisk-id", {
+					apiKey: userInfo.apiKey,
+					liskId: result.data.user.id,
+				});
+
+				console.log("Link Lisk ID Result:", linkResult);
+				const updatedUser = { ...userInfo, liskId: result.data.id };
+				Cookies.set("paymezar_user", JSON.stringify(updatedUser), { expires: 7 });
+				setUserInfo(updatedUser);
+				if (linkResult.error) setLiskError(linkResult.message);
+			} else {
+				setLiskError(result.message || "Failed to create Lisk account");
+			}
+		} catch (err: any) {
+			setLiskError(err.message || "Failed to create Lisk account");
+		} finally {
+			setLiskLoading(false);
 		}
 	};
 
@@ -230,15 +273,38 @@ export default function SignUpPage() {
 												</div>
 											</div>
 										)}
+										{userInfo.liskId && (
+											<div>
+												<span className="text-xs text-default-500">
+													Lisk ID
+												</span>
+												<div className="font-mono text-xs">
+													{userInfo.liskId}
+												</div>
+											</div>
+										)}
 									</div>
 									<Button
 										color="primary"
 										radius="full"
 										className="w-full max-w-xs mt-4"
-										// onClick={handleCreateLiskAccount} // implement this handler for next step
-									>
-										Create Lisk Account
+										onClick={handleCreateLiskAccount}
+										isLoading={liskLoading}
+										disabled={!!userInfo.liskId}>
+										{userInfo.liskId
+											? "Lisk Account Created"
+											: "Create Lisk Account"}
 									</Button>
+									{liskError && (
+										<div className="text-red-600 text-xs text-center">
+											{liskError}
+										</div>
+									)}
+									{liskUser && (
+										<div className="text-green-600 text-xs text-center">
+											Lisk account created! ID: {liskUser.id}
+										</div>
+									)}
 									<p className="text-xs text-default-500 text-center mt-2">
 										This step is required to receive and send ZAR stablecoin on
 										the Lisk blockchain.
