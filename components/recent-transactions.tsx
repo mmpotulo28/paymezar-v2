@@ -1,7 +1,6 @@
+"use client";
 import { Card, CardHeader, CardBody, Chip } from "@heroui/react";
 import { Button } from "@heroui/button";
-import Link from "next/link";
-import { Badge } from "@heroui/badge";
 import { iTransaction } from "@/types";
 import { ChevronRight } from "lucide-react";
 

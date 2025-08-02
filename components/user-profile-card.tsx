@@ -1,3 +1,4 @@
+"use client";
 import { Card, CardBody, Chip } from "@heroui/react";
 import { Avatar } from "@heroui/avatar";
 import { Badge } from "@heroui/badge";
