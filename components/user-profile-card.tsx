@@ -23,7 +23,8 @@ export function UserProfileCard({ user, className = "" }: UserProfileCardProps) 
 						className="ring-2 ring-primary-400"
 					/>
 					<span className="text-xs text-default-400 font-medium">
-						{user.role.charAt(0) + user.role.slice(1).toLowerCase()}
+						{(user.role && user.role.charAt(0) + user.role.slice(1).toLowerCase()) ||
+							"User"}
 					</span>
 				</div>
 				<div className="flex-1 min-w-0 w-full">

@@ -8,6 +8,7 @@ import { AlertCircleIcon, ShieldCheck, Lock, CheckCircle2, LogIn, KeyRound } fro
 import { postApi } from "@/lib/helpers";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/context/SessionManager";
+import Cookies from "js-cookie";
 
 export default function SignInPage() {
 	const [form, setForm] = useState({
@@ -18,7 +19,7 @@ export default function SignInPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState(false);
 	const router = useRouter();
-	const { setUser } = useSession();
+	const { setSession } = useSession();
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setForm({ ...form, [e.target.name]: e.target.value });
@@ -32,13 +33,16 @@ export default function SignInPage() {
 
 		try {
 			const result = await postApi("/api/auth/sign-in", form);
-			if (!result.error) {
-				setUser(result.data.user);
-
-				// delay for 3 seconds to show success message
-				console.log("User signed in successfully", result.data.user);
+			console.log("Sign in result", result);
+			if (!result.error && result.data?.user) {
 				setSuccess(true);
-				router.push("/account");
+				// Set session with the returned user object
+				setSession(result.data.user);
+
+				// delay for 1 second to show success message
+				setTimeout(() => {
+					router.push("/account");
+				}, 1000);
 			} else {
 				console.error("Sign in failed", result.message);
 				setError(result.message || "Sign in failed");

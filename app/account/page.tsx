@@ -6,7 +6,6 @@ import { Tabs, Tab } from "@heroui/tabs";
 import { UserProfileCard } from "@/components/user-profile-card";
 import { RecentTransactions } from "@/components/recent-transactions";
 import { dummyTransactions as transactions } from "@/lib/dummy-transactions";
-import { dummyUser } from "@/lib/dummy-user";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import { Sun, Moon, RefreshCcw, Link2, Download, FileText, Lock, Shield } from "lucide-react";
@@ -22,6 +21,7 @@ import {
 	Bar,
 	Legend,
 } from "recharts";
+import { useSession } from "@/context/SessionManager";
 
 export default function AccountPage() {
 	const { theme, setTheme } = useTheme();
@@ -29,6 +29,7 @@ export default function AccountPage() {
 	const [socialConnected, setSocialConnected] = useState(false);
 	const [gasEnabled, setGasEnabled] = useState(false);
 	const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+	const { user } = useSession();
 
 	const handleClearCache = () => {
 		// Simulate cache clearing
@@ -89,7 +90,7 @@ export default function AccountPage() {
 	return (
 		<section className="flex flex-col items-center min-h-[70vh] py-8 gap-8 w-full">
 			{/* User Profile */}
-			<UserProfileCard user={dummyUser} className="max-w-2xl w-full" />
+			{user && <UserProfileCard user={user} className="max-w-2xl w-full" />}
 
 			{/* Account Management Tabs */}
 			<Tabs className="max-w-2xl w-full" variant="underlined">
@@ -103,10 +104,10 @@ export default function AccountPage() {
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 								<div>
 									<div className="text-xs text-default-500 font-medium mb-1">
-										Wallet Address
+										Payment Id
 									</div>
 									<Input
-										value={dummyUser.publicKey || "-"}
+										value={user?.paymentIdentifier || "-"}
 										readOnly
 										size="sm"
 										className="w-full"
@@ -125,7 +126,7 @@ export default function AccountPage() {
 										Email
 									</div>
 									<Input
-										value={dummyUser.email}
+										value={user?.email}
 										readOnly
 										size="sm"
 										className="w-full"

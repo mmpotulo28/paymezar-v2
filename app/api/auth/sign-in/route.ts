@@ -56,12 +56,18 @@ export async function POST(req: NextRequest) {
 
 		// 3. Fetch Lisk user info
 		console.log("Fetching Lisk user by ID", { liskId: apiKeyRow.lisk_id });
-		const liskRes = await getLiskUserById({
-			apiKey: apiKeyRow.api_key,
-			liskId: apiKeyRow.lisk_id,
-		});
+		const liskRes = await fetch(
+			`https://seal-app-qp9cc.ondigitalocean.app/api/v1/users/${apiKeyRow.lisk_id}`,
+			{
+				headers: {
+					Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
+				},
+			},
+		).then((res) => res.json());
 
-		if (liskRes.error || !liskRes.data) {
+		console.log("Lisk user fetched", { liskUser: liskRes });
+
+		if (liskRes.error || !liskRes.user) {
 			console.error("Failed to fetch Lisk user", liskRes.message, {
 				liskId: apiKeyRow.lisk_id,
 				data: liskRes.data,
@@ -77,20 +83,8 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
-		console.log("Lisk user fetched successfully", { liskUser: liskRes.data });
-		return NextResponse.json(
-			{
-				error: false,
-				message: "Sign in successful",
-				data: {
-					user: liskRes.data,
-					apiKey: apiKeyRow.api_key,
-					liskId: apiKeyRow.lisk_id,
-				},
-				status: 200,
-			},
-			{ status: 200 },
-		);
+		console.log("Lisk user fetched successfully", { liskUser: liskRes.user });
+		return NextResponse.json(liskRes, { status: 200 });
 	} catch (error: any) {
 		console.error("Error during sign-in", error);
 		return NextResponse.json(
