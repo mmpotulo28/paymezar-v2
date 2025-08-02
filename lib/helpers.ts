@@ -15,9 +15,15 @@ export async function postApi<T = any>(
 	url: string,
 	data: any,
 	headers: Record<string, string> = {},
+	method: "POST" | "PUT" | "DELETE" | "GET" = "POST",
 ): Promise<{ error: boolean; message: string; data: T | null; status: number }> {
 	try {
-		const response = await axios.post(url, data, { headers });
+		const response = await axios({
+			url,
+			method,
+			headers,
+			data,
+		});
 		console.log("API Response:", response.data);
 		return {
 			error: false,
@@ -71,5 +77,21 @@ export async function createLiskAccount({
 			"Content-Type": "application/json",
 			Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
 		},
+	);
+}
+
+/**
+ * Fetches a Lisk user by liskId using the API key.
+ * Returns { error, message, data, status }
+ */
+export async function getLiskUserById({ apiKey, liskId }: { apiKey: string; liskId: string }) {
+	console.log("Fetching Lisk user by ID::", { liskId });
+	return await postApi(
+		`https://seal-app-qp9cc.ondigitalocean.app/api/v1/users/${liskId}`,
+		{},
+		{
+			Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
+		},
+		"GET",
 	);
 }

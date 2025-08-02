@@ -1,13 +1,13 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, CardFooter, Chip } from "@heroui/react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
 import { AlertCircleIcon, ShieldCheck, Lock, CheckCircle2, UserPlus, KeyRound } from "lucide-react";
-import axios from "axios";
 import Cookies from "js-cookie";
 import { createLiskAccount, postApi } from "@/lib/helpers";
+import { useRouter } from "next/navigation";
 
 export default function SignUpPage() {
 	const [form, setForm] = useState({
@@ -31,6 +31,38 @@ export default function SignUpPage() {
 	const [liskLoading, setLiskLoading] = useState(false);
 	const [liskError, setLiskError] = useState<string | null>(null);
 	const [liskUser, setLiskUser] = useState<any>(null);
+	const [autoCreateCountdown, setAutoCreateCountdown] = useState(5);
+	const router = useRouter();
+
+	// Auto-create Lisk account after 5 seconds if not clicked
+	useEffect(() => {
+		if (step === 2 && userInfo && !userInfo.liskId) {
+			setAutoCreateCountdown(5);
+			const interval = setInterval(() => {
+				setAutoCreateCountdown((prev) => {
+					if (prev <= 1) {
+						clearInterval(interval);
+						handleCreateLiskAccount();
+						return 0;
+					}
+					return prev - 1;
+				});
+			}, 1000);
+			return () => clearInterval(interval);
+		}
+	}, [step, userInfo]);
+
+	// Redirect to sign-in page after Lisk account creation and no errors
+	const shouldRedirectToSignIn = step === 2 && !!userInfo?.liskId && !liskError && !liskLoading;
+
+	useEffect(() => {
+		if (shouldRedirectToSignIn) {
+			const timeout = setTimeout(() => {
+				router.push("/auth/sign-in");
+			}, 1500);
+			return () => clearTimeout(timeout);
+		}
+	}, [shouldRedirectToSignIn, router]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setForm({ ...form, [e.target.name]: e.target.value });
@@ -58,18 +90,24 @@ export default function SignUpPage() {
 	};
 
 	const handleCreateLiskAccount = async () => {
-		if (!userInfo?.apiKey) return;
+		const isInvalid =
+			!userInfo?.apiKey ||
+			liskLoading ||
+			userInfo.liskId ||
+			!userInfo.email ||
+			!userInfo.firstName ||
+			!userInfo.lastName;
+		if (isInvalid) return;
+
 		setLiskLoading(true);
 		setLiskError(null);
 		try {
 			const result = await createLiskAccount({
-				apiKey: userInfo.apiKey,
-				email: userInfo.email,
-				firstName: userInfo.firstName,
-				lastName: userInfo.lastName,
+				apiKey: userInfo.apiKey || "",
+				email: userInfo.email || "",
+				firstName: userInfo.firstName || "",
+				lastName: userInfo.lastName || "",
 			});
-
-			console.log("Create Lisk Account Result:", result);
 
 			if (!result.error && result.data) {
 				setLiskUser(result.data);
@@ -77,9 +115,7 @@ export default function SignUpPage() {
 					apiKey: userInfo.apiKey,
 					liskId: result.data.user.id,
 				});
-
-				console.log("Link Lisk ID Result:", linkResult);
-				const updatedUser = { ...userInfo, liskId: result.data.id };
+				const updatedUser = { ...userInfo, liskId: result.data.user.id };
 				Cookies.set("paymezar_user", JSON.stringify(updatedUser), { expires: 7 });
 				setUserInfo(updatedUser);
 				if (linkResult.error) setLiskError(linkResult.message);
@@ -288,13 +324,18 @@ export default function SignUpPage() {
 										color="primary"
 										radius="full"
 										className="w-full max-w-xs mt-4"
-										onClick={handleCreateLiskAccount}
+										onPress={handleCreateLiskAccount}
 										isLoading={liskLoading}
 										disabled={!!userInfo.liskId}>
 										{userInfo.liskId
 											? "Lisk Account Created"
-											: "Create Lisk Account"}
+											: liskLoading
+												? "Creating Lisk Account..."
+												: `Create Lisk Account${autoCreateCountdown > 0 ? ` (${autoCreateCountdown})` : ""}`}
 									</Button>
+									<Link showAnchorIcon href="/auth/sign-in" color="primary">
+										Sign in
+									</Link>
 									{liskError && (
 										<div className="text-red-600 text-xs text-center">
 											{liskError}

@@ -7,6 +7,7 @@ import { Link } from "@heroui/link";
 import { AlertCircleIcon, ShieldCheck, Lock, CheckCircle2, LogIn, KeyRound } from "lucide-react";
 import { postApi } from "@/lib/helpers";
 import { useRouter } from "next/navigation";
+import { useSession } from "@/context/SessionManager";
 
 export default function SignInPage() {
 	const [form, setForm] = useState({
@@ -17,6 +18,7 @@ export default function SignInPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState(false);
 	const router = useRouter();
+	const { setUser } = useSession();
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setForm({ ...form, [e.target.name]: e.target.value });
@@ -26,15 +28,25 @@ export default function SignInPage() {
 		e.preventDefault();
 		setLoading(true);
 		setError(null);
+		setSuccess(false);
+
 		try {
 			const result = await postApi("/api/auth/sign-in", form);
 			if (!result.error) {
+				setUser(result.data.user);
+
+				// delay for 3 seconds to show success message
+				console.log("User signed in successfully", result.data.user);
 				setSuccess(true);
 				router.push("/account");
 			} else {
+				console.error("Sign in failed", result.message);
 				setError(result.message || "Sign in failed");
+				setSuccess(false);
 			}
 		} catch (err: any) {
+			setSuccess(false);
+			console.error("Sign in error", err);
 			setError(err.message || "Sign in failed");
 		} finally {
 			setLoading(false);
