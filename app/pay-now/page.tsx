@@ -42,8 +42,8 @@ export default function PayNowPage() {
 				selectedKey={tab}
 				onSelectionChange={(key) => setTab(String(key))}
 				className="w-full max-w-2xl">
-				<Tab key="send" title="Send Payment" className="w-full">
-					<Card className="w-full">
+				<Tab key="send" title="Send Payment" className="w-full flex flex-col items-center">
+					<Card className="w-full max-w-2xl">
 						<CardHeader className="text-xl font-bold">Send ZAR Stablecoin</CardHeader>
 						<CardBody>
 							<form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -83,7 +83,10 @@ export default function PayNowPage() {
 						</CardFooter>
 					</Card>
 				</Tab>
-				<Tab key="transactions" title="Recent Transactions" className="w-full">
+				<Tab
+					key="transactions"
+					title="Recent Transactions"
+					className="w-full flex align-center justify-center">
 					<RecentTransactions transactions={dummyTransactions} />
 				</Tab>
 			</Tabs>

@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardBody } from "@heroui/react";
+import { Card, CardHeader, CardBody, Chip } from "@heroui/react";
 import { Button } from "@heroui/button";
 import Link from "next/link";
 import { Badge } from "@heroui/badge";
@@ -36,7 +36,7 @@ export function RecentTransactions({ transactions, className = "" }: RecentTrans
 		};
 	});
 	return (
-		<Card className={`w-full ${className}`}>
+		<Card className={`w-full max-w-2xl ${className}`}>
 			<CardHeader className="flex items-center justify-between">
 				<span className="text-xl font-bold">Recent Transactions</span>
 
@@ -64,9 +64,11 @@ export function RecentTransactions({ transactions, className = "" }: RecentTrans
 							key={tx.id}
 							className="flex items-center justify-between p-3 rounded-lg border border-default-200 bg-default-50">
 							<div className="flex items-center gap-3">
-								<Badge color={tx.direction === "in" ? "success" : "primary"}>
+								<Chip
+									variant="light"
+									color={tx.direction === "in" ? "success" : "primary"}>
 									{tx.direction === "in" ? "Received" : "Sent"}
-								</Badge>
+								</Chip>
 								<span className="font-mono text-xs text-default-600">
 									{tx.direction === "in" ? tx.from : tx.to}
 								</span>
@@ -76,7 +78,8 @@ export function RecentTransactions({ transactions, className = "" }: RecentTrans
 								{tx.amount} ZAR
 							</span>
 							<span className="text-xs text-default-500">{tx.date}</span>
-							<Badge
+							<Chip
+								variant="flat"
 								color={
 									tx.status === "Completed"
 										? "success"
@@ -85,7 +88,7 @@ export function RecentTransactions({ transactions, className = "" }: RecentTrans
 											: "default"
 								}>
 								{tx.status}
-							</Badge>
+							</Chip>
 						</div>
 					))}
 				</div>

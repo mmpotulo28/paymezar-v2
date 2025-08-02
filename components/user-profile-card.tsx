@@ -1,4 +1,4 @@
-import { Card, CardBody } from "@heroui/react";
+import { Card, CardBody, Chip } from "@heroui/react";
 import { Avatar } from "@heroui/avatar";
 import { Badge } from "@heroui/badge";
 import { Snippet } from "@heroui/snippet";
@@ -40,31 +40,33 @@ export function UserProfileCard({ user, className = "" }: UserProfileCardProps) 
 							</span>
 						</div>
 						<div className="flex flex-col gap-1 col-span-1 sm:col-span-2">
-							<span className="text-xs text-default-500 font-medium">
-								Wallet Address
-							</span>
+							<span className="text-xs text-default-500 font-medium">Payment Id</span>
 							<Snippet
 								hideSymbol
 								variant="bordered"
 								className="text-xs truncate max-w-full">
 								<span>
-									<Code color="primary">{user.publicKey || "-"}</Code>
+									<Code color="primary">{user.paymentIdentifier || "-"}</Code>
 								</span>
 							</Snippet>
 						</div>
 						<div className="flex flex-col gap-1">
-							<span className="text-xs text-default-500 font-medium">Payment ID</span>
+							<span className="text-xs text-default-500 font-medium">
+								Payment Enabled
+							</span>
 							<span className="text-xs text-default-700 truncate">
-								{user.paymentIdentifier || (
+								{user.enabledPay ? (
+									<span className="font-semibold">Enabled</span>
+								) : (
 									<span className="italic text-default-400">Not set</span>
 								)}
 							</span>
 						</div>
 						<div className="flex flex-col gap-1">
 							<span className="text-xs text-default-500 font-medium">Status</span>
-							<Badge color={user.enabledPay ? "primary" : "default"} variant="flat">
+							<Chip color={user.enabledPay ? "primary" : "default"} variant="flat">
 								{user.enabledPay ? "Active" : "Inactive"}
-							</Badge>
+							</Chip>
 						</div>
 					</div>
 				</div>
