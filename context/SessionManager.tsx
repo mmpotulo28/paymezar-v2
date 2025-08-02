@@ -245,7 +245,13 @@ export function SessionManager({ children }: { children: ReactNode }) {
 
 	// Access control: redirect to login if not authenticated and not on home or auth pages
 	useEffect(() => {
-		const publicPaths = ["/", "/auth/sign-in", "/auth/sign-up", "/auth/forgot-password"];
+		const publicPaths = [
+			"/",
+			"/auth/sign-in",
+			"/auth/sign-up",
+			"/auth/forgot-password",
+			"/auth/reset-password",
+		];
 		const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
 		if (!isAuthenticated && !isPublic) {
 			console.log(
