@@ -17,6 +17,16 @@ interface iQRScannerProps {
 
 const QrCodeScanner: React.FC<iQRScannerProps> = ({ scanModalOpen, onClose, onScan }) => {
 	const [scanError, setScanError] = useState<string | null>(null);
+	const [qrKey, setQrKey] = useState(0);
+	const lastErrorRef = useRef<string | null>(null);
+
+	useEffect(() => {
+		if (scanModalOpen) {
+			setQrKey((k) => k + 1); // force remount to release camera
+			setScanError(null);
+			lastErrorRef.current = null;
+		}
+	}, [scanModalOpen]);
 
 	const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 	const [code, setCode] = useState<string>("");
@@ -27,17 +37,10 @@ const QrCodeScanner: React.FC<iQRScannerProps> = ({ scanModalOpen, onClose, onSc
 			setCode(decodedText);
 			onScan(decodedText);
 			scannerRef.current?.pause();
-			setScanError(null);
 		};
 
 		const onScanFailure = (error: string): void => {
-			const ignoredErrors = [
-				"QR code parse error, error = NotFoundException: No MultiFormat Readers were able to detect the code.",
-				"QR code parse error, error = No barcode or QR code detected.",
-			];
-			if (ignoredErrors.includes(error)) return; // Avoid duplicate errors
-			console.error(`Code scan error = ${error}`);
-			setScanError(error);
+			console.warn(`Code scan error = ${error}`);
 		};
 
 		if (scannerRef.current) {
@@ -45,6 +48,7 @@ const QrCodeScanner: React.FC<iQRScannerProps> = ({ scanModalOpen, onClose, onSc
 		}
 
 		scannerRef.current = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, false);
+
 		scannerRef.current?.render(onScanSuccess, onScanFailure);
 
 		return () => {
@@ -66,8 +70,7 @@ const QrCodeScanner: React.FC<iQRScannerProps> = ({ scanModalOpen, onClose, onSc
 							<div className={`flex flex-col items-center gap-3 `}>
 								{scanModalOpen && (
 									<div>
-										<div id="reader" style={{ width: "300px" }}></div>
-										<div>{code && <p>Scanned code: {code}</p>}</div>
+										<div id="reader" style={{ width: "300px" }} />
 									</div>
 								)}
 								{scanError && (
