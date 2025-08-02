@@ -6,7 +6,7 @@ import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
 import { AlertCircleIcon, Lock, MailWarning } from "lucide-react";
 import { supabaseClient } from "@/lib/db";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 function getHashParams(): Record<string, string> {
 	if (typeof window === "undefined") return {};
@@ -25,8 +25,6 @@ export default function ResetPasswordPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState<string | null>(null);
 	const router = useRouter();
-	const searchParams = useSearchParams();
-
 	useEffect(() => {
 		const hashParams = getHashParams();
 		if (hashParams.error_description) {
