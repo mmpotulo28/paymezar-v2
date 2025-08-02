@@ -58,25 +58,33 @@ export function SessionManager({ children }: { children: ReactNode }) {
 	// Helper: Save session to cookie (JWT, expiry, user)
 	const cacheSession = useCallback(
 		(user: iUser | null, token: string | null, expiresAt: number | null) => {
-			if (user && token && expiresAt) {
+			if (user) {
 				Cookies.set("paymezar_user", JSON.stringify(user), {
-					expires: 7,
-					secure: true,
-					sameSite: "Strict",
-				});
-				Cookies.set("paymezar_token", token, {
-					expires: 7,
-					secure: true,
-					sameSite: "Strict",
-				});
-				Cookies.set("paymezar_expiry", String(expiresAt), {
 					expires: 7,
 					secure: true,
 					sameSite: "Strict",
 				});
 			} else {
 				Cookies.remove("paymezar_user");
+			}
+
+			// Only cache token/expiry if present, but not required for session
+			if (token) {
+				Cookies.set("paymezar_token", token, {
+					expires: 7,
+					secure: true,
+					sameSite: "Strict",
+				});
+			} else {
 				Cookies.remove("paymezar_token");
+			}
+			if (expiresAt) {
+				Cookies.set("paymezar_expiry", String(expiresAt), {
+					expires: 7,
+					secure: true,
+					sameSite: "Strict",
+				});
+			} else {
 				Cookies.remove("paymezar_expiry");
 			}
 		},
@@ -89,17 +97,24 @@ export function SessionManager({ children }: { children: ReactNode }) {
 		const cookieToken = Cookies.get("paymezar_token");
 		const cookieExpiry = Cookies.get("paymezar_expiry");
 		let valid = false;
-		if (cookieUser && cookieToken && cookieExpiry) {
+		if (cookieUser) {
 			try {
 				const parsedUser = JSON.parse(cookieUser);
 				const expiry = Number(cookieExpiry);
 				const now = Date.now() / 1000;
+
 				if (expiry > now) {
-					setUser(parsedUser);
-					setAccessToken(cookieToken);
-					setSessionExpiry(expiry);
-					valid = true;
+					console.warn("Token expired", {
+						user: parsedUser,
+						token: cookieToken,
+						expiry,
+					});
 				}
+
+				setUser(parsedUser);
+				setAccessToken(cookieToken || null);
+				setSessionExpiry(expiry);
+				valid = true;
 			} catch {
 				setUser(null);
 				setAccessToken(null);
@@ -117,7 +132,8 @@ export function SessionManager({ children }: { children: ReactNode }) {
 
 	// Keep cookie in sync with user state
 	useEffect(() => {
-		if (user && accessToken && sessionExpiry) {
+		// Only cache if all are present and valid
+		if (user && accessToken && sessionExpiry && sessionExpiry > Date.now() / 1000) {
 			cacheSession(user, accessToken, sessionExpiry);
 		}
 	}, [user, accessToken, sessionExpiry, cacheSession]);
@@ -127,6 +143,7 @@ export function SessionManager({ children }: { children: ReactNode }) {
 		async (sessionUser: iUser | null) => {
 			setLoading(true);
 			if (!sessionUser) {
+				console.log("Clearing session, no user provided");
 				setUser(null);
 				setAccessToken(null);
 				setSessionExpiry(null);
@@ -138,8 +155,9 @@ export function SessionManager({ children }: { children: ReactNode }) {
 			console.log("Setting session for user", sessionUser);
 			// Get Supabase session (JWT)
 			const { data, error } = await supabaseClient.auth.getSession();
-			setUser(sessionUser);
-			if (error || !data.session) {
+
+			if (error) {
+				console.error("Failed to get session", error);
 				setUser(null);
 				setAccessToken(null);
 				setSessionExpiry(null);
@@ -147,12 +165,13 @@ export function SessionManager({ children }: { children: ReactNode }) {
 				setLoading(false);
 				return;
 			}
-			const jwt = data.session.access_token;
-			const expiresAt = data.session.expires_at; // unix timestamp (seconds)
-
-			setAccessToken(jwt);
+			const jwt = data?.session?.access_token;
+			const expiresAt = data?.session?.expires_at; // unix timestamp (seconds)
+			setUser(sessionUser);
+			cacheSession(sessionUser, jwt || null, expiresAt || null);
+			setAccessToken(jwt || null);
 			setSessionExpiry(expiresAt || null);
-			cacheSession(sessionUser, jwt, expiresAt || null);
+			cacheSession(sessionUser, jwt || null, expiresAt || null);
 			setLoading(false);
 		},
 		[cacheSession],
@@ -229,8 +248,8 @@ export function SessionManager({ children }: { children: ReactNode }) {
 		const publicPaths = ["/", "/auth/sign-in", "/auth/sign-up", "/auth/forgot-password"];
 		const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
 		if (!isAuthenticated && !isPublic) {
-			alert(
-				`You must be logged in to access this page. ${JSON.stringify({ pathname, isAuthenticated })}`,
+			console.log(
+				`You must be logged in to access this page. ${JSON.stringify({ pathname, isAuthenticated, user })}`,
 			);
 			// router.replace("/auth/sign-in");
 		}
