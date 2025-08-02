@@ -12,6 +12,8 @@ export interface iUser {
 	businessId: string | null;
 	createdAt: string;
 	updatedAt: string;
+	password?: string; // Optional for sign-up, not stored in DB
+	apiKey?: string | null; // Optional, can be generated later
 }
 // Transaction type for a single transaction in the app
 export interface iTransaction {
