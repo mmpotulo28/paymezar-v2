@@ -17,44 +17,53 @@ interface iQRScannerProps {
 
 const QrCodeScanner: React.FC<iQRScannerProps> = ({ scanModalOpen, onClose, onScan }) => {
 	const [scanError, setScanError] = useState<string | null>(null);
-	const [qrKey, setQrKey] = useState(0);
 	const lastErrorRef = useRef<string | null>(null);
+	const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
 	useEffect(() => {
-		if (scanModalOpen) {
-			setQrKey((k) => k + 1); // force remount to release camera
+		if (!scanModalOpen) {
+			// Modal closed: clear scanner and errors
+			scannerRef.current?.clear();
+			scannerRef.current = null;
 			setScanError(null);
 			lastErrorRef.current = null;
+			return;
 		}
-	}, [scanModalOpen]);
 
-	const scannerRef = useRef<Html5QrcodeScanner | null>(null);
-	const [code, setCode] = useState<string>("");
-
-	useEffect(() => {
+		// Modal opened: initialize scanner
 		const onScanSuccess = (decodedText: string, decodedResult: Html5QrcodeResult): void => {
 			console.log(`Code matched = ${decodedText}`, decodedResult);
-			setCode(decodedText);
 			onScan(decodedText);
 			scannerRef.current?.pause();
 		};
 
 		const onScanFailure = (error: string): void => {
-			console.warn(`Code scan error = ${error}`);
+			const ignoredErrors = [
+				"QR code parse error, error = No barcode or QR code detected.",
+				"QR code parse error, error = NotFoundException: No MultiFormat Readers were able to detect the code.",
+			];
+			if (ignoredErrors.some((msg) => error.includes(msg))) {
+				return; // Ignore specific errors
+			}
+			if (lastErrorRef.current === error) {
+				return; // Ignore repeated errors
+			}
+			lastErrorRef.current = error;
+			setScanError(error);
+			console.warn(`Scan error: ${error}`);
 		};
-
-		if (scannerRef.current) {
-			scannerRef.current.clear();
-		}
 
 		scannerRef.current = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, false);
-
-		scannerRef.current?.render(onScanSuccess, onScanFailure);
+		scannerRef.current.render(onScanSuccess, onScanFailure);
 
 		return () => {
-			scannerRef.current?.clear();
+			// Cleanup: stop scanner and release camera
+			if (scannerRef.current) {
+				scannerRef.current.clear();
+				scannerRef.current = null;
+			}
 		};
-	}, []);
+	}, [scanModalOpen]);
 
 	return (
 		<Modal isOpen={scanModalOpen} onClose={onClose} size="sm">
