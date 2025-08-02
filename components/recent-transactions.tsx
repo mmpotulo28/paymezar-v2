@@ -3,6 +3,7 @@ import { Card, CardHeader, CardBody, Chip } from "@heroui/react";
 import { Button } from "@heroui/button";
 import { iTransaction } from "@/types";
 import { ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 export interface Transaction {
 	id: string;
@@ -39,17 +40,13 @@ export function RecentTransactions({ transactions, className = "" }: RecentTrans
 			<CardHeader className="flex items-center justify-between">
 				<span className="text-xl font-bold">Recent Transactions</span>
 
-				<Button
-					href="/account/transactions"
-					as="a"
-					size="sm"
-					color="primary"
-					variant="light"
-					radius="full">
-					<span className="flex items-center gap-1 justify-center">
-						View All <ChevronRight size={18} />
-					</span>
-				</Button>
+				<Link href="/account/transactions">
+					<Button as="button" size="sm" color="primary" variant="light" radius="full">
+						<span className="flex items-center gap-1 justify-center">
+							View All <ChevronRight size={18} />
+						</span>
+					</Button>
+				</Link>
 			</CardHeader>
 			<CardBody>
 				<div className="flex flex-col gap-3">

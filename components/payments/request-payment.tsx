@@ -51,7 +51,11 @@ export default function RequestPayment() {
 							required
 							min={1}
 						/>
-						<Button color="primary" type="submit" radius="full">
+						<Button
+							color="primary"
+							type="submit"
+							radius="sm"
+							className="max-w-3xs mx-0">
 							Generate QR Code
 						</Button>
 					</form>
@@ -75,7 +79,8 @@ export default function RequestPayment() {
 						<Button
 							variant="flat"
 							color="secondary"
-							onClick={() => {
+							className="max-w-3xs mx-0"
+							onPress={() => {
 								setQrVisible(false);
 								setRequestAmount("");
 								setRequestLoading(false);

@@ -5,7 +5,7 @@ import { Card, CardBody, CardHeader, CardFooter } from "@heroui/react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { HeartFilledIcon } from "@/components/icons";
-import { QrCode as QrCodeIcon } from "lucide-react";
+import { AlertCircleIcon, QrCode as QrCodeIcon } from "lucide-react";
 import QrCodeScanner from "@/components/qr-code-scanner";
 import { dummyUser } from "@/lib/dummy-user";
 
@@ -148,9 +148,10 @@ export default function SendPayment() {
 					<Button
 						color="primary"
 						type="submit"
-						radius="full"
+						radius="sm"
 						isLoading={loading}
-						disabled={loading}>
+						disabled={loading}
+						className="max-w-3xs mx-0">
 						{loading ? "Processing..." : "Send Payment"}
 					</Button>
 					{responseMsg && <div className="text-green-600 text-center">{responseMsg}</div>}
@@ -159,7 +160,8 @@ export default function SendPayment() {
 			</CardBody>
 			<CardFooter className="flex items-center justify-end">
 				<span className="text-xs text-default-500 flex items-center gap-1">
-					<HeartFilledIcon size={16} className="text-danger" /> Powered by Lisk & HeroUI
+					<AlertCircleIcon size={16} className="text-danger" /> Be cautious when sending
+					payments. Always verify recipient details.
 				</span>
 			</CardFooter>
 			{scanModalOpen && (

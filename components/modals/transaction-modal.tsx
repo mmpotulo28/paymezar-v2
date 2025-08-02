@@ -81,9 +81,10 @@ const TransactionModal: React.FC<iTransactionModalProps> = ({ isOpen, onClose, s
 							)}
 						</ModalBody>
 						<ModalFooter>
-							<Button color="primary" onPress={() => onClose()}>
-								Close
-							</Button>
+							<span className="text-xs text-default-500">
+								if you have any questions about this transaction, please contact
+								support.
+							</span>
 						</ModalFooter>
 					</>
 				)}

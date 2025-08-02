@@ -10,15 +10,7 @@ import {
 	Chip,
 	Tooltip,
 } from "@heroui/react";
-import type { ChipProps } from "@heroui/react";
-import {
-	Modal,
-	ModalBody,
-	ModalHeader,
-	ModalFooter,
-	useDisclosure,
-	ModalContent,
-} from "@heroui/modal";
+import { useDisclosure } from "@heroui/modal";
 import { Button } from "@heroui/button";
 import { useCallback, useState } from "react";
 import * as React from "react";
