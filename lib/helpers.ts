@@ -193,3 +193,63 @@ export async function redeemLZAR({
 		"POST",
 	);
 }
+
+/**
+ * Upsert (create or update) a user's bank account.
+ */
+export async function upsertBankAccount({
+	userId,
+	accountHolder,
+	accountNumber,
+	branchCode,
+	bankName,
+}: {
+	userId: string;
+	accountHolder: string;
+	accountNumber: string;
+	branchCode: string;
+	bankName: string;
+}) {
+	return await postApi(
+		`https://seal-app-qp9cc.ondigitalocean.app/api/v1/bank/${encodeURIComponent(userId)}`,
+		{
+			accountHolder,
+			accountNumber,
+			branchCode,
+			bankName,
+		},
+		{
+			"Content-Type": "application/json",
+			Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
+		},
+		"POST",
+	);
+}
+
+/**
+ * Fetches the bank account details for a user.
+ */
+export async function getBankAccounts({ userId }: { userId: string }) {
+	return await postApi(
+		`https://seal-app-qp9cc.ondigitalocean.app/api/v1/bank/${encodeURIComponent(userId)}`,
+		{},
+		{
+			Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
+		},
+		"GET",
+	);
+}
+
+/**
+ * Deletes the bank account for a user.
+ */
+export async function deleteBankAccount({ userId }: { userId: string }) {
+	return await postApi(
+		`https://seal-app-qp9cc.ondigitalocean.app/api/v1/bank/${encodeURIComponent(userId)}`,
+		{},
+		{
+			Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
+		},
+		"DELETE",
+	);
+}

@@ -1,9 +1,18 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import React, {
+	createContext,
+	useContext,
+	useEffect,
+	useState,
+	ReactNode,
+	useCallback,
+	use,
+} from "react";
 import Cookies from "js-cookie";
 import { supabaseClient } from "@/lib/db";
 import { iUser } from "@/types";
-import { getLiskUserById, postApi } from "@/lib/helpers";
+import { getLiskUserById } from "@/lib/helpers";
+import { usePathname, useRouter } from "next/navigation";
 
 interface SessionContextProps {
 	user: iUser | null;
@@ -12,7 +21,8 @@ interface SessionContextProps {
 	logout: () => Promise<void>;
 	setUser: (user: iUser | null) => void;
 	refreshUser: () => Promise<void>;
-	setSession: (session: iUser | null) => void;
+	setSession: (session: iUser | null) => Promise<void>;
+	accessToken: string | null;
 }
 
 const SessionContext = createContext<SessionContextProps>({
@@ -22,7 +32,8 @@ const SessionContext = createContext<SessionContextProps>({
 	logout: async () => {},
 	setUser: () => {},
 	refreshUser: async () => {},
-	setSession: () => {},
+	setSession: async () => {},
+	accessToken: null,
 });
 
 export function useSession() {
@@ -32,100 +43,210 @@ export function useSession() {
 export function SessionManager({ children }: { children: ReactNode }) {
 	const [user, setUser] = useState<iUser | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [accessToken, setAccessToken] = useState<string | null>(null);
+	const [sessionExpiry, setSessionExpiry] = useState<number | null>(null);
+	const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-	const cacheSession = async (user: iUser | null) => {
-		if (user) {
-			console.log("Caching session user", user);
-			Cookies.set("paymezar_user", JSON.stringify(user), { expires: 7 });
-		} else {
-			console.warn("Clearing cached session user");
-			Cookies.remove("paymezar_user");
-		}
-	};
+	const pathname = usePathname();
+	const router = useRouter();
 
-	// Load user from cookie on mount
+	useEffect(() => {
+		console.log("setting isAuthenticated", { user, accessToken, sessionExpiry });
+		setIsAuthenticated(!!user);
+	}, [user, accessToken, sessionExpiry]);
+
+	// Helper: Save session to cookie (JWT, expiry, user)
+	const cacheSession = useCallback(
+		(user: iUser | null, token: string | null, expiresAt: number | null) => {
+			if (user && token && expiresAt) {
+				Cookies.set("paymezar_user", JSON.stringify(user), {
+					expires: 7,
+					secure: true,
+					sameSite: "Strict",
+				});
+				Cookies.set("paymezar_token", token, {
+					expires: 7,
+					secure: true,
+					sameSite: "Strict",
+				});
+				Cookies.set("paymezar_expiry", String(expiresAt), {
+					expires: 7,
+					secure: true,
+					sameSite: "Strict",
+				});
+			} else {
+				Cookies.remove("paymezar_user");
+				Cookies.remove("paymezar_token");
+				Cookies.remove("paymezar_expiry");
+			}
+		},
+		[],
+	);
+
+	// Load session from cookie on mount
 	useEffect(() => {
 		const cookieUser = Cookies.get("paymezar_user");
-		if (cookieUser) {
+		const cookieToken = Cookies.get("paymezar_token");
+		const cookieExpiry = Cookies.get("paymezar_expiry");
+		let valid = false;
+		if (cookieUser && cookieToken && cookieExpiry) {
 			try {
-				const parsed = JSON.parse(cookieUser);
-				setUser(parsed);
+				const parsedUser = JSON.parse(cookieUser);
+				const expiry = Number(cookieExpiry);
+				const now = Date.now() / 1000;
+				if (expiry > now) {
+					setUser(parsedUser);
+					setAccessToken(cookieToken);
+					setSessionExpiry(expiry);
+					valid = true;
+				}
 			} catch {
 				setUser(null);
+				setAccessToken(null);
+				setSessionExpiry(null);
 			}
 		}
+		if (!valid) {
+			setUser(null);
+			setAccessToken(null);
+			setSessionExpiry(null);
+			cacheSession(null, null, null);
+		}
 		setLoading(false);
-	}, []);
+	}, [cacheSession]);
 
 	// Keep cookie in sync with user state
 	useEffect(() => {
-		if (user) {
-			console.log("Updating session cookie with user", user);
-			cacheSession(user);
-		} else {
-			Cookies.remove("paymezar_user");
+		if (user && accessToken && sessionExpiry) {
+			cacheSession(user, accessToken, sessionExpiry);
 		}
-	}, [user]);
+	}, [user, accessToken, sessionExpiry, cacheSession]);
 
-	const setSession = async (session: iUser | null) => {
-		console.log("Setting session", session);
-		setUser(session);
-		if (session) {
-			cacheSession(session);
-		} else {
-			Cookies.remove("paymezar_user");
+	// Set session after login/signup
+	const setSession = useCallback(
+		async (sessionUser: iUser | null) => {
+			setLoading(true);
+			if (!sessionUser) {
+				setUser(null);
+				setAccessToken(null);
+				setSessionExpiry(null);
+				cacheSession(null, null, null);
+				setLoading(false);
+				return;
+			}
+
+			console.log("Setting session for user", sessionUser);
+			// Get Supabase session (JWT)
+			const { data, error } = await supabaseClient.auth.getSession();
+			setUser(sessionUser);
+			if (error || !data.session) {
+				setUser(null);
+				setAccessToken(null);
+				setSessionExpiry(null);
+				cacheSession(null, null, null);
+				setLoading(false);
+				return;
+			}
+			const jwt = data.session.access_token;
+			const expiresAt = data.session.expires_at; // unix timestamp (seconds)
+
+			setAccessToken(jwt);
+			setSessionExpiry(expiresAt || null);
+			cacheSession(sessionUser, jwt, expiresAt || null);
+			setLoading(false);
+		},
+		[cacheSession],
+	);
+
+	// Refresh session if expired or about to expire (within 2 minutes)
+	const refreshUser = useCallback(async () => {
+		setLoading(true);
+		try {
+			const { data, error } = await supabaseClient.auth.getSession();
+			if (error || !data.session) {
+				setUser(null);
+				setAccessToken(null);
+				setSessionExpiry(null);
+				cacheSession(null, null, null);
+				setLoading(false);
+				return;
+			}
+			const jwt = data.session.access_token;
+			const expiresAt = data.session.expires_at;
+			const now = Date.now() / 1000;
+			if (typeof expiresAt === "number" && expiresAt - now < 120) {
+				// If session is about to expire, refresh
+				await supabaseClient.auth.refreshSession();
+			}
+			// Get user info from Supabase
+			const { data: userData } = await supabaseClient.auth.getUser();
+			if (userData?.user) {
+				const userObj: iUser = {
+					id: userData.user.id,
+					email: userData.user.email || "",
+					firstName: userData.user.user_metadata?.firstName || "",
+					lastName: userData.user.user_metadata?.lastName || "",
+					imageUrl: userData.user.user_metadata?.imageUrl || null,
+					enabledPay: userData.user.user_metadata?.enabledPay ?? null,
+					role: userData.user.user_metadata?.role || "CUSTOMER",
+					publicKey: userData.user.user_metadata?.publicKey || null,
+					paymentIdentifier: userData.user.user_metadata?.paymentIdentifier || null,
+					businessId: userData.user.user_metadata?.businessId || null,
+					createdAt: userData.user.created_at,
+					updatedAt: userData.user.updated_at || userData.user.created_at,
+				};
+				setUser(userObj);
+				setAccessToken(jwt);
+				setSessionExpiry(expiresAt || null);
+				cacheSession(userObj, jwt, expiresAt || null);
+			} else {
+				setUser(null);
+				setAccessToken(null);
+				setSessionExpiry(null);
+				cacheSession(null, null, null);
+			}
+		} finally {
+			setLoading(false);
 		}
-	};
+	}, [cacheSession]);
 
-	const logout = async () => {
+	// Secure logout
+	const logout = useCallback(async () => {
 		setLoading(true);
 		try {
 			await supabaseClient.auth.signOut();
 			setUser(null);
-			Cookies.remove("paymezar_user");
+			setAccessToken(null);
+			setSessionExpiry(null);
+			cacheSession(null, null, null);
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [cacheSession]);
 
-	const refreshUser = async () => {
-		setLoading(true);
-		try {
-			const { data } = await supabaseClient.auth.getUser();
-			if (data?.user) {
-				const userObj: iUser = {
-					id: data.user.id,
-					email: data.user.email || "",
-					firstName: data.user.user_metadata?.firstName || "",
-					lastName: data.user.user_metadata?.lastName || "",
-					imageUrl: data.user.user_metadata?.imageUrl || null,
-					enabledPay: data.user.user_metadata?.enabledPay ?? null,
-					role: data.user.user_metadata?.role || "CUSTOMER",
-					publicKey: data.user.user_metadata?.publicKey || null,
-					paymentIdentifier: data.user.user_metadata?.paymentIdentifier || null,
-					businessId: data.user.user_metadata?.businessId || null,
-					createdAt: data.user.created_at,
-					updatedAt: data.user.updated_at || data.user.created_at,
-				};
-				setUser(userObj);
-			} else {
-				setUser(null);
-			}
-		} finally {
-			setLoading(false);
+	// Access control: redirect to login if not authenticated and not on home or auth pages
+	useEffect(() => {
+		const publicPaths = ["/", "/auth/sign-in", "/auth/sign-up", "/auth/forgot-password"];
+		const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
+		if (!isAuthenticated && !isPublic) {
+			alert(
+				`You must be logged in to access this page. ${JSON.stringify({ pathname, isAuthenticated })}`,
+			);
+			// router.replace("/auth/sign-in");
 		}
-	};
+	}, [isAuthenticated, pathname, router]);
 
 	return (
 		<SessionContext.Provider
 			value={{
 				user,
-				isAuthenticated: !!user,
+				isAuthenticated,
 				loading,
 				logout,
 				setUser,
 				refreshUser,
 				setSession,
+				accessToken,
 			}}>
 			{children}
 		</SessionContext.Provider>

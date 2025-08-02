@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, CardFooter, Chip } from "@heroui/react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
@@ -19,7 +19,14 @@ export default function SignInPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState(false);
 	const router = useRouter();
-	const { setSession } = useSession();
+	const { setSession, isAuthenticated, loading: sessionLoading } = useSession();
+
+	useEffect(() => {
+		// If already authenticated, redirect to account page
+		if (isAuthenticated && !sessionLoading) {
+			router.replace("/account");
+		}
+	}, [isAuthenticated, sessionLoading, router]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setForm({ ...form, [e.target.name]: e.target.value });
@@ -34,14 +41,14 @@ export default function SignInPage() {
 		try {
 			const result = await postApi("/api/auth/sign-in", form);
 			console.log("Sign in result", result);
-			if (!result.error && result.data?.user) {
+			if (!result.error) {
 				setSuccess(true);
-				// Set session with the returned user object
-				setSession(result.data.user);
+				// Use the user object or fallback to the whole result.data if user is not nested
+				const userObj = result.data.user || result.data;
+				await setSession(userObj);
 
-				// delay for 1 second to show success message
 				setTimeout(() => {
-					router.push("/account");
+					router.replace("/account");
 				}, 1000);
 			} else {
 				console.error("Sign in failed", result.message);
