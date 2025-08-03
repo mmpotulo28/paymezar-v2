@@ -56,3 +56,15 @@ export interface iPricingPlan {
 	features: string[];
 	isPopular?: boolean;
 }
+
+// Charge type for a single charge in the app
+export interface iCharge {
+	id: string;
+	paymentId: string;
+	amount: number;
+	note: string | null;
+	status: string;
+	userId: string;
+	createdAt: string;
+	updatedAt: string;
+}

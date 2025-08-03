@@ -7,7 +7,7 @@ import React, {
 	ReactNode,
 	useCallback,
 } from "react";
-import { iTransaction, iBankAccount } from "@/types";
+import { iTransaction, iBankAccount, iCharge } from "@/types";
 import { useSession } from "./SessionManager";
 import { postApi, getUserBalance, getBankAccounts } from "@/lib/helpers";
 
@@ -22,6 +22,9 @@ interface AccountContextProps {
 	bankAccounts: iBankAccount[];
 	loadingBankAccounts: boolean;
 	refreshBankAccounts: () => Promise<void>;
+	charges: iCharge[];
+	loadingCharges: boolean;
+	refreshCharges: () => Promise<void>;
 }
 
 const AccountContext = createContext<AccountContextProps>({
@@ -35,6 +38,9 @@ const AccountContext = createContext<AccountContextProps>({
 	bankAccounts: [],
 	loadingBankAccounts: false,
 	refreshBankAccounts: async () => {},
+	charges: [],
+	loadingCharges: false,
+	refreshCharges: async () => {},
 });
 
 export function useAccount() {
@@ -54,6 +60,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
 	const [bankAccounts, setBankAccounts] = useState<iBankAccount[]>([]);
 	const [loadingBankAccounts, setLoadingBankAccounts] = useState(false);
+
+	const [charges, setCharges] = useState<iCharge[]>([]);
+	const [loadingCharges, setLoadingCharges] = useState(false);
 
 	const fetchTransactions = useCallback(async () => {
 		if (!user?.id) {
@@ -131,11 +140,40 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 		setLoadingBankAccounts(false);
 	}, [user?.id]);
 
+	const fetchCharges = useCallback(async () => {
+		if (!user?.id) {
+			setCharges([]);
+			return;
+		}
+		setLoadingCharges(true);
+		try {
+			const result = await postApi(
+				`https://seal-app-qp9cc.ondigitalocean.app/api/v1/charge/${encodeURIComponent(user.id)}`,
+				{},
+				{
+					Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
+				},
+				"GET",
+			);
+			if (!result.error && Array.isArray(result.data?.charges)) {
+				setCharges(result.data.charges);
+			} else if (!result.error && Array.isArray(result.data)) {
+				setCharges(result.data);
+			} else {
+				setCharges([]);
+			}
+		} catch {
+			setCharges([]);
+		}
+		setLoadingCharges(false);
+	}, [user?.id]);
+
 	useEffect(() => {
 		fetchTransactions();
 		fetchBalance();
 		fetchBankAccounts();
-	}, [fetchTransactions, fetchBalance, fetchBankAccounts]);
+		fetchCharges();
+	}, [fetchTransactions, fetchBalance, fetchBankAccounts, fetchCharges]);
 
 	return (
 		<AccountContext.Provider
@@ -150,6 +188,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 				bankAccounts,
 				loadingBankAccounts,
 				refreshBankAccounts: fetchBankAccounts,
+				charges,
+				loadingCharges,
+				refreshCharges: fetchCharges,
 			}}>
 			{children}
 		</AccountContext.Provider>

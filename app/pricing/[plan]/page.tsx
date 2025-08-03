@@ -50,8 +50,7 @@ export default function SubscriptionPage() {
 		setSuccess(null);
 		try {
 			const result = await postApi("/api/subscription/create", {
-				userId: user.id,
-				liskId: user.paymentIdentifier,
+				liskId: user.id,
 				plan: planKey,
 				period,
 				amount,
@@ -62,6 +61,7 @@ export default function SubscriptionPage() {
 				setError(result.message || "Failed to create subscription.");
 			}
 		} catch (e: any) {
+			console.error("Subscription error:", e);
 			setError(e.message || "Failed to create subscription.");
 		}
 		setLoading(false);
