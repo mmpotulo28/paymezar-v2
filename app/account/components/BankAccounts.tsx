@@ -2,19 +2,22 @@ import { Card, CardHeader, CardBody, Chip, Select, SelectItem, Spinner } from "@
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Plus, Banknote, DeleteIcon, RefreshCcw } from "lucide-react";
-import { useState, useEffect } from "react";
-import { iBankAccount } from "@/types";
+import { useState } from "react";
 import { BANKS } from "@/lib/banks";
-import { upsertBankAccount, getBankAccounts, deleteBankAccount } from "@/lib/helpers";
+import { upsertBankAccount, deleteBankAccount } from "@/lib/helpers";
 import { useSession } from "@/context/SessionManager";
+import { useAccount } from "@/context/AccountContext";
 
 export function BankAccounts() {
 	const { user } = useSession();
-	const [accounts, setAccounts] = useState<iBankAccount[]>([]);
+	const { bankAccounts, loadingBankAccounts, refreshBankAccounts } = useAccount();
 	const [showAdd, setShowAdd] = useState(false);
-	const [form, setForm] = useState<
-		Omit<iBankAccount, "id" | "userId" | "createdAt" | "updatedAt">
-	>({
+	const [form, setForm] = useState<{
+		accountHolder: string;
+		accountNumber: string;
+		branchCode: string;
+		bank: string;
+	}>({
 		accountHolder: "",
 		accountNumber: "",
 		branchCode: "",
@@ -25,41 +28,11 @@ export function BankAccounts() {
 	const [success, setSuccess] = useState<string | null>(null);
 	const [refreshing, setRefreshing] = useState(false);
 
-	const fetchAccounts = async () => {
-		if (!user?.id) return;
-		setLoading(true);
-		setError(null);
-		try {
-			const result = await getBankAccounts({ userId: user.id });
-			if (!result.error && result.data) {
-				const arr = Array.isArray(result.data)
-					? result.data
-					: result.data.bankAccount
-						? [result.data.bankAccount]
-						: result.data.id
-							? [result.data]
-							: [];
-				setAccounts(arr);
-			} else {
-				setAccounts([]);
-			}
-		} catch (e: any) {
-			setError(e.message || "Failed to fetch bank accounts.");
-			setAccounts([]);
-		}
-		setLoading(false);
-	};
-
 	const handleRefresh = async () => {
 		setRefreshing(true);
-		await fetchAccounts();
+		await refreshBankAccounts();
 		setRefreshing(false);
 	};
-
-	useEffect(() => {
-		fetchAccounts();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [user?.id]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		setForm({ ...form, [e.target.name]: e.target.value });
@@ -88,7 +61,7 @@ export function BankAccounts() {
 		});
 
 		if (!result.error && result.data?.bankAccount) {
-			setAccounts((prev) => [...prev, result.data.bankAccount]);
+			await refreshBankAccounts();
 			setForm({ accountHolder: "", accountNumber: "", branchCode: "", bank: "" });
 			setShowAdd(false);
 			setSuccess("Bank account saved successfully!");
@@ -98,7 +71,7 @@ export function BankAccounts() {
 		setLoading(false);
 	};
 
-	const handleDeleteAccount = async (account: iBankAccount) => {
+	const handleDeleteAccount = async (accountId: string) => {
 		if (!user?.id) return;
 		setLoading(true);
 		setError(null);
@@ -107,7 +80,7 @@ export function BankAccounts() {
 		const result = await deleteBankAccount({ userId: user.id });
 
 		if (!result.error) {
-			setAccounts((prev) => prev.filter((acc) => acc.id !== account.id));
+			await refreshBankAccounts();
 			setSuccess("Bank account deleted successfully!");
 		} else {
 			setError(result.message || "Failed to delete bank account.");
@@ -198,15 +171,15 @@ export function BankAccounts() {
 						{success && <div className="text-green-600 text-xs">{success}</div>}
 					</form>
 				)}
-				{loading && (
+				{loadingBankAccounts && (
 					<div className="text-default-400 text-center py-4">
 						<Spinner color="primary" label="Loading..." />
 					</div>
 				)}
-				{!loading && accounts.length === 0 && (
+				{!loadingBankAccounts && bankAccounts.length === 0 && (
 					<div className="text-default-400 text-center py-4">No bank accounts found.</div>
 				)}
-				{accounts.map((acc) => (
+				{bankAccounts.map((acc) => (
 					<div
 						key={acc.id}
 						className="flex flex-col sm:flex-row items-center justify-between gap-2 border-b border-default-100 py-2">
@@ -233,7 +206,7 @@ export function BankAccounts() {
 							size="sm"
 							color="danger"
 							variant="flat"
-							onPress={() => handleDeleteAccount(acc)}
+							onPress={() => handleDeleteAccount(acc.id)}
 							disabled={loading}>
 							<DeleteIcon size={16} />
 						</Button>

@@ -4,6 +4,7 @@ import { Button } from "@heroui/button";
 import { iTransaction } from "@/types";
 import { AnchorIcon, ChevronRight } from "lucide-react";
 import { Link } from "@heroui/react";
+import { useAccount } from "@/context/AccountContext";
 
 export interface Transaction {
 	id: string;
@@ -16,13 +17,18 @@ export interface Transaction {
 }
 
 export interface RecentTransactionsProps {
-	transactions: iTransaction[];
+	transactions?: iTransaction[];
 	className?: string;
 }
 
-export function RecentTransactions({ transactions, className = "" }: RecentTransactionsProps) {
+export function RecentTransactions({
+	transactions: _transactions,
+	className = "",
+}: RecentTransactionsProps) {
+	const { transactions } = useAccount();
+	const txs = transactions.length > 0 ? transactions : _transactions || [];
 	// Convert iTransaction[] to Transaction[] for display
-	const mapped: Transaction[] = transactions.map((tx) => {
+	const mapped: Transaction[] = txs.map((tx) => {
 		// For demo: treat txType 'deposit' as 'in', others as 'out'
 		const direction: "in" | "out" = tx.txType === "deposit" ? "in" : "out";
 		return {

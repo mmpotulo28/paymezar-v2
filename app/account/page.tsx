@@ -5,14 +5,13 @@ import { Input } from "@heroui/input";
 import { Tabs, Tab } from "@heroui/tabs";
 import { UserProfileCard } from "@/components/user-profile-card";
 import { RecentTransactions } from "@/components/recent-transactions";
-import { dummyTransactions as transactions } from "@/lib/dummy-transactions";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import { Sun, Moon, RefreshCcw, Link2, Download, FileText, Lock, Shield } from "lucide-react";
 import { AccountOverview } from "./components/AccountOverview";
 import { BalanceHistory } from "./components/BalanceHistory";
 import { AccountSettings } from "./components/AccountSettings";
-import { RedeemLZAR } from "./components/RedeemLZAR";
+import { WithdrawDeposit } from "./components/WithdrawDeposit";
 import { BankAccounts } from "./components/BankAccounts";
 import { useSession } from "@/context/SessionManager";
 
@@ -80,10 +79,10 @@ export default function AccountPage() {
 					<BalanceHistory />
 				</Tab>
 				<Tab
-					key="redeem"
+					key="withdraw-deposit"
 					className="w-full flex align-center justify-center max-w-2xl"
-					title="Redeem LZAR">
-					<RedeemLZAR />
+					title="Withdraw / Deposit">
+					<WithdrawDeposit />
 				</Tab>
 				<Tab
 					key="bank"
@@ -114,10 +113,7 @@ export default function AccountPage() {
 								Download Statement
 							</Button>
 						</div>
-						<RecentTransactions
-							transactions={transactions}
-							className="max-w-2xl w-full"
-						/>
+						<RecentTransactions className="max-w-2xl w-full" />
 					</div>
 				</Tab>
 				<Tab

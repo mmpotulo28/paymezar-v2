@@ -3,15 +3,16 @@ import { Card, CardHeader, CardBody } from "@heroui/react";
 import { Tabs, Tab } from "@heroui/tabs";
 import { Input } from "@heroui/input";
 import { TransactionsTable } from "@/components/transactions-table";
-import { dummyTransactions } from "@/lib/dummy-transactions";
+import { useAccount } from "@/context/AccountContext";
 import { useState } from "react";
 
 export default function AccountTransactionsPage() {
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<string | null>(null);
+	const { transactions, loading, error, refreshTransactions } = useAccount();
 
 	// Filter transactions by search and status
-	const filtered = dummyTransactions.filter((tx) => {
+	const filtered = transactions.filter((tx) => {
 		const matchesSearch =
 			search === "" ||
 			tx.id.includes(search) ||
@@ -46,6 +47,8 @@ export default function AccountTransactionsPage() {
 							<Tab key="Pending" title="Pending" />
 						</Tabs>
 					</div>
+					{loading && <div className="text-default-400 text-center py-4">Loading...</div>}
+					{error && <div className="text-red-600 text-center py-4">{error}</div>}
 					<TransactionsTable transactions={filtered} />
 				</CardBody>
 			</Card>

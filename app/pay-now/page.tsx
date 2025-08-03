@@ -2,7 +2,6 @@
 import { Tabs, Tab } from "@heroui/tabs";
 import { UserProfileCard } from "@/components/user-profile-card";
 import { RecentTransactions } from "@/components/recent-transactions";
-import { dummyTransactions } from "@/lib/dummy-transactions";
 import { Suspense } from "react";
 import RequestPayment from "@/components/payments/request-payment";
 import SendPayment from "@/components/payments/send-payment";
@@ -31,7 +30,7 @@ export default function PayNowPage() {
 					key="transactions"
 					title="Recent Transactions"
 					className="w-full flex align-center justify-center">
-					<RecentTransactions transactions={dummyTransactions} />
+					<RecentTransactions />
 				</Tab>
 			</Tabs>
 		</section>
