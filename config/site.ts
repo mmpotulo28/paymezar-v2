@@ -18,6 +18,10 @@ export const siteConfig = {
 			href: "/account",
 		},
 		{
+			label: "Pricing",
+			href: "/pricing",
+		},
+		{
 			label: "Support",
 			href: "/support",
 		},

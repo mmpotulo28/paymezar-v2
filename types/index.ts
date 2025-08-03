@@ -44,3 +44,15 @@ export interface iBankAccount {
 	createdAt: string;
 	updatedAt: string;
 }
+
+// Pricing plan type for subscriptions
+export interface iPricingPlan {
+	name: string;
+	price: {
+		monthly: number;
+		yearly: number;
+	};
+	description: string;
+	features: string[];
+	isPopular?: boolean;
+}
