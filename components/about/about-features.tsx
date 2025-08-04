@@ -1,6 +1,7 @@
 "use client";
 import { ShieldCheck, Zap, Globe, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { Card } from "@heroui/react";
 
 const features = [
 	{
@@ -36,12 +37,13 @@ export function AboutFeatures() {
 			{features.map((f, i) => (
 				<motion.div
 					key={f.title}
-					className="flex flex-col items-center gap-3 bg-white/80 rounded-xl shadow border border-default-100 p-6 hover:shadow-lg transition"
 					whileHover={{ scale: 1.04 }}
 					transition={{ type: "spring", stiffness: 300 }}>
-					{f.icon}
-					<h2 className="text-lg font-semibold">{f.title}</h2>
-					<p className="text-default-600 text-center">{f.desc}</p>
+					<Card className="flex flex-col items-center gap-3 rounded-xl shadow border border-default-100 p-6 hover:shadow-lg transition">
+						{f.icon}
+						<h2 className="text-lg font-semibold">{f.title}</h2>
+						<p className="text-default-600 text-center">{f.desc}</p>
+					</Card>
 				</motion.div>
 			))}
 		</motion.div>
