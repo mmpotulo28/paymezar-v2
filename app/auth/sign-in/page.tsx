@@ -43,12 +43,20 @@ export default function SignInPage() {
 			console.log("Sign in result", result);
 			if (!result.error) {
 				setSuccess(true);
-				// Use the user object or fallback to the whole result.data if user is not nested
 				const userObj = result.data.user || result.data;
 				await setSession(userObj);
 
+				// Redirect logic: use redirect param if present, else fallback to /account
+				const params = new URLSearchParams(window.location.search);
+				const redirect = params.get("redirect");
 				setTimeout(() => {
-					router.replace("/account");
+					if (redirect) {
+						console.log("Redirecting to", redirect);
+						// router.replace(redirect);
+					} else {
+						console.log("Redirecting to /account");
+						// router.replace("/account");
+					}
 				}, 1000);
 			} else {
 				console.error("Sign in failed", result.message);

@@ -12,7 +12,7 @@ import Cookies from "js-cookie";
 import { supabaseClient } from "@/lib/db";
 import { iUser } from "@/types";
 import { getLiskUserById } from "@/lib/helpers";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface SessionContextProps {
 	user: iUser | null;
@@ -45,15 +45,10 @@ export function SessionManager({ children }: { children: ReactNode }) {
 	const [loading, setLoading] = useState(true);
 	const [accessToken, setAccessToken] = useState<string | null>(null);
 	const [sessionExpiry, setSessionExpiry] = useState<number | null>(null);
-	const [isAuthenticated, setIsAuthenticated] = useState(false);
 
 	const pathname = usePathname();
+	const searchParams = useSearchParams();
 	const router = useRouter();
-
-	useEffect(() => {
-		console.log("setting isAuthenticated", { user, accessToken, sessionExpiry });
-		setIsAuthenticated(!!user);
-	}, [user, accessToken, sessionExpiry]);
 
 	// Helper: Save session to cookie (JWT, expiry, user)
 	const cacheSession = useCallback(
@@ -137,6 +132,39 @@ export function SessionManager({ children }: { children: ReactNode }) {
 			cacheSession(user, accessToken, sessionExpiry);
 		}
 	}, [user, accessToken, sessionExpiry, cacheSession]);
+
+	// Access control: redirect to login if not authenticated and not on home or auth pages
+	useEffect(() => {
+		const publicPaths = [
+			"/",
+			"/auth/sign-in",
+			"/auth/sign-up",
+			"/auth/forgot-password",
+			"/auth/reset-password",
+			"/404",
+			"/500",
+			"/support",
+			"/support/contact",
+			"/support/faq",
+			"/support/terms",
+			"/support/privacy",
+			"/support/cookies",
+			"/sentry-example-page",
+		];
+		const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
+		if (loading) return; // Don't redirect while loading
+		if (!user && !isPublic) {
+			console.log(
+				`You must be logged in to access this page. ${JSON.stringify({ pathname, user })}`,
+			);
+			const redirectUrl =
+				"/auth/sign-in?redirect=" +
+				encodeURIComponent(
+					pathname + (searchParams?.toString() ? "?" + searchParams.toString() : ""),
+				);
+			router.replace(redirectUrl);
+		}
+	}, [user, pathname, router, searchParams, loading]);
 
 	// Set session after login/signup
 	const setSession = useCallback(
@@ -243,38 +271,11 @@ export function SessionManager({ children }: { children: ReactNode }) {
 		}
 	}, [cacheSession]);
 
-	// Access control: redirect to login if not authenticated and not on home or auth pages
-	useEffect(() => {
-		const publicPaths = [
-			"/",
-			"/auth/sign-in",
-			"/auth/sign-up",
-			"/auth/forgot-password",
-			"/auth/reset-password",
-			"/404",
-			"/500",
-			"/support",
-			"/support/contact",
-			"/support/faq",
-			"/support/terms",
-			"/support/privacy",
-			"/support/cookies",
-			"/sentry-example-page",
-		];
-		const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
-		if (!isAuthenticated && !isPublic) {
-			console.log(
-				`You must be logged in to access this page. ${JSON.stringify({ pathname, isAuthenticated, user })}`,
-			);
-			// router.replace("/auth/sign-in");
-		}
-	}, [isAuthenticated, pathname, router]);
-
 	return (
 		<SessionContext.Provider
 			value={{
 				user,
-				isAuthenticated,
+				isAuthenticated: !!user,
 				loading,
 				logout,
 				setUser,
