@@ -251,6 +251,14 @@ export function SessionManager({ children }: { children: ReactNode }) {
 			"/auth/sign-up",
 			"/auth/forgot-password",
 			"/auth/reset-password",
+			"/404",
+			"/500",
+			"/support",
+			"/support/contact",
+			"/support/faq",
+			"/support/terms",
+			"/support/privacy",
+			"/support/cookies",
 		];
 		const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
 		if (!isAuthenticated && !isPublic) {

@@ -1,17 +1,12 @@
 "use client";
 import { Link } from "@heroui/link";
-import { Snippet } from "@heroui/snippet";
-import { Code } from "@heroui/code";
 import { button as buttonStyles } from "@heroui/theme";
-import { Button, Card, CardBody, CardHeader } from "@heroui/react";
+import { Card, CardBody, CardHeader } from "@heroui/react";
 import { Badge } from "@heroui/badge";
-import { Tabs, Tab } from "@heroui/tabs";
-import { Avatar } from "@heroui/avatar";
 
 import { HeartFilledIcon, GithubIcon } from "@/components/icons";
 import { siteConfig } from "@/config/site";
 import { title, subtitle } from "@/components/primitives";
-import { dummyUser } from "@/lib/dummy-user";
 import { UserProfileCard } from "@/components/user-profile-card";
 import { useSession } from "@/context/SessionManager";
 import { useRouter } from "next/navigation";
