@@ -23,6 +23,7 @@
     "@heroui/theme": "2.4.20",
     "@react-aria/ssr": "3.9.10",
     "@react-aria/visually-hidden": "3.8.26",
+    "@sentry/nextjs": "^10.0.0",
     "@supabase/supabase-js": "^2.53.0",
     "axios": "^1.11.0",
     "clsx": "2.1.1",

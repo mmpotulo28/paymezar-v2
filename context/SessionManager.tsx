@@ -259,6 +259,7 @@ export function SessionManager({ children }: { children: ReactNode }) {
 			"/support/terms",
 			"/support/privacy",
 			"/support/cookies",
+			"/sentry-example-page",
 		];
 		const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
 		if (!isAuthenticated && !isPublic) {
