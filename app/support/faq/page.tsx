@@ -5,64 +5,52 @@ import { Accordion, AccordionItem, Card, CardHeader, CardBody, Pagination } from
 const faqs = [
 	{
 		question: "What is PayMe-Zar?",
-		answer:
-			"PayMe-Zar is a ZAR stablecoin payment platform that enables fast, secure, and borderless payments using the Lisk blockchain.",
+		answer: "PayMe-Zar is a ZAR stablecoin payment platform that enables fast, secure, and borderless payments using the Lisk blockchain.",
 	},
 	{
 		question: "How do I create an account?",
-		answer:
-			"Click on 'Sign Up', fill in your details, and follow the instructions to verify your email and create your Lisk account.",
+		answer: "Click on 'Sign Up', fill in your details, and follow the instructions to verify your email and create your Lisk account.",
 	},
 	{
 		question: "Is PayMe-Zar free to use?",
-		answer:
-			"The Starter plan is free. Pro and Business plans have affordable monthly or yearly fees.",
+		answer: "The Starter plan is free. Pro and Business plans have affordable monthly or yearly fees.",
 	},
 	{
 		question: "What is a ZAR stablecoin?",
-		answer:
-			"A ZAR stablecoin is a digital asset pegged 1:1 to the South African Rand (ZAR), providing price stability.",
+		answer: "A ZAR stablecoin is a digital asset pegged 1:1 to the South African Rand (ZAR), providing price stability.",
 	},
 	{
 		question: "How do I deposit funds?",
-		answer:
-			"Link your South African bank account and use the Deposit feature in your account dashboard.",
+		answer: "Link your South African bank account and use the Deposit feature in your account dashboard.",
 	},
 	{
 		question: "How do I withdraw funds?",
-		answer:
-			"Go to the Withdraw tab, select your bank account, enter the amount, and submit your request.",
+		answer: "Go to the Withdraw tab, select your bank account, enter the amount, and submit your request.",
 	},
 	{
 		question: "How long do deposits and withdrawals take?",
-		answer:
-			"Deposits and withdrawals are typically processed within 24 hours on business days.",
+		answer: "Deposits and withdrawals are typically processed within 24 hours on business days.",
 	},
 	{
 		question: "Is my data secure?",
-		answer:
-			"Yes, we use bank-grade encryption and never share your data with third parties.",
+		answer: "Yes, we use bank-grade encryption and never share your data with third parties.",
 	},
 	{
 		question: "Can I use PayMe-Zar for business payments?",
-		answer:
-			"Yes, our Business plan is designed for companies, payroll, and bulk payouts.",
+		answer: "Yes, our Business plan is designed for companies, payroll, and bulk payouts.",
 	},
 	{
 		question: "What is a payment identifier?",
-		answer:
-			"A payment identifier is your unique PayMe-Zar ID, used to receive payments from others.",
+		answer: "A payment identifier is your unique PayMe-Zar ID, used to receive payments from others.",
 	},
 	// ... 90 more FAQs below ...
 	{
 		question: "Can I send payments internationally?",
-		answer:
-			"Currently, PayMe-Zar is focused on ZAR payments within South Africa, but blockchain transfers are borderless.",
+		answer: "Currently, PayMe-Zar is focused on ZAR payments within South Africa, but blockchain transfers are borderless.",
 	},
 	{
 		question: "How do I reset my password?",
-		answer:
-			"Go to the Sign In page and click 'Forgot password?' to receive a reset link.",
+		answer: "Go to the Sign In page and click 'Forgot password?' to receive a reset link.",
 	},
 	{
 		question: "What happens if I lose access to my email?",
@@ -70,18 +58,15 @@ const faqs = [
 	},
 	{
 		question: "Can I use PayMe-Zar on mobile?",
-		answer:
-			"Yes, our platform is fully responsive and works on all modern devices.",
+		answer: "Yes, our platform is fully responsive and works on all modern devices.",
 	},
 	{
 		question: "How do I upgrade my plan?",
-		answer:
-			"Visit the Pricing page, select your desired plan, and follow the upgrade process.",
+		answer: "Visit the Pricing page, select your desired plan, and follow the upgrade process.",
 	},
 	{
 		question: "What payment methods are supported?",
-		answer:
-			"We support direct bank account linking for deposits and withdrawals.",
+		answer: "We support direct bank account linking for deposits and withdrawals.",
 	},
 	{
 		question: "Is there a minimum deposit amount?",
@@ -89,18 +74,15 @@ const faqs = [
 	},
 	{
 		question: "Is there a maximum withdrawal limit?",
-		answer:
-			"Limits depend on your subscription plan. See the Pricing page for details.",
+		answer: "Limits depend on your subscription plan. See the Pricing page for details.",
 	},
 	{
 		question: "How do I contact support?",
-		answer:
-			"Visit the Support Center and click 'Contact Us' to send a message or find contact details.",
+		answer: "Visit the Support Center and click 'Contact Us' to send a message or find contact details.",
 	},
 	{
 		question: "Can I cancel my subscription?",
-		answer:
-			"Yes, you can cancel or change your subscription at any time from your account settings.",
+		answer: "Yes, you can cancel or change your subscription at any time from your account settings.",
 	},
 	{
 		question: "Do you offer refunds?",
@@ -120,13 +102,11 @@ const faqs = [
 	},
 	{
 		question: "What is the difference between Pro and Business plans?",
-		answer:
-			"Business plans offer unlimited transfers, bulk payouts, API access, and dedicated support.",
+		answer: "Business plans offer unlimited transfers, bulk payouts, API access, and dedicated support.",
 	},
 	{
 		question: "How do I generate a payment QR code?",
-		answer:
-			"Use the Request Payment feature to generate a QR code for others to scan and pay.",
+		answer: "Use the Request Payment feature to generate a QR code for others to scan and pay.",
 	},
 	{
 		question: "Are there any hidden fees?",
@@ -134,13 +114,11 @@ const faqs = [
 	},
 	{
 		question: "How do I update my profile information?",
-		answer:
-			"Go to your account page and click 'Manage Profile' to update your details.",
+		answer: "Go to your account page and click 'Manage Profile' to update your details.",
 	},
 	{
 		question: "Can I use PayMe-Zar for payroll?",
-		answer:
-			"Yes, the Business plan supports bulk payouts and payroll features.",
+		answer: "Yes, the Business plan supports bulk payouts and payroll features.",
 	},
 	{
 		question: "How do I export my transaction data?",
@@ -148,13 +126,11 @@ const faqs = [
 	},
 	{
 		question: "What happens if my payment fails?",
-		answer:
-			"You will be notified, and the funds will not be deducted. Please check your balance and try again.",
+		answer: "You will be notified, and the funds will not be deducted. Please check your balance and try again.",
 	},
 	{
 		question: "How do I verify my bank account?",
-		answer:
-			"After adding your bank account, follow the verification steps sent to your email.",
+		answer: "After adding your bank account, follow the verification steps sent to your email.",
 	},
 	{
 		question: "Can I invite team members to my account?",
@@ -170,8 +146,7 @@ const faqs = [
 	},
 	{
 		question: "Can I use PayMe-Zar for donations?",
-		answer:
-			"Yes, you can receive donations using your payment identifier or QR code.",
+		answer: "Yes, you can receive donations using your payment identifier or QR code.",
 	},
 	{
 		question: "How do I change my subscription period?",
@@ -179,8 +154,7 @@ const faqs = [
 	},
 	{
 		question: "Are my funds insured?",
-		answer:
-			"Funds are held securely, but are not insured by a government agency.",
+		answer: "Funds are held securely, but are not insured by a government agency.",
 	},
 	{
 		question: "How do I report a bug?",
@@ -188,8 +162,7 @@ const faqs = [
 	},
 	{
 		question: "Can I use PayMe-Zar for e-commerce?",
-		answer:
-			"Yes, you can accept ZAR stablecoin payments for your online store.",
+		answer: "Yes, you can accept ZAR stablecoin payments for your online store.",
 	},
 	{
 		question: "How do I get notified of payments?",
@@ -197,13 +170,11 @@ const faqs = [
 	},
 	{
 		question: "What is a stablecoin?",
-		answer:
-			"A stablecoin is a cryptocurrency pegged to a stable asset, like ZAR, to minimize volatility.",
+		answer: "A stablecoin is a cryptocurrency pegged to a stable asset, like ZAR, to minimize volatility.",
 	},
 	{
 		question: "Can I use PayMe-Zar outside South Africa?",
-		answer:
-			"You can access your account globally, but ZAR payments are focused on South Africa.",
+		answer: "You can access your account globally, but ZAR payments are focused on South Africa.",
 	},
 	{
 		question: "How do I reset my 2FA?",
@@ -211,13 +182,11 @@ const faqs = [
 	},
 	{
 		question: "What browsers are supported?",
-		answer:
-			"PayMe-Zar works on all modern browsers including Chrome, Firefox, Safari, and Edge.",
+		answer: "PayMe-Zar works on all modern browsers including Chrome, Firefox, Safari, and Edge.",
 	},
 	{
 		question: "How do I refer a friend?",
-		answer:
-			"Use your referral link in your account dashboard to invite friends.",
+		answer: "Use your referral link in your account dashboard to invite friends.",
 	},
 	{
 		question: "Can I use biometrics to log in?",
@@ -229,8 +198,7 @@ const faqs = [
 	},
 	{
 		question: "Can I receive payments from anyone?",
-		answer:
-			"Yes, anyone with your payment identifier or QR code can send you ZAR.",
+		answer: "Yes, anyone with your payment identifier or QR code can send you ZAR.",
 	},
 	{
 		question: "How do I change my email address?",
@@ -258,8 +226,7 @@ const faqs = [
 	},
 	{
 		question: "How do I know my payment was successful?",
-		answer:
-			"You will receive a confirmation notification and see the transaction in your history.",
+		answer: "You will receive a confirmation notification and see the transaction in your history.",
 	},
 	{
 		question: "Can I use PayMe-Zar for point-of-sale?",
@@ -271,8 +238,7 @@ const faqs = [
 	},
 	{
 		question: "What if I forget my password?",
-		answer:
-			"Use the 'Forgot password?' link on the sign-in page to reset your password.",
+		answer: "Use the 'Forgot password?' link on the sign-in page to reset your password.",
 	},
 	{
 		question: "How do I enable notifications?",
@@ -284,13 +250,11 @@ const faqs = [
 	},
 	{
 		question: "How do I get started?",
-		answer:
-			"Sign up, verify your email, create your Lisk account, and start using PayMe-Zar.",
+		answer: "Sign up, verify your email, create your Lisk account, and start using PayMe-Zar.",
 	},
 	{
 		question: "Is there a mobile app?",
-		answer:
-			"A mobile app is coming soon. Use the web app on your phone for now.",
+		answer: "A mobile app is coming soon. Use the web app on your phone for now.",
 	},
 	{
 		question: "How do I change my password?",
@@ -306,13 +270,11 @@ const faqs = [
 	},
 	{
 		question: "What is KYC?",
-		answer:
-			"KYC stands for 'Know Your Customer', a process to verify your identity.",
+		answer: "KYC stands for 'Know Your Customer', a process to verify your identity.",
 	},
 	{
 		question: "How do I complete KYC?",
-		answer:
-			"Follow the instructions in your account dashboard to complete KYC.",
+		answer: "Follow the instructions in your account dashboard to complete KYC.",
 	},
 	{
 		question: "Can I use PayMe-Zar for charity?",
@@ -328,13 +290,11 @@ const faqs = [
 	},
 	{
 		question: "How do I set up a business account?",
-		answer:
-			"Select the Business plan during sign-up or upgrade from your account.",
+		answer: "Select the Business plan during sign-up or upgrade from your account.",
 	},
 	{
 		question: "How do I manage team members?",
-		answer:
-			"Business plan users can add or remove team members in account settings.",
+		answer: "Business plan users can add or remove team members in account settings.",
 	},
 	{
 		question: "Can I use PayMe-Zar for freelance payments?",
@@ -346,8 +306,7 @@ const faqs = [
 	},
 	{
 		question: "Is there a referral program?",
-		answer:
-			"Yes, refer friends and earn rewards. See your dashboard for details.",
+		answer: "Yes, refer friends and earn rewards. See your dashboard for details.",
 	},
 	{
 		question: "How do I change my plan?",
@@ -355,8 +314,7 @@ const faqs = [
 	},
 	{
 		question: "Can I use PayMe-Zar for government payments?",
-		answer:
-			"Currently, PayMe-Zar is not integrated with government payment systems.",
+		answer: "Currently, PayMe-Zar is not integrated with government payment systems.",
 	},
 	{
 		question: "How do I verify my identity?",
@@ -384,8 +342,7 @@ const faqs = [
 	},
 	{
 		question: "How do I get API access?",
-		answer:
-			"Business plan users get API access. See the Pricing page for details.",
+		answer: "Business plan users get API access. See the Pricing page for details.",
 	},
 	{
 		question: "How do I export my charges?",
@@ -516,12 +473,10 @@ export default function FaqPage() {
 		<div className="min-h-[80vh] flex flex-col items-center py-12 px-4">
 			<Card className="w-full max-w-4xl mb-10">
 				<CardHeader className="flex flex-col items-center gap-2">
-					<h1 className="text-3xl font-bold text-center">
-						Frequently Asked Questions
-					</h1>
+					<h1 className="text-3xl font-bold text-center">Frequently Asked Questions</h1>
 					<p className="text-default-500 text-center max-w-xl">
-						Find answers to common questions about PayMe-Zar, subscriptions,
-						payments, and more.
+						Find answers to common questions about PayMe-Zar, subscriptions, payments,
+						and more.
 					</p>
 				</CardHeader>
 				<CardBody>
