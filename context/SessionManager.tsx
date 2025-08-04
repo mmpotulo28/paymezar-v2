@@ -47,7 +47,10 @@ export function SessionManager({ children }: { children: ReactNode }) {
 	const [sessionExpiry, setSessionExpiry] = useState<number | null>(null);
 
 	const pathname = usePathname();
-	const searchParams = useSearchParams();
+	let searchParams = {};
+	if (typeof window !== "undefined") {
+		searchParams = Object.fromEntries(new URLSearchParams(window.location.search));
+	}
 	const router = useRouter();
 
 	// Helper: Save session to cookie (JWT, expiry, user)
