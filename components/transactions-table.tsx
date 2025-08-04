@@ -1,37 +1,15 @@
 "use client";
 import { iTransaction } from "@/types";
-import {
-	Table,
-	TableHeader,
-	TableColumn,
-	TableBody,
-	TableRow,
-	TableCell,
-	Chip,
-	Tooltip,
-} from "@heroui/react";
+import { Chip, Tooltip, Button } from "@heroui/react";
+import { EyeIcon } from "lucide-react";
 import { useDisclosure } from "@heroui/modal";
-import { Button } from "@heroui/button";
-import { useCallback, useState } from "react";
-import * as React from "react";
-import { DeleteIcon, EyeIcon } from "lucide-react";
-import { statusColorMap } from "@/lib/helpers";
+import { useState } from "react";
 import TransactionModal from "./modals/transaction-modal";
+import { statusColorMap } from "@/lib/helpers";
 
 interface TransactionsTableProps {
 	transactions: iTransaction[];
 }
-
-const columns = [
-	{ name: "ID", uid: "id" },
-	{ name: "USER", uid: "userId" },
-	{ name: "TYPE", uid: "txType" },
-	{ name: "METHOD", uid: "method" },
-	{ name: "AMOUNT", uid: "value" },
-	{ name: "STATUS", uid: "status" },
-	{ name: "DATE", uid: "createdAt" },
-	{ name: "ACTIONS", uid: "actions" },
-];
 
 export function TransactionsTable({ transactions }: TransactionsTableProps) {
 	const { isOpen, onOpen, onClose } = useDisclosure();
@@ -42,81 +20,63 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
 		onOpen();
 	};
 
-	const renderCell = useCallback((tx: iTransaction, columnKey: React.Key) => {
-		switch (columnKey) {
-			case "id":
-				return <span className="font-mono text-xs">{tx.id}</span>;
-			case "userId":
-				return <span className="font-mono text-xs">{tx.userId}</span>;
-			case "txType":
-				return <span className="text-xs">{tx.txType}</span>;
-			case "method":
-				return <span className="text-xs">{tx.method}</span>;
-			case "value":
-				return (
-					<span className="font-mono text-xs font-bold">
-						{tx.value.toLocaleString("en-ZA", {
-							style: "currency",
-							currency: tx.currency,
-						})}
-					</span>
-				);
-			case "status":
-				return (
-					<Chip
-						className="capitalize"
-						color={statusColorMap[tx.status] || "default"}
-						size="sm"
-						variant="flat">
-						{tx.status}
-					</Chip>
-				);
-			case "createdAt":
-				return <span className="text-xs">{tx.createdAt.split("T")[0]}</span>;
-			case "actions":
-				return (
-					<div className="relative flex items-center gap-2">
-						<Tooltip content="Details">
-							<Button
-								size="sm"
-								variant="flat"
-								className="p-0"
-								onPress={() => handleView(tx)}>
-								<EyeIcon />
-							</Button>
-						</Tooltip>
-						<Tooltip color="danger" content="Delete transaction">
-							<span className="text-lg text-danger cursor-pointer active:opacity-50">
-								<DeleteIcon />
-							</span>
-						</Tooltip>
-					</div>
-				);
-			default:
-				return null;
-		}
-	}, []);
-
 	return (
 		<>
-			<Table aria-label="Transactions table" removeWrapper className="w-full">
-				<TableHeader columns={columns}>
-					{(column) => (
-						<TableColumn
-							key={column.uid}
-							align={column.uid === "actions" ? "center" : "start"}>
-							{column.name}
-						</TableColumn>
-					)}
-				</TableHeader>
-				<TableBody items={transactions} emptyContent={"No transactions found."}>
-					{(item) => (
-						<TableRow key={item.id}>
-							{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
-						</TableRow>
-					)}
-				</TableBody>
-			</Table>
+			<div className="flex flex-col gap-3">
+				{transactions.length === 0 && (
+					<div className="text-default-400 text-center py-4">No transactions found.</div>
+				)}
+				{transactions.map((tx) => (
+					<div
+						key={tx.id}
+						className="rounded-xl border border-default-200 bg-default-50 hover:bg-default-100 transition flex flex-col sm:flex-row items-start sm:items-center gap-2 p-4">
+						<div className="flex-1 flex flex-col gap-1">
+							<div className="flex items-center gap-2">
+								<span className="font-mono text-xs text-default-500 truncate max-w-[120px]">
+									{tx.id}
+								</span>
+								<Chip
+									variant="flat"
+									color={statusColorMap[tx.status] || "default"}
+									size="sm">
+									{tx.status}
+								</Chip>
+							</div>
+							<span className="text-xs text-default-400">
+								{tx.createdAt.split("T")[0]}
+							</span>
+							<span className="text-xs text-default-600">
+								Type: {tx.txType} | Method: {tx.method}
+							</span>
+							{tx.externalId && (
+								<span className="text-xs text-default-400">
+									External Ref: {tx.externalId}
+								</span>
+							)}
+						</div>
+						<div className="flex flex-col items-end gap-1 min-w-[90px]">
+							<span className="font-mono text-base font-bold text-primary">
+								{tx.value.toLocaleString("en-ZA", {
+									style: "currency",
+									currency: "ZAR",
+								})}
+							</span>
+							<span className="text-xs text-default-500">{tx.currency}</span>
+						</div>
+						<div className="flex items-center gap-2">
+							<Tooltip content="Details">
+								<Button
+									size="sm"
+									variant="flat"
+									className="p-0"
+									onPress={() => handleView(tx)}>
+									<EyeIcon />
+								</Button>
+							</Tooltip>
+						</div>
+					</div>
+				))}
+			</div>
 			<TransactionModal isOpen={isOpen} onClose={onClose} selected={selected} />
 		</>
 	);

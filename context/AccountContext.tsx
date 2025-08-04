@@ -13,7 +13,7 @@ import { postApi, getUserBalance, getBankAccounts } from "@/lib/helpers";
 
 interface AccountContextProps {
 	transactions: iTransaction[];
-	loading: boolean;
+	loadingTransactions: boolean;
 	error: string | null;
 	refreshTransactions: () => Promise<void>;
 	balance: { tokens: { name: string; balance: string }[] } | null;
@@ -29,7 +29,7 @@ interface AccountContextProps {
 
 const AccountContext = createContext<AccountContextProps>({
 	transactions: [],
-	loading: false,
+	loadingTransactions: false,
 	error: null,
 	refreshTransactions: async () => {},
 	balance: null,
@@ -50,7 +50,7 @@ export function useAccount() {
 export function AccountProvider({ children }: { children: ReactNode }) {
 	const { user } = useSession();
 	const [transactions, setTransactions] = useState<iTransaction[]>([]);
-	const [loading, setLoading] = useState(false);
+	const [loadingTransactions, setLoadingTransactions] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
 	const [balance, setBalance] = useState<{ tokens: { name: string; balance: string }[] } | null>(
@@ -69,11 +69,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 			setTransactions([]);
 			return;
 		}
-		setLoading(true);
+		setLoadingTransactions(true);
 		setError(null);
 		try {
 			const result = await postApi(
-				`https://seal-app-qp9cc.ondigitalocean.app/api/v1/transactions/${encodeURIComponent(user.id)}`,
+				`https://seal-app-qp9cc.ondigitalocean.app/api/v1/${encodeURIComponent(user.id)}/transactions`,
 				{},
 				{
 					Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
@@ -92,7 +92,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 			setTransactions([]);
 			setError(e.message || "Failed to fetch transactions.");
 		}
-		setLoading(false);
+		setLoadingTransactions(false);
 	}, [user?.id]);
 
 	const fetchBalance = useCallback(async () => {
@@ -179,7 +179,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 		<AccountContext.Provider
 			value={{
 				transactions,
-				loading,
+				loadingTransactions,
 				error,
 				refreshTransactions: fetchTransactions,
 				balance,

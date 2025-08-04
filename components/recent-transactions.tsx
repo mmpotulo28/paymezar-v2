@@ -26,21 +26,7 @@ export function RecentTransactions({
 	className = "",
 }: RecentTransactionsProps) {
 	const { transactions } = useAccount();
-	const txs = transactions.length > 0 ? transactions : _transactions || [];
-	// Convert iTransaction[] to Transaction[] for display
-	const mapped: Transaction[] = txs.map((tx) => {
-		// For demo: treat txType 'deposit' as 'in', others as 'out'
-		const direction: "in" | "out" = tx.txType === "deposit" ? "in" : "out";
-		return {
-			id: tx.id,
-			to: direction === "out" ? tx.userId : undefined,
-			from: direction === "in" ? tx.userId : undefined,
-			amount: tx.value,
-			status: tx.status,
-			date: tx.createdAt.split("T")[0],
-			direction,
-		};
-	});
+
 	return (
 		<Card className={`w-full max-w-2xl ${className}`}>
 			<CardHeader className="flex items-center justify-between">
@@ -56,36 +42,49 @@ export function RecentTransactions({
 							No transactions found.
 						</div>
 					)}
-					{mapped.map((tx) => (
+					{transactions?.slice(0, 3).map((tx) => (
 						<div
 							key={tx.id}
-							className="flex items-center justify-between p-3 rounded-lg border border-default-200 bg-default-50">
-							<div className="flex items-center gap-3">
-								<Chip
-									variant="light"
-									color={tx.direction === "in" ? "success" : "primary"}>
-									{tx.direction === "in" ? "Received" : "Sent"}
-								</Chip>
-								<span className="font-mono text-xs text-default-600">
-									{tx.direction === "in" ? tx.from : tx.to}
+							className="w-full text-left rounded-xl border border-default-200 bg-default-50 hover:bg-default-100 transition flex flex-col sm:flex-row items-start justify-center gap-2 p-4 cursor-pointer">
+							<div className="flex-1 flex flex-col gap-1">
+								<div className="flex items-center gap-2">
+									<span className="font-mono text-xs text-default-500 truncate max-w-[120px]">
+										{tx.id}
+									</span>
+									<Chip
+										variant="flat"
+										color={
+											tx.status === "Completed"
+												? "success"
+												: tx.status === "Pending"
+													? "warning"
+													: "default"
+										}
+										size="sm">
+										{tx.status}
+									</Chip>
+								</div>
+								<span className="text-xs text-default-400">
+									{tx.createdAt.split("T")[0]}
 								</span>
+								<span className="text-xs text-default-600">
+									Type: {tx.txType} | Method: {tx.method}
+								</span>
+								{tx.externalId && (
+									<span className="text-xs text-default-400">
+										External Ref: {tx.externalId}
+									</span>
+								)}
 							</div>
-							<span className="font-mono text-sm font-bold">
-								{tx.direction === "in" ? "+" : "-"}
-								{tx.amount} ZAR
-							</span>
-							<span className="text-xs text-default-500">{tx.date}</span>
-							<Chip
-								variant="flat"
-								color={
-									tx.status === "Completed"
-										? "success"
-										: tx.status === "Pending"
-											? "warning"
-											: "default"
-								}>
-								{tx.status}
-							</Chip>
+							<div className="flex md:flex-col sm:flex-row md:items-end sm:items-start gap-1 min-w-[90px]">
+								<span className="font-mono text-base font-bold text-primary">
+									{tx.value.toLocaleString("en-ZA", {
+										style: "currency",
+										currency: "ZAR",
+									})}
+								</span>
+								<span className="text-xs text-default-500">{tx.currency}</span>
+							</div>
 						</div>
 					))}
 				</div>
