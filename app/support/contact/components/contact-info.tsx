@@ -14,11 +14,11 @@ export function ContactInfo() {
 					<div>
 						<h3 className="text-lg font-semibold">Office Location</h3>
 						<p className="text-default-500">
-							123 Business Street
+							PayMe-Zar HQ
 							<br />
-							Suite 100
+							123 Fintech Avenue
 							<br />
-							San Francisco, CA 94107
+							Johannesburg, South Africa
 						</p>
 					</div>
 				</div>
@@ -29,8 +29,8 @@ export function ContactInfo() {
 					</Button>
 					<div>
 						<h3 className="text-lg font-semibold">Phone</h3>
-						<Link href="tel:+1234567890" color="foreground">
-							(123) 456-7890
+						<Link href="tel:+27110000000" color="foreground">
+							+27 11 000 0000
 						</Link>
 					</div>
 				</div>
@@ -41,8 +41,8 @@ export function ContactInfo() {
 					</Button>
 					<div>
 						<h3 className="text-lg font-semibold">Email</h3>
-						<Link href="mailto:contact@company.com" color="foreground">
-							contact@company.com
+						<Link href="mailto:support@paymezar.com" color="foreground">
+							support@paymezar.com
 						</Link>
 					</div>
 				</div>
@@ -54,7 +54,7 @@ export function ContactInfo() {
 					<div>
 						<h3 className="text-lg font-semibold">Business Hours</h3>
 						<p className="text-default-500">
-							Monday - Friday: 9:00 AM - 5:00 PM
+							Monday - Friday: 8:00 AM - 6:00 PM
 							<br />
 							Saturday - Sunday: Closed
 						</p>
@@ -62,16 +62,36 @@ export function ContactInfo() {
 				</div>
 
 				<div className="flex gap-4 mt-4">
-					<Button isIconOnly variant="light" as={Link} href="#" isExternal>
+					<Button
+						isIconOnly
+						variant="light"
+						as={Link}
+						href="https://facebook.com/paymezar"
+						isExternal>
 						<Facebook size={16} className="text-default-500" />
 					</Button>
-					<Button isIconOnly variant="light" as={Link} href="#" isExternal>
+					<Button
+						isIconOnly
+						variant="light"
+						as={Link}
+						href="https://twitter.com/mmpotulo"
+						isExternal>
 						<Twitter size={16} className="text-default-500" />
 					</Button>
-					<Button isIconOnly variant="light" as={Link} href="#" isExternal>
+					<Button
+						isIconOnly
+						variant="light"
+						as={Link}
+						href="https://linkedin.com/company/paymezar"
+						isExternal>
 						<Linkedin size={16} className="text-default-500" />
 					</Button>
-					<Button isIconOnly variant="light" as={Link} href="#" isExternal>
+					<Button
+						isIconOnly
+						variant="light"
+						as={Link}
+						href="https://instagram.com/paymezar"
+						isExternal>
 						<Instagram size={16} className="text-default-500" />
 					</Button>
 				</div>
