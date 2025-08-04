@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardBody } from "@heroui/react";
 import { ChevronRight, ChevronLeft } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const carouselItems = [
 	{
@@ -28,9 +29,25 @@ const carouselItems = [
 
 export function CarouselSection() {
 	const [carouselIndex, setCarouselIndex] = useState(0);
+	const [direction, setDirection] = useState<1 | -1>(1);
 
-	const handlePrev = () => setCarouselIndex((i) => (i === 0 ? carouselItems.length - 1 : i - 1));
-	const handleNext = () => setCarouselIndex((i) => (i === carouselItems.length - 1 ? 0 : i + 1));
+	const handlePrev = () => {
+		setDirection(-1);
+		setCarouselIndex((i) => (i === 0 ? carouselItems.length - 1 : i - 1));
+	};
+	const handleNext = () => {
+		setDirection(1);
+		setCarouselIndex((i) => (i === carouselItems.length - 1 ? 0 : i + 1));
+	};
+
+	// Autoplay every 4 seconds
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setDirection(1);
+			setCarouselIndex((i) => (i === carouselItems.length - 1 ? 0 : i + 1));
+		}, 4000);
+		return () => clearInterval(interval);
+	}, []);
 
 	return (
 		<section className="w-full max-w-2xl flex flex-col items-center gap-4">
@@ -41,17 +58,45 @@ export function CarouselSection() {
 					aria-label="Previous">
 					<ChevronLeft size={24} />
 				</button>
-				<Card className="w-full mx-12 transition-all duration-300">
-					<CardBody className="flex flex-col items-center gap-2 py-8">
-						<span className="text-4xl">{carouselItems[carouselIndex].icon}</span>
-						<span className="text-xl font-bold">
-							{carouselItems[carouselIndex].title}
-						</span>
-						<span className="text-default-600 text-base">
-							{carouselItems[carouselIndex].description}
-						</span>
-					</CardBody>
-				</Card>
+				<div className="w-full mx-12 min-h-[180px] flex items-center justify-center overflow-hidden">
+					<AnimatePresence initial={false} custom={direction}>
+						<motion.div
+							key={carouselIndex}
+							custom={direction}
+							initial={{
+								opacity: 0,
+								x: 400 * direction,
+								// scale: 0.96,
+							}}
+							animate={{
+								opacity: 1,
+								x: 0,
+								scale: 1,
+								transition: { duration: 1, ease: "easeInOut" },
+							}}
+							exit={{
+								opacity: 0,
+								x: -400 * direction,
+								scale: 0,
+								transition: { duration: 1, ease: "easeInOut" },
+							}}
+							className="w-full min-w-full">
+							<Card className="w-full">
+								<CardBody className="flex flex-col items-center gap-2 py-8">
+									<span className="text-4xl">
+										{carouselItems[carouselIndex].icon}
+									</span>
+									<span className="text-xl font-bold">
+										{carouselItems[carouselIndex].title}
+									</span>
+									<span className="text-default-600 text-base">
+										{carouselItems[carouselIndex].description}
+									</span>
+								</CardBody>
+							</Card>
+						</motion.div>
+					</AnimatePresence>
+				</div>
 				<button
 					className="absolute right-0 z-10 bg-white/80 rounded-full p-2 shadow hover:bg-primary-100 transition"
 					onClick={handleNext}

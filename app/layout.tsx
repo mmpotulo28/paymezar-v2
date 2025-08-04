@@ -8,6 +8,7 @@ import { Providers } from "./providers";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
+import Script from "next/script";
 
 export const metadata: Metadata = {
 	title: {
@@ -54,6 +55,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 						</footer>
 					</div>
 				</Providers>
+
+				{/* scripts */}
+				<Script src="//code.tidio.co/lezepkbgvcgjcmyblgikrziylqlazjid.js" async />
 			</body>
 		</html>
 	);

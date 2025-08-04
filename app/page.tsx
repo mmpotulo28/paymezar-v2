@@ -16,7 +16,7 @@ export default function Home() {
 			<PricingSection />
 			<FaqsSection />
 			<div className="mt-8 text-xs text-default-500 flex items-center gap-1">
-				<HeartFilledIcon size={16} className="text-danger" /> Powered by Lisk & HeroUI
+				<HeartFilledIcon size={16} className="text-danger" /> Powered by Lisk Blockchain
 			</div>
 		</section>
 	);
