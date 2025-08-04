@@ -1,19 +1,18 @@
 "use client";
-import { Card, CardBody, CardFooter, CardHeader, Chip } from "@heroui/react";
 import { Button } from "@heroui/button";
-import { Input } from "@heroui/input";
 import { Tabs, Tab } from "@heroui/tabs";
 import { UserProfileCard } from "@/components/user-profile-card";
 import { RecentTransactions } from "@/components/recent-transactions";
 import { useTheme } from "next-themes";
 import { useState } from "react";
-import { Sun, Moon, RefreshCcw, Link2, Download, FileText, Lock, Shield } from "lucide-react";
-import { AccountOverview } from "./components/AccountOverview";
-import { BalanceHistory } from "./components/BalanceHistory";
-import { AccountSettings } from "./components/AccountSettings";
-import { WithdrawDeposit } from "./components/WithdrawDeposit";
-import { BankAccounts } from "./components/BankAccounts";
+import { Download, FileText } from "lucide-react";
+
 import { useSession } from "@/context/SessionManager";
+import { AccountOverview } from "@/components/account/AccountOverview";
+import { AccountSettings } from "@/components/account/AccountSettings";
+import { BalanceHistory } from "@/components/account/BalanceHistory";
+import { BankAccounts } from "@/components/account/BankAccounts";
+import { WithdrawDeposit } from "@/components/account/WithdrawDeposit";
 
 export default function AccountPage() {
 	const { theme, setTheme } = useTheme();
