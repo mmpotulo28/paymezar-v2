@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 
 export function HeroSection() {
 	return (
-		<div className="w-full max-w-3xl text-center flex flex-col items-center gap-4">
+		<section className="w-full max-w-3xl text-center flex flex-col items-center gap-4">
 			<h1 className="text-4xl md:text-5xl font-extrabold text-primary mb-2">PayMe-Zar</h1>
 			<p className="text-lg md:text-xl text-default-700 font-medium mb-2">
 				Instant ZAR stablecoin payments for everyone.
@@ -45,6 +45,6 @@ export function HeroSection() {
 					Support
 				</Link>
 			</div>
-		</div>
+		</section>
 	);
 }

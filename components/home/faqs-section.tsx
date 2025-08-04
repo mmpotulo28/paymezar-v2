@@ -24,7 +24,7 @@ const faqs = [
 
 export function FaqsSection() {
 	return (
-		<div className="w-full max-w-3xl mt-12">
+		<section className="w-full max-w-3xl mt-12">
 			<h2 className="text-2xl font-bold text-center mb-6">Frequently Asked Questions</h2>
 			<Accordion variant="bordered">
 				{faqs.map((faq, idx) => (
@@ -45,6 +45,6 @@ export function FaqsSection() {
 					More FAQs
 				</Link>
 			</div>
-		</div>
+		</section>
 	);
 }

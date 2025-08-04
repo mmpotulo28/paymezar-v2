@@ -7,7 +7,7 @@ import { button as buttonStyles } from "@heroui/theme";
 export function PricingSection() {
 	const pricingPlans = [PLAN_DETAILS.starter, PLAN_DETAILS.pro, PLAN_DETAILS.business];
 	return (
-		<div className="w-full max-w-5xl mt-12">
+		<section className="w-full max-w-5xl mt-12">
 			<h2 className="text-2xl font-bold text-center mb-6">Choose Your Plan</h2>
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 				{pricingPlans.map((plan) => (
@@ -26,6 +26,6 @@ export function PricingSection() {
 					See All Features
 				</Link>
 			</div>
-		</div>
+		</section>
 	);
 }

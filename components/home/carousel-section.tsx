@@ -33,7 +33,7 @@ export function CarouselSection() {
 	const handleNext = () => setCarouselIndex((i) => (i === carouselItems.length - 1 ? 0 : i + 1));
 
 	return (
-		<div className="w-full max-w-2xl flex flex-col items-center gap-4">
+		<section className="w-full max-w-2xl flex flex-col items-center gap-4">
 			<div className="relative w-full flex items-center justify-center">
 				<button
 					className="absolute left-0 z-10 bg-white/80 rounded-full p-2 shadow hover:bg-primary-100 transition"
@@ -67,6 +67,6 @@ export function CarouselSection() {
 					/>
 				))}
 			</div>
-		</div>
+		</section>
 	);
 }

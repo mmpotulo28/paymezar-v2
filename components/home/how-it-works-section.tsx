@@ -3,7 +3,7 @@ import { Card, CardBody } from "@heroui/react";
 
 export function HowItWorksSection() {
 	return (
-		<div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+		<section className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
 			<Card className="bg-secondary-100">
 				<CardBody className="flex flex-col items-center text-center gap-2">
 					<span className="text-xl font-bold">1. Create Your Account</span>
@@ -28,6 +28,6 @@ export function HowItWorksSection() {
 					</span>
 				</CardBody>
 			</Card>
-		</div>
+		</section>
 	);
 }
