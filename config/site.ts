@@ -32,16 +32,20 @@ export const siteConfig = {
 	],
 	navMenuItems: [
 		{
-			label: "Profile",
-			href: "/profile",
+			label: "Home",
+			href: "/",
+		},
+		{
+			label: "Pay now",
+			href: "/pay-now",
 		},
 		{
 			label: "Account",
 			href: "/account",
 		},
 		{
-			label: "Pay now",
-			href: "/pay-now",
+			label: "Pricing",
+			href: "/pricing",
 		},
 		{
 			label: "Support",
@@ -54,10 +58,6 @@ export const siteConfig = {
 		{
 			label: "Settings",
 			href: "/settings",
-		},
-		{
-			label: "Help & Feedback",
-			href: "/help-feedback",
 		},
 		{
 			label: "Logout",

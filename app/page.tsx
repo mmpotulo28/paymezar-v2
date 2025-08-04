@@ -95,7 +95,7 @@ export default function Home() {
 
 			{/* App Features */}
 			<div className="w-full max-w-2xl grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-				<Card className="bg-gradient-to-br from-violet-100 to-violet-50">
+				<Card className="bg-secondary-100">
 					<CardBody className="flex flex-col items-center text-center gap-2">
 						<span className="text-xl font-bold">Peer-to-Peer</span>
 						<span className="text-default-600 text-sm">
@@ -103,7 +103,7 @@ export default function Home() {
 						</span>
 					</CardBody>
 				</Card>
-				<Card className="bg-gradient-to-br from-green-100 to-green-50">
+				<Card className="bg-success-100">
 					<CardBody className="flex flex-col items-center text-center gap-2">
 						<span className="text-xl font-bold">Secure & Transparent</span>
 						<span className="text-default-600 text-sm">
@@ -111,7 +111,7 @@ export default function Home() {
 						</span>
 					</CardBody>
 				</Card>
-				<Card className="bg-gradient-to-br from-yellow-100 to-yellow-50">
+				<Card className="bg-warning-100">
 					<CardBody className="flex flex-col items-center text-center gap-2">
 						<span className="text-xl font-bold">Low Fees</span>
 						<span className="text-default-600 text-sm">
