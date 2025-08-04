@@ -68,7 +68,7 @@ export function AccountOverview() {
 							color="primary"
 							className="w-full"
 							radius="full"
-							href="/profile"
+							href="/account/profile"
 							as="a">
 							Manage Profile
 						</Button>

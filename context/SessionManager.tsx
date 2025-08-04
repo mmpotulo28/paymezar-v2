@@ -266,7 +266,7 @@ export function SessionManager({ children }: { children: ReactNode }) {
 			console.log(
 				`You must be logged in to access this page. ${JSON.stringify({ pathname, isAuthenticated, user })}`,
 			);
-			router.replace("/auth/sign-in");
+			// router.replace("/auth/sign-in");
 		}
 	}, [isAuthenticated, pathname, router]);
 
