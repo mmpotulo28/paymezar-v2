@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 		const arrayBuffer = await file.arrayBuffer();
 
 		const { error: uploadError } = await supabase.storage
-			.from("profile-images")
+			.from("paymezar-public")
 			.upload(fileName, arrayBuffer, {
 				contentType: file.type,
 				upsert: true,
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
-		const { data: urlData } = supabase.storage.from("profile-images").getPublicUrl(fileName);
+		const { data: urlData } = supabase.storage.from("paymezar-public").getPublicUrl(fileName);
 
 		if (!urlData) {
 			console.error("Error getting public URL:", urlData);
