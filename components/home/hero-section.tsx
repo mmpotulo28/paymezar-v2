@@ -7,7 +7,7 @@ export function HeroSection() {
 	return (
 		<section className="w-full max-w-3xl text-center flex flex-col items-center gap-4">
 			<h1 className="text-4xl md:text-5xl font-extrabold text-primary mb-2">PayMe-Zar</h1>
-			<p className="text-lg md:text-xl text-default-700 font-medium mb-2">
+			<p className="text-lg md:text-xl  font-medium mb-2 text-secondary-500">
 				Instant ZAR stablecoin payments for everyone.
 			</p>
 			<p className="text-base text-default-500 max-w-xl mx-auto mb-4">

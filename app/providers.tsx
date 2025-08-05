@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { SessionManager } from "@/context/SessionManager";
 import { AccountProvider } from "@/context/AccountContext";
+import { GlobalProvider } from "@/context/GlobalContext";
 
 export interface ProvidersProps {
 	children: React.ReactNode;
@@ -26,9 +27,11 @@ export function Providers({ children, themeProps }: ProvidersProps) {
 	return (
 		<HeroUIProvider navigate={router.push}>
 			<NextThemesProvider {...themeProps}>
-				<SessionManager>
-					<AccountProvider>{children}</AccountProvider>
-				</SessionManager>
+				<GlobalProvider>
+					<SessionManager>
+						<AccountProvider>{children}</AccountProvider>
+					</SessionManager>
+				</GlobalProvider>
 			</NextThemesProvider>
 		</HeroUIProvider>
 	);
