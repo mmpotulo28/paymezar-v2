@@ -2,13 +2,12 @@ import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import { Link } from "@heroui/link";
 import clsx from "clsx";
-
 import { Providers } from "./providers";
-
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
 	title: {
@@ -55,6 +54,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 						</footer>
 					</div>
 				</Providers>
+
+				<Analytics />
 
 				{/* scripts */}
 				<Script src="//code.tidio.co/lezepkbgvcgjcmyblgikrziylqlazjid.js" async />
