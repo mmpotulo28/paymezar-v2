@@ -6,7 +6,7 @@ import { UploadCloud, User, Mail, Phone } from "lucide-react";
 import { postApi } from "@/lib/helpers";
 
 export default function ProfilePage() {
-	const { user, refreshUser } = useSession();
+	const { user, setSession } = useSession();
 	const [form, setForm] = useState({
 		firstName: user?.firstName || "",
 		lastName: user?.lastName || "",
@@ -25,7 +25,7 @@ export default function ProfilePage() {
 				firstName: user.firstName || "",
 				lastName: user.lastName || "",
 				email: user.email || "",
-				phone: "",
+				phone: user.phone || "",
 				imageUrl: user.imageUrl || "",
 			});
 		}
@@ -70,7 +70,8 @@ export default function ProfilePage() {
 			const result = await postApi(
 				"/api/account/update-profile",
 				{
-					id: user.id,
+					id: user.supabaseId || user.id,
+					liskId: user.id,
 					email: form.email,
 					firstName: form.firstName,
 					lastName: form.lastName,
@@ -86,7 +87,9 @@ export default function ProfilePage() {
 			}
 
 			setSuccess("Profile updated successfully!");
-			await refreshUser();
+			console.log("Profile update result:", result.data);
+			// await refreshUser();
+			setSession(result.data.user);
 		} catch (err: any) {
 			setError(err.message || "Failed to update profile.");
 		}

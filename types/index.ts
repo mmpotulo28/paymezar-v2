@@ -1,9 +1,11 @@
 // User type for a single user in the app
 export interface iUser {
 	id: string;
+	supabaseId: string | null; // Supabase user ID
 	firstName: string | null;
 	lastName: string | null;
 	email: string;
+	phone?: string | null; // Optional phone number
 	imageUrl: string | null;
 	enabledPay: boolean | null;
 	role: "ADMIN" | "MEMBER" | "CUSTOMER";

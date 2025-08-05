@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 			.eq("user_id", userId)
 			.single();
 
-		if (!apiKeyRow || !apiKeyRow.lisk_id || !apiKeyRow.api_key) {
+		if (!apiKeyRow || !apiKeyRow.lisk_id || !apiKeyRow.api_key || apiKeyError) {
 			console.error("API key or Lisk ID not found for user", { userId });
 			return NextResponse.json(
 				{
@@ -84,7 +84,10 @@ export async function POST(req: NextRequest) {
 		}
 
 		console.log("Lisk user fetched successfully", { liskUser: liskRes.user });
-		return NextResponse.json(liskRes, { status: 200 });
+		return NextResponse.json(
+			{ ...liskRes.user, apiKey: apiKeyRow.api_key, supabaseId: userId },
+			{ status: 200 },
+		);
 	} catch (error: any) {
 		console.error("Error during sign-in", error);
 		return NextResponse.json(

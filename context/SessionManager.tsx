@@ -233,6 +233,7 @@ export function SessionManager({ children }: { children: ReactNode }) {
 			const { data: userData } = await supabaseClient.auth.getUser();
 			if (userData?.user) {
 				const userObj: iUser = {
+					supabaseId: userData.user.id,
 					id: userData.user.id,
 					email: userData.user.email || "",
 					firstName: userData.user.user_metadata?.firstName || "",

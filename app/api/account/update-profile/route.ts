@@ -9,9 +9,10 @@ import axios from "axios";
  */
 export async function PUT(req: NextRequest) {
 	try {
-		const { id, email, firstName, lastName, imageUrl, phone } = await req.json();
+		const { id, liskId, email, firstName, lastName, imageUrl, phone } = await req.json();
+		const isMissingFields = !id || !liskId || !email || !firstName || !lastName;
 
-		if (!id || !email || !firstName || !lastName) {
+		if (isMissingFields) {
 			return NextResponse.json(
 				{ error: true, message: "Missing required fields", data: null, status: 400 },
 				{ status: 400 },
@@ -19,7 +20,7 @@ export async function PUT(req: NextRequest) {
 		}
 
 		// 1. Update Supabase Auth user (email, metadata)
-		const { error: metaError } = await supabase.auth.admin.updateUserById(id, {
+		const { error: metaError, data: userData } = await supabase.auth.admin.updateUserById(id, {
 			email,
 			phone,
 			user_metadata: {
@@ -29,6 +30,7 @@ export async function PUT(req: NextRequest) {
 			},
 		});
 		if (metaError) {
+			console.error("Supabase user update error:", metaError);
 			return NextResponse.json(
 				{ error: true, message: metaError.message, data: null, status: 500 },
 				{ status: 500 },
@@ -37,7 +39,7 @@ export async function PUT(req: NextRequest) {
 
 		// 2. Update Lisk API user
 		const apiRes = await axios.put(
-			`https://seal-app-qp9cc.ondigitalocean.app/api/v1/users/${encodeURIComponent(id)}`,
+			`https://seal-app-qp9cc.ondigitalocean.app/api/v1/users/${encodeURIComponent(liskId)}`,
 			{
 				email,
 				firstName,
@@ -52,7 +54,8 @@ export async function PUT(req: NextRequest) {
 			},
 		);
 
-		if (apiRes.status !== 200) {
+		if (apiRes.status !== 200 && apiRes.status !== 201) {
+			console.error("Lisk API update error:", apiRes.data);
 			return NextResponse.json(
 				{
 					error: true,
@@ -68,12 +71,13 @@ export async function PUT(req: NextRequest) {
 			{
 				error: false,
 				message: "Profile updated successfully",
-				data: { user: apiRes.data },
+				user: { ...apiRes.data.user, supabaseId: id, phone },
 				status: 200,
 			},
 			{ status: 200 },
 		);
 	} catch (err: any) {
+		console.error("Error updating profile", err);
 		return NextResponse.json(
 			{
 				error: true,
