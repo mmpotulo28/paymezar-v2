@@ -1,17 +1,17 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardHeader, CardBody, CardFooter, Input, Button, Avatar, Chip } from "@heroui/react";
 import { useSession } from "@/context/SessionManager";
-import { supabaseClient } from "@/lib/db";
-import { UploadCloud, User, Mail, Phone, Image as ImageIcon } from "lucide-react";
+import { UploadCloud, User, Mail, Phone } from "lucide-react";
+import { postApi } from "@/lib/helpers";
 
 export default function ProfilePage() {
-	const { user, setUser, refreshUser } = useSession();
+	const { user, refreshUser } = useSession();
 	const [form, setForm] = useState({
 		firstName: user?.firstName || "",
 		lastName: user?.lastName || "",
 		email: user?.email || "",
-		phone: "", // Assuming phone is not in user type, add if needed
+		phone: "",
 		imageUrl: user?.imageUrl || "",
 	});
 	const [loading, setLoading] = useState(false);
@@ -20,13 +20,12 @@ export default function ProfilePage() {
 	const [imageUploading, setImageUploading] = useState(false);
 
 	useEffect(() => {
-		// Initialize form with user data
 		if (user) {
 			setForm({
 				firstName: user.firstName || "",
 				lastName: user.lastName || "",
 				email: user.email || "",
-				phone: "", // Assuming phone is not in user type, add if needed
+				phone: "",
 				imageUrl: user.imageUrl || "",
 			});
 		}
@@ -38,21 +37,20 @@ export default function ProfilePage() {
 
 	const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
-		if (!file) return;
+		if (!file || !user?.id) return;
 		setImageUploading(true);
 		setError(null);
 		setSuccess(null);
 		try {
-			const fileExt = file.name.split(".").pop();
-			const fileName = `${user?.id || "profile"}-${Date.now()}.${fileExt}`;
-			const { data, error: uploadError } = await supabaseClient.storage
-				.from("profile-images")
-				.upload(fileName, file, { upsert: true });
-			if (uploadError) throw uploadError;
-			const { data: urlData } = supabaseClient.storage
-				.from("profile-images")
-				.getPublicUrl(fileName);
-			setForm((f) => ({ ...f, imageUrl: urlData.publicUrl }));
+			const formData = new FormData();
+			formData.append("file", file);
+			formData.append("userId", user.id);
+
+			// Use postApi for consistency
+			const result = await postApi("/api/account/image-upload", formData, {}, "POST");
+			if (result.error || !result.data?.url)
+				throw new Error(result.message || "Failed to upload image");
+			setForm((f) => ({ ...f, imageUrl: result.data.url }));
 			setSuccess("Profile image uploaded!");
 		} catch (err: any) {
 			setError("Failed to upload image.");
@@ -65,24 +63,28 @@ export default function ProfilePage() {
 		setLoading(true);
 		setError(null);
 		setSuccess(null);
+
 		try {
-			const updates: any = {
-				firstName: form.firstName,
-				lastName: form.lastName,
-				imageUrl: form.imageUrl,
-			};
-			// Email update (if changed)
-			if (form.email && form.email !== user?.email) {
-				const { error: emailError } = await supabaseClient.auth.updateUser({
+			if (!user?.id) throw new Error("User not found.");
+
+			const result = await postApi(
+				"/api/account/update-profile",
+				{
+					id: user.id,
 					email: form.email,
-				});
-				if (emailError) throw emailError;
+					firstName: form.firstName,
+					lastName: form.lastName,
+					imageUrl: form.imageUrl,
+					phone: form.phone,
+				},
+				{ "Content-Type": "application/json" },
+				"PUT",
+			);
+
+			if (result.error) {
+				throw new Error(result.message || "Failed to update profile.");
 			}
-			// Update user metadata
-			const { error: metaError } = await supabaseClient.auth.updateUser({
-				data: updates,
-			});
-			if (metaError) throw metaError;
+
 			setSuccess("Profile updated successfully!");
 			await refreshUser();
 		} catch (err: any) {
@@ -112,7 +114,7 @@ export default function ProfilePage() {
 									accept="image/*"
 									className="hidden"
 									onChange={handleImageChange}
-									disabled={imageUploading && true}
+									disabled={imageUploading}
 								/>
 								{imageUploading ? "Uploading..." : "Change Profile Image"}
 							</label>
@@ -125,7 +127,6 @@ export default function ProfilePage() {
 								onChange={handleChange}
 								autoComplete="given-name"
 								required
-								disabled
 								startContent={<User size={16} />}
 							/>
 							<Input
@@ -135,7 +136,6 @@ export default function ProfilePage() {
 								onChange={handleChange}
 								autoComplete="family-name"
 								required
-								disabled
 								startContent={<User size={16} />}
 							/>
 						</div>
@@ -147,7 +147,6 @@ export default function ProfilePage() {
 							onChange={handleChange}
 							autoComplete="email"
 							required
-							disabled
 							startContent={<Mail size={16} />}
 						/>
 						<Input
@@ -157,7 +156,6 @@ export default function ProfilePage() {
 							value={form.phone}
 							onChange={handleChange}
 							autoComplete="tel"
-							disabled
 							startContent={<Phone size={16} />}
 						/>
 						<Button
@@ -166,7 +164,6 @@ export default function ProfilePage() {
 							isLoading={loading}
 							className="w-full mt-2"
 							radius="full"
-							disabled
 							startContent={<User size={18} />}>
 							Update Profile
 						</Button>

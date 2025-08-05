@@ -163,7 +163,8 @@ export function SessionManager({ children }: { children: ReactNode }) {
 			const redirectUrl =
 				"/auth/sign-in?redirect=" +
 				encodeURIComponent(
-					pathname + (searchParams?.toString() ? "?" + searchParams.toString() : ""),
+					pathname +
+						(searchParams ? "?" + new URLSearchParams(searchParams).toString() : ""),
 				);
 			router.replace(redirectUrl);
 		}
