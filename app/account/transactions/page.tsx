@@ -11,7 +11,8 @@ import { iTransaction } from "@/types";
 export default function AccountTransactionsPage() {
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<string | null>(null);
-	const { transactions, loadingTransactions, error, refreshTransactions } = useAccount();
+	const { transactions, loadingTransactions, transactionsError, refreshTransactions } =
+		useAccount();
 	const [modalOpen, setModalOpen] = useState(false);
 	const [selectedTx, setSelectedTx] = useState<iTransaction | null>(null);
 
@@ -75,7 +76,9 @@ export default function AccountTransactionsPage() {
 					{loadingTransactions && (
 						<div className="text-default-400 text-center py-4">Loading...</div>
 					)}
-					{error && <div className="text-red-600 text-center py-4">{error}</div>}
+					{transactionsError && (
+						<div className="text-red-600 text-center py-4">{transactionsError}</div>
+					)}
 					<div className="flex flex-col gap-3 mt-2">
 						{filtered.length === 0 && !loadingTransactions && (
 							<div className="text-default-400 text-center py-4">

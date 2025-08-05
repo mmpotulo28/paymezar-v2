@@ -7,6 +7,7 @@ import RequestPayment from "@/components/payments/request-payment";
 import SendPayment from "@/components/payments/send-payment";
 import { useSession } from "@/context/SessionManager";
 import { ChargesList } from "@/components/charges-list";
+import { WithdrawDeposit } from "@/components/account/WithdrawDeposit";
 
 export default function PayNowPage() {
 	const { user } = useSession();
@@ -15,7 +16,7 @@ export default function PayNowPage() {
 			<Suspense fallback={<div>Loading user profile...</div>}>
 				<UserProfileCard user={user} className="max-w-2xl" />
 			</Suspense>
-			<Tabs className="w-full max-w-2xl">
+			<Tabs color="primary" destroyInactiveTabPanel className="w-full max-w-2xl">
 				<Tab key="send" title="Send Payment" className="w-full flex flex-col items-center">
 					<SendPayment />
 				</Tab>
@@ -28,8 +29,15 @@ export default function PayNowPage() {
 				</Tab>
 
 				<Tab
+					key="withdraw-deposit"
+					className="w-full flex align-center justify-center max-w-2xl"
+					title="Withdraw / Deposit">
+					<WithdrawDeposit />
+				</Tab>
+
+				<Tab
 					key="transactions"
-					title="Recent Transactions"
+					title="Transactions"
 					className="w-full flex align-center justify-center">
 					<RecentTransactions />
 				</Tab>

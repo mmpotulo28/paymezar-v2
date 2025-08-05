@@ -46,7 +46,7 @@ export function UserProfileCard({ user, className = "" }: UserProfileCardProps) 
 					<Avatar
 						src={user.imageUrl || undefined}
 						size="lg"
-						className="ring-2 ring-primary-400"
+						className="ring-2 ring-primary-400 bg-background"
 					/>
 					<span className="text-xs text-default-400 font-medium">
 						{(user.role && user.role.charAt(0) + user.role.slice(1).toLowerCase()) ||

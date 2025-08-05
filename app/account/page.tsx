@@ -9,36 +9,14 @@ import { Download, FileText } from "lucide-react";
 
 import { useSession } from "@/context/SessionManager";
 import { AccountOverview } from "@/components/account/AccountOverview";
-import { AccountSettings } from "@/components/account/AccountSettings";
 import { BalanceHistory } from "@/components/account/BalanceHistory";
 import { BankAccounts } from "@/components/account/BankAccounts";
 import { WithdrawDeposit } from "@/components/account/WithdrawDeposit";
+import { SubscriptionsList } from "@/components/account/SubscriptionsList";
+import { useAccount } from "@/context/AccountContext";
 
 export default function AccountPage() {
-	const { theme, setTheme } = useTheme();
-	const [cacheCleared, setCacheCleared] = useState(false);
-	const [socialConnected, setSocialConnected] = useState(false);
-	const [gasEnabled, setGasEnabled] = useState(false);
-	const [twoFAEnabled, setTwoFAEnabled] = useState(false);
 	const { user } = useSession();
-
-	const handleClearCache = () => {
-		// Simulate cache clearing
-		setCacheCleared(true);
-		setTimeout(() => setCacheCleared(false), 1500);
-	};
-
-	const handleConnectSocial = () => {
-		// Simulate social account connection
-		setSocialConnected(true);
-		setTimeout(() => setSocialConnected(false), 1500);
-	};
-
-	const handleEnableGas = () => {
-		// Simulate gas allocation
-		setGasEnabled(true);
-		setTimeout(() => setGasEnabled(false), 1500);
-	};
 
 	const handleExportTransactions = () => {
 		// Simulate export
@@ -50,21 +28,13 @@ export default function AccountPage() {
 		alert("Statement downloaded!");
 	};
 
-	const handleResetPassword = () => {
-		alert("Password reset link sent to your email.");
-	};
-
-	const handleToggle2FA = () => {
-		setTwoFAEnabled((v) => !v);
-	};
-
 	return (
 		<section className="flex flex-col items-center min-h-[70vh] py-8 gap-8 w-full">
 			{/* User Profile */}
 			{user && <UserProfileCard user={user} className="max-w-2xl w-full" />}
 
 			{/* Account Management Tabs */}
-			<Tabs className="max-w-2xl w-full" variant="underlined">
+			<Tabs className="max-w-2xl w-full" variant="solid">
 				<Tab
 					key="overview"
 					className="w-full flex align-center justify-center max-w-2xl"
@@ -77,17 +47,18 @@ export default function AccountPage() {
 					title="Analytics">
 					<BalanceHistory />
 				</Tab>
-				<Tab
-					key="withdraw-deposit"
-					className="w-full flex align-center justify-center max-w-2xl"
-					title="Withdraw / Deposit">
-					<WithdrawDeposit />
-				</Tab>
+
 				<Tab
 					key="bank"
 					className="w-full flex align-center justify-center max-w-2xl"
 					title="Bank Accounts">
 					<BankAccounts />
+				</Tab>
+				<Tab
+					key="subscriptions"
+					className="w-full flex align-center justify-center max-w-2xl"
+					title="Subscriptions">
+					<SubscriptionsList />
 				</Tab>
 				<Tab
 					key="transactions"
@@ -114,12 +85,6 @@ export default function AccountPage() {
 						</div>
 						<RecentTransactions className="max-w-2xl w-full" />
 					</div>
-				</Tab>
-				<Tab
-					key="settings"
-					className="w-full flex align-center justify-center max-w-2xl"
-					title="Settings">
-					<AccountSettings />
 				</Tab>
 			</Tabs>
 		</section>

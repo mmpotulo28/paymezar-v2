@@ -153,6 +153,7 @@ export function SessionManager({ children }: { children: ReactNode }) {
 			"/support/privacy",
 			"/support/cookies",
 			"/sentry-example-page",
+			"/settings", // allow settings page to be public
 		];
 		const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
 		if (loading) return; // Don't redirect while loading

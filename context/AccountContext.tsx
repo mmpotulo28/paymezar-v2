@@ -14,33 +14,47 @@ import { postApi, getUserBalance, getBankAccounts } from "@/lib/helpers";
 interface AccountContextProps {
 	transactions: iTransaction[];
 	loadingTransactions: boolean;
-	error: string | null;
+	transactionsError: string | null;
 	refreshTransactions: () => Promise<void>;
 	balance: { tokens: { name: string; balance: string }[] } | null;
 	loadingBalance: boolean;
 	refreshBalance: () => Promise<void>;
+	balanceError: string | null;
 	bankAccounts: iBankAccount[];
 	loadingBankAccounts: boolean;
 	refreshBankAccounts: () => Promise<void>;
+	bankAccountsError: string | null;
 	charges: iCharge[];
 	loadingCharges: boolean;
 	refreshCharges: () => Promise<void>;
+	chargesError: string | null;
+	subscriptions: any[];
+	loadingSubscriptions: boolean;
+	refreshSubscriptions: () => Promise<void>;
+	subscriptionError: string | null;
 }
 
 const AccountContext = createContext<AccountContextProps>({
 	transactions: [],
 	loadingTransactions: false,
-	error: null,
+	transactionsError: null,
 	refreshTransactions: async () => {},
 	balance: null,
 	loadingBalance: false,
 	refreshBalance: async () => {},
+	balanceError: null,
 	bankAccounts: [],
 	loadingBankAccounts: false,
 	refreshBankAccounts: async () => {},
+	bankAccountsError: null,
 	charges: [],
 	loadingCharges: false,
 	refreshCharges: async () => {},
+	chargesError: null,
+	subscriptions: [],
+	loadingSubscriptions: false,
+	refreshSubscriptions: async () => {},
+	subscriptionError: null,
 });
 
 export function useAccount() {
@@ -51,18 +65,25 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 	const { user } = useSession();
 	const [transactions, setTransactions] = useState<iTransaction[]>([]);
 	const [loadingTransactions, setLoadingTransactions] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const [transactionsError, setTransactionsError] = useState<string | null>(null);
 
 	const [balance, setBalance] = useState<{ tokens: { name: string; balance: string }[] } | null>(
 		null,
 	);
 	const [loadingBalance, setLoadingBalance] = useState(false);
+	const [balanceError, setBalanceError] = useState<string | null>(null);
 
 	const [bankAccounts, setBankAccounts] = useState<iBankAccount[]>([]);
 	const [loadingBankAccounts, setLoadingBankAccounts] = useState(false);
+	const [bankAccountsError, setBankAccountsError] = useState<string | null>(null);
 
 	const [charges, setCharges] = useState<iCharge[]>([]);
 	const [loadingCharges, setLoadingCharges] = useState(false);
+	const [chargesError, setChargesError] = useState<string | null>(null);
+
+	const [subscriptions, setSubscriptions] = useState<any[]>([]);
+	const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
+	const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
 
 	const fetchTransactions = useCallback(async () => {
 		if (!user?.id) {
@@ -70,7 +91,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 			return;
 		}
 		setLoadingTransactions(true);
-		setError(null);
+		setTransactionsError(null);
 		try {
 			const result = await postApi(
 				`https://seal-app-qp9cc.ondigitalocean.app/api/v1/${encodeURIComponent(user.id)}/transactions`,
@@ -86,11 +107,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 				setTransactions(result.data.transactions);
 			} else {
 				setTransactions([]);
-				setError(result.message || "Failed to fetch transactions.");
+				setTransactionsError(result.message || "Failed to fetch transactions.");
 			}
 		} catch (e: any) {
 			setTransactions([]);
-			setError(e.message || "Failed to fetch transactions.");
+			setTransactionsError(e.message || "Failed to fetch transactions.");
 		}
 		setLoadingTransactions(false);
 	}, [user?.id]);
@@ -168,29 +189,69 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 		setLoadingCharges(false);
 	}, [user?.id]);
 
+	const fetchSubscriptions = useCallback(async () => {
+		if (!user?.id) {
+			setSubscriptions([]);
+			return;
+		}
+		setLoadingSubscriptions(true);
+		setSubscriptionError(null);
+		try {
+			const result = await postApi(
+				`/api/subscription/list?liskId=${encodeURIComponent(user.id)}`,
+				{},
+				{ "Content-Type": "application/json" },
+				"GET",
+			);
+
+			if (result.error) {
+				throw new Error(result.message);
+			}
+			if (Array.isArray(result.data?.subscriptions)) {
+				setSubscriptions(result.data.subscriptions);
+			} else if (Array.isArray(result.data)) {
+				setSubscriptions(result.data);
+			} else {
+				setSubscriptions([]);
+			}
+		} catch (error: any) {
+			setSubscriptions([]);
+			setSubscriptionError(error.message || error || "Failed to fetch subscriptions.");
+		}
+		setLoadingSubscriptions(false);
+	}, [user?.id]);
+
 	useEffect(() => {
 		fetchTransactions();
 		fetchBalance();
 		fetchBankAccounts();
 		fetchCharges();
-	}, [fetchTransactions, fetchBalance, fetchBankAccounts, fetchCharges]);
+		fetchSubscriptions();
+	}, [fetchTransactions, fetchBalance, fetchBankAccounts, fetchCharges, fetchSubscriptions]);
 
 	return (
 		<AccountContext.Provider
 			value={{
 				transactions,
 				loadingTransactions,
-				error,
 				refreshTransactions: fetchTransactions,
+				transactionsError,
 				balance,
 				loadingBalance,
 				refreshBalance: fetchBalance,
+				balanceError,
 				bankAccounts,
 				loadingBankAccounts,
 				refreshBankAccounts: fetchBankAccounts,
+				bankAccountsError,
 				charges,
 				loadingCharges,
 				refreshCharges: fetchCharges,
+				chargesError,
+				subscriptions,
+				loadingSubscriptions,
+				refreshSubscriptions: fetchSubscriptions,
+				subscriptionError,
 			}}>
 			{children}
 		</AccountContext.Provider>
