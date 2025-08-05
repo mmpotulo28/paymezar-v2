@@ -2,6 +2,7 @@ import { iUser } from "@/types";
 
 export const dummyUser: iUser = {
 	id: "user-1",
+	supabaseId: "user-1-supabase-id",
 	firstName: "Jane",
 	lastName: "Doe",
 	email: "jane.doe@email.com",
