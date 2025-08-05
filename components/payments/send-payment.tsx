@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Card, CardBody, CardHeader, CardFooter } from "@heroui/react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
-import { HeartFilledIcon } from "@/components/icons";
 import { AlertCircleIcon, QrCode as QrCodeIcon } from "lucide-react";
 import QrCodeScanner from "@/components/qr-code-scanner";
 import { useSession } from "@/context/SessionManager";
@@ -122,7 +121,7 @@ export default function SendPayment() {
 	return (
 		<Card className="w-full max-w-2xl">
 			<CardHeader className="text-xl font-bold flex items-center justify-between">
-				<span>Send ZAR Stablecoin</span>
+				<span>Send ZAR coin</span>
 				<Button
 					variant="flat"
 					color="secondary"

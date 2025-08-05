@@ -104,9 +104,10 @@ export function BankAccounts() {
 						size="sm"
 						variant="flat"
 						color="primary"
+						className="p-0 min-h-0 min-w-10"
 						startContent={<Plus size={16} />}
 						onPress={() => setShowAdd((v) => !v)}>
-						{showAdd ? "Cancel" : "Add"}
+						{showAdd ? "Cancel" : ""}
 					</Button>
 					<Button
 						size="sm"
@@ -187,7 +188,7 @@ export function BankAccounts() {
 							<img
 								src={getBankIcon(acc.bank)}
 								alt={acc.bank}
-								className="w-8 h-8 object-contain rounded bg-white border"
+								className="w-8 h-8 object-contain rounded bg-white"
 								style={{ minWidth: 32, minHeight: 32 }}
 							/>
 							<div className="flex flex-col gap-1">
@@ -199,17 +200,19 @@ export function BankAccounts() {
 								</span>
 							</div>
 						</div>
-						<Chip color="primary" variant="flat" className="text-xs">
-							Added {acc.createdAt.split("T")[0]}
-						</Chip>
-						<Button
-							size="sm"
-							color="danger"
-							variant="flat"
-							onPress={() => handleDeleteAccount(acc.id)}
-							disabled={loading}>
-							<DeleteIcon size={16} />
-						</Button>
+						<div className="flex flex-row items-center justify-around gap-2">
+							<Chip color="default" variant="flat" className="text-xs">
+								Added {acc.createdAt.split("T")[0]}
+							</Chip>
+							<Button
+								size="sm"
+								color="danger"
+								variant="flat"
+								onPress={() => handleDeleteAccount(acc.id)}
+								disabled={loading}>
+								<DeleteIcon size={16} />
+							</Button>
+						</div>
 					</div>
 				))}
 			</CardBody>

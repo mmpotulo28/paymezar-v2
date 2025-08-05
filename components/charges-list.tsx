@@ -1,5 +1,5 @@
 "use client";
-import { Card, CardHeader, CardBody, Chip, Button, Spinner } from "@heroui/react";
+import { Card, CardHeader, CardBody, Chip, Button, Spinner, Snippet } from "@heroui/react";
 import { iCharge } from "@/types";
 import { useAccount } from "@/context/AccountContext";
 import { RefreshCcw } from "lucide-react";
@@ -35,10 +35,12 @@ export function ChargesList({ className = "" }: { className?: string }) {
 					{charges.map((charge) => (
 						<div
 							key={charge.id}
-							className="flex items-center justify-between p-3 rounded-lg border border-default-200 bg-default-50">
+							className="flex lg:items-center items-start gap-2 lg:flex-row flex-col justify-between p-3 rounded-lg border border-default-200 bg-default-50">
 							<div className="flex flex-col gap-1">
 								<span className="font-mono text-xs text-default-600">
-									{charge.paymentId}
+									<Snippet size="sm" hideSymbol variant="flat">
+										{charge.paymentId}
+									</Snippet>
 								</span>
 								<span className="text-xs text-default-500">
 									{charge.note || "-"}

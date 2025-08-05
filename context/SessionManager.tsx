@@ -25,6 +25,25 @@ interface SessionContextProps {
 	accessToken: string | null;
 }
 
+const publicPaths = [
+	"/",
+	"/auth/sign-in",
+	"/auth/sign-up",
+	"/auth/forgot-password",
+	"/auth/reset-password",
+	"/404",
+	"/500",
+	"/support",
+	"/support/contact",
+	"/support/faq",
+	"/support/terms",
+	"/support/privacy",
+	"/support/cookies",
+	"/sentry-example-page",
+	"/settings",
+	"/pricing",
+];
+
 const SessionContext = createContext<SessionContextProps>({
 	user: null,
 	isAuthenticated: false,
@@ -138,23 +157,6 @@ export function SessionManager({ children }: { children: ReactNode }) {
 
 	// Access control: redirect to login if not authenticated and not on home or auth pages
 	useEffect(() => {
-		const publicPaths = [
-			"/",
-			"/auth/sign-in",
-			"/auth/sign-up",
-			"/auth/forgot-password",
-			"/auth/reset-password",
-			"/404",
-			"/500",
-			"/support",
-			"/support/contact",
-			"/support/faq",
-			"/support/terms",
-			"/support/privacy",
-			"/support/cookies",
-			"/sentry-example-page",
-			"/settings", // allow settings page to be public
-		];
 		const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
 		if (loading) return; // Don't redirect while loading
 		if (!user && !isPublic) {

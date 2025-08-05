@@ -1,4 +1,4 @@
-import { Card, CardBody, CardHeader } from "@heroui/react";
+import { Card, CardBody, CardHeader, Snippet } from "@heroui/react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { useSession } from "@/context/SessionManager";
@@ -33,14 +33,11 @@ export function AccountOverview() {
 			</CardHeader>
 			<CardBody className="flex flex-col gap-6">
 				<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-					<div>
+					<div className="w-full">
 						<div className="text-xs text-default-500 font-medium mb-1">Payment Id</div>
-						<Input
-							value={user?.paymentIdentifier || "-"}
-							readOnly
-							size="sm"
-							className="w-full"
-						/>
+						<Snippet size="sm" hideSymbol variant="flat" className="w-full">
+							{user?.paymentIdentifier || "-"}
+						</Snippet>
 					</div>
 					<div>
 						<div className="text-xs text-default-500 font-medium mb-1">Balance</div>
@@ -59,9 +56,11 @@ export function AccountOverview() {
 							)}
 						</div>
 					</div>
-					<div>
+					<div className="w-full">
 						<div className="text-xs text-default-500 font-medium mb-1">Email</div>
-						<Input value={user?.email} readOnly size="sm" className="w-full" />
+						<Snippet size="sm" hideSymbol variant="flat" className="w-full">
+							{user?.email || "-"}
+						</Snippet>
 					</div>
 					<div className="flex items-end">
 						<Button

@@ -122,7 +122,8 @@ export const Navbar = () => {
 											? "danger"
 											: "foreground"
 								}
-								href="#"
+								as={NextLink}
+								href={item.href}
 								size="lg">
 								{item.label}
 							</Link>

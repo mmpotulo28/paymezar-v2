@@ -9,7 +9,7 @@ export function SubscriptionsList() {
 	return (
 		<Card className="w-full max-w-2xl">
 			<CardHeader className="flex items-center justify-between">
-				<span className="text-xl font-bold">Your Subscriptions</span>
+				<span className="text-xl font-bold">Subscriptions</span>
 				<Button
 					size="sm"
 					variant="flat"
