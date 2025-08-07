@@ -38,9 +38,9 @@ export function UserProfileCard({ className = "" }: UserProfileCardProps) {
 		[user.firstName, user.lastName].filter(Boolean).join(" ") ||
 		user.primaryEmailAddress?.emailAddress;
 
-	const hasLiskAccount = user.publicMetadata?.liskAccountCreated;
-	const paymentId = user.publicMetadata?.paymentId as string;
-	const paymentEnabled = user.publicMetadata?.paymentEnabled as boolean;
+	const hasLiskAccount = user.unsafeMetadata?.liskAccountCreated;
+	const paymentId = user.unsafeMetadata?.paymentId as string;
+	const paymentEnabled = user.unsafeMetadata?.paymentEnabled as boolean;
 
 	return (
 		<Card className={`w-full max-w-xl shadow-lg border border-default-200  ${className}`}>

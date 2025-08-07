@@ -117,15 +117,37 @@ export async function createLiskAccount({
  * Returns { error, message, data, status }
  */
 export async function getLiskUserById({ id }: { id: string }) {
-	console.log("Fetching Lisk user by ID::", { id });
-	return await postApi(
-		`https://seal-app-qp9cc.ondigitalocean.app/api/v1/users/${id}`,
-		{},
-		{
-			Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
-		},
-		"GET",
-	);
+	console.log("Fetching Lisk user by ID:", { id });
+	try {
+		const result = await postApi(
+			`https://seal-app-qp9cc.ondigitalocean.app/api/v1/users/${id}`,
+			{},
+			{
+				Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
+			},
+			"GET",
+		);
+
+		// If the user is not found, that's not necessarily an error for our use case
+		if (result.status === 404) {
+			return {
+				error: false,
+				message: "User not found",
+				data: null,
+				status: 404,
+			};
+		}
+
+		return result;
+	} catch (error: any) {
+		console.error("Error fetching Lisk user:", error);
+		return {
+			error: true,
+			message: error.message || "Failed to fetch user",
+			data: null,
+			status: 500,
+		};
+	}
 }
 
 /**
@@ -344,5 +366,5 @@ export function formatClerkError(error: any): string {
  */
 export function needsLiskOnboarding(user: any): boolean {
 	if (!user) return false;
-	return !user.publicMetadata?.liskAccountCreated && !user.publicMetadata?.liskOnboardingSkipped;
+	return !user.unsafeMetadata?.liskAccountCreated && !user.unsafeMetadata?.liskOnboardingSkipped;
 }

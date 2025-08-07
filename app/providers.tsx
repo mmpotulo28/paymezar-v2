@@ -34,8 +34,19 @@ function OnboardingCheck({ children }: { children: React.ReactNode }) {
 		isLoaded &&
 		user &&
 		!isAuthPage &&
-		!user.publicMetadata?.liskAccountCreated &&
-		!user.publicMetadata?.liskOnboardingSkipped;
+		!user.unsafeMetadata?.liskAccountCreated &&
+		!user.unsafeMetadata?.liskOnboardingSkipped;
+
+	// Debug logging
+	if (isLoaded && user) {
+		console.log("Onboarding check:", {
+			userId: user.id,
+			isAuthPage,
+			liskAccountCreated: user.unsafeMetadata?.liskAccountCreated,
+			liskOnboardingSkipped: user.unsafeMetadata?.liskOnboardingSkipped,
+			needsLiskOnboarding,
+		});
+	}
 
 	if (needsLiskOnboarding) {
 		return (

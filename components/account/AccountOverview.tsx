@@ -37,7 +37,7 @@ export function AccountOverview() {
 					<div className="w-full">
 						<div className="text-xs text-default-500 font-medium mb-1">Payment Id</div>
 						<Snippet size="sm" hideSymbol variant="flat" className="w-full">
-							{(user?.publicMetadata?.paymentId as string) || "-"}
+							{(user?.unsafeMetadata?.paymentId as string) || "-"}
 						</Snippet>
 					</div>
 					<div>

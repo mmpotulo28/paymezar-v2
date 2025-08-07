@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, CardFooter } from "@heroui/react";
 import { Button } from "@heroui/button";
 import { AlertCircleIcon, CheckCircle2, Rocket } from "lucide-react";
-import { createLiskAccount } from "@/lib/helpers";
+import { createLiskAccount, getLiskUserById } from "@/lib/helpers";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
@@ -44,6 +44,31 @@ export function LiskOnboarding() {
 		setLoading(true);
 		setError(null);
 		try {
+			// First, check if Lisk user already exists
+			console.log("Checking if Lisk user already exists...");
+			const existingUserResult = await getLiskUserById({ id: user.id });
+
+			if (!existingUserResult.error && existingUserResult.data?.user) {
+				// User already exists in Lisk, just update Clerk metadata
+				console.log("Lisk user already exists:", existingUserResult.data.user);
+
+				await user.update({
+					unsafeMetadata: {
+						liskAccountCreated: true,
+						paymentId: existingUserResult.data.user.paymentIdentifier,
+						paymentEnabled: existingUserResult.data.user.enabledPay,
+					},
+				});
+
+				setSuccess(true);
+				setTimeout(() => {
+					router.refresh(); // Refresh to update user metadata
+				}, 2000);
+				return;
+			}
+
+			// User doesn't exist, create new one
+			console.log("Creating new Lisk user...");
 			const result = await createLiskAccount({
 				id: user.id,
 				email: user.primaryEmailAddress.emailAddress,
@@ -54,7 +79,7 @@ export function LiskOnboarding() {
 			if (!result.error && result.data) {
 				// Update Clerk user metadata with Lisk account info
 				await user.update({
-					publicMetadata: {
+					unsafeMetadata: {
 						liskAccountCreated: true,
 						paymentId: result.data.user.paymentIdentifier,
 						paymentEnabled: result.data.user.enabledPay,
@@ -69,6 +94,7 @@ export function LiskOnboarding() {
 				setError(result.message || "Failed to create Lisk account");
 			}
 		} catch (err: any) {
+			console.error("Lisk account creation error:", err);
 			setError(err.message || "Failed to create Lisk account");
 		} finally {
 			setLoading(false);
@@ -79,7 +105,7 @@ export function LiskOnboarding() {
 		// Mark onboarding as skipped and allow user to continue
 		if (user) {
 			user.update({
-				publicMetadata: {
+				unsafeMetadata: {
 					liskOnboardingSkipped: true,
 				},
 			}).then(() => {
@@ -115,6 +141,10 @@ export function LiskOnboarding() {
 									{user?.primaryEmailAddress?.emailAddress}
 								</div>
 							</div>
+							<div>
+								<span className="text-xs text-default-500">User ID</span>
+								<div className="font-mono text-xs text-default-400">{user?.id}</div>
+							</div>
 						</div>
 
 						<div className="text-center">
@@ -127,16 +157,16 @@ export function LiskOnboarding() {
 						</div>
 
 						{error && (
-							<div className="flex items-center gap-2 text-red-600 text-sm w-full">
+							<div className="flex items-center gap-2 text-red-600 text-sm w-full p-3 bg-red-50 rounded-lg border border-red-200">
 								<AlertCircleIcon size={18} />
 								<span>{error}</span>
 							</div>
 						)}
 
 						{success && (
-							<div className="flex items-center gap-2 text-green-600 text-sm w-full">
+							<div className="flex items-center gap-2 text-green-600 text-sm w-full p-3 bg-green-50 rounded-lg border border-green-200">
 								<CheckCircle2 size={18} />
-								<span>Lisk account created successfully!</span>
+								<span>Lisk account set up successfully!</span>
 							</div>
 						)}
 					</div>
@@ -151,10 +181,10 @@ export function LiskOnboarding() {
 						disabled={loading || success}
 						startContent={<Rocket size={18} />}>
 						{success
-							? "Account Created!"
+							? "Account Ready!"
 							: loading
-								? "Creating Account..."
-								: `Create Blockchain Account${autoCreateCountdown > 0 ? ` (${autoCreateCountdown})` : ""}`}
+								? "Setting up account..."
+								: `Set Up Blockchain Account${autoCreateCountdown > 0 ? ` (${autoCreateCountdown})` : ""}`}
 					</Button>
 
 					{!loading && !success && (
