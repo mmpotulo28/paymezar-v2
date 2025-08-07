@@ -1,21 +1,17 @@
 "use client";
 import { Card, CardBody, Chip, Link } from "@heroui/react";
 import { Avatar } from "@heroui/avatar";
-import { Badge } from "@heroui/badge";
 import { Snippet } from "@heroui/snippet";
 import { Code } from "@heroui/code";
-import { iUser } from "@/types";
 import { Lock } from "lucide-react";
-import { Button } from "@heroui/button";
-import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 
 export interface UserProfileCardProps {
-	user?: iUser | null;
 	className?: string;
 }
 
-export function UserProfileCard({ user, className = "" }: UserProfileCardProps) {
-	const router = useRouter();
+export function UserProfileCard({ className = "" }: UserProfileCardProps) {
+	const { user } = useUser();
 
 	if (!user) {
 		return (
@@ -38,7 +34,9 @@ export function UserProfileCard({ user, className = "" }: UserProfileCardProps) 
 		);
 	}
 
-	const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
+	const fullName =
+		[user.firstName, user.lastName].filter(Boolean).join(" ") ||
+		user.primaryEmailAddress?.emailAddress;
 	return (
 		<Card className={`w-full max-w-xl shadow-lg border border-default-200  ${className}`}>
 			<CardBody className="flex flex-col sm:flex-row items-center gap-6 p-6">
@@ -49,8 +47,7 @@ export function UserProfileCard({ user, className = "" }: UserProfileCardProps) 
 						className="ring-2 ring-primary-400 bg-background"
 					/>
 					<span className="text-xs text-default-400 font-medium">
-						{(user.role && user.role.charAt(0) + user.role.slice(1).toLowerCase()) ||
-							"User"}
+						{user.organizationMemberships[0].role || "User"}
 					</span>
 				</div>
 				<div className="flex-1 min-w-0 w-full">
@@ -62,7 +59,7 @@ export function UserProfileCard({ user, className = "" }: UserProfileCardProps) 
 						<div className="flex flex-col gap-1">
 							<span className="text-xs text-default-500 font-medium">Email</span>
 							<span className="text-sm text-default-700 truncate">
-								{user.email || (
+								{user.primaryEmailAddress?.emailAddress || (
 									<span className="italic text-default-400">Not provided</span>
 								)}
 							</span>
@@ -74,7 +71,9 @@ export function UserProfileCard({ user, className = "" }: UserProfileCardProps) 
 								variant="bordered"
 								className="text-xs truncate max-w-full">
 								<span>
-									<Code color="primary">{user.paymentIdentifier || "-"}</Code>
+									<Code color="primary">
+										{(user.publicMetadata["paymentId"] as string) || "-"}
+									</Code>
 								</span>
 							</Snippet>
 						</div>
@@ -83,7 +82,7 @@ export function UserProfileCard({ user, className = "" }: UserProfileCardProps) 
 								Payment Enabled
 							</span>
 							<span className="text-xs text-default-700 truncate">
-								{user.enabledPay ? (
+								{user.publicMetadata["paymentEnabled"] ? (
 									<span className="font-semibold">Enabled</span>
 								) : (
 									<span className="italic text-default-400">Not set</span>
@@ -92,8 +91,12 @@ export function UserProfileCard({ user, className = "" }: UserProfileCardProps) 
 						</div>
 						<div className="flex flex-col gap-1">
 							<span className="text-xs text-default-500 font-medium">Status</span>
-							<Chip color={user.enabledPay ? "primary" : "default"} variant="flat">
-								{user.enabledPay ? "Active" : "Inactive"}
+							<Chip
+								color={
+									user.publicMetadata["paymentEnabled"] ? "primary" : "default"
+								}
+								variant="flat">
+								{user.publicMetadata["paymentEnabled"] ? "Active" : "Inactive"}
 							</Chip>
 						</div>
 					</div>

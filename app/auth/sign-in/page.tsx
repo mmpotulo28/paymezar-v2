@@ -5,10 +5,8 @@ import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
 import { AlertCircleIcon, ShieldCheck, Lock, CheckCircle2, LogIn, KeyRound } from "lucide-react";
-import { postApi } from "@/lib/helpers";
 import { useRouter } from "next/navigation";
-import { useSession } from "@/context/SessionManager";
-import Cookies from "js-cookie";
+import { useSignIn, useUser } from "@clerk/nextjs";
 
 export default function SignInPage() {
 	const [form, setForm] = useState({
@@ -19,14 +17,15 @@ export default function SignInPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState(false);
 	const router = useRouter();
-	const { setSession, isAuthenticated, loading: sessionLoading } = useSession();
+	const { signIn } = useSignIn();
+	const { user } = useUser();
 
 	useEffect(() => {
 		// If already authenticated, redirect to account page
-		if (isAuthenticated && !sessionLoading) {
+		if (user) {
 			router.replace("/account");
 		}
-	}, [isAuthenticated, sessionLoading, router]);
+	}, [user, router]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setForm({ ...form, [e.target.name]: e.target.value });
@@ -38,35 +37,76 @@ export default function SignInPage() {
 		setError(null);
 		setSuccess(false);
 
-		try {
-			const result = await postApi("/api/auth/sign-in", form);
-			console.log("Sign in result", result);
-			if (!result.error) {
-				setSuccess(true);
-				const userObj = result.data.user || result.data;
-				await setSession(userObj);
+		if (!form.email || !form.password) {
+			setError("Email and password are required");
+			setLoading(false);
+			return;
+		}
 
-				// Redirect logic: use redirect param if present, else fallback to /account
+		if (!signIn) {
+			setError("Sign in is not available");
+			setLoading(false);
+			return;
+		}
+
+		try {
+			const result = await signIn.create({
+				identifier: form.email,
+				password: form.password,
+			});
+
+			if (result.status === "complete") {
+				setSuccess(true);
+				// Get redirect URL from query params
 				const params = new URLSearchParams(window.location.search);
 				const redirect = params.get("redirect");
+
 				setTimeout(() => {
 					if (redirect) {
-						console.log("Redirecting to", redirect);
-						// router.replace(redirect);
+						router.replace(decodeURIComponent(redirect));
 					} else {
-						console.log("Redirecting to /account");
-						// router.replace("/account");
+						router.replace("/account");
 					}
-				}, 1000);
+				}, 500);
+			} else if (result.status === "needs_second_factor") {
+				setError("Two-factor authentication required. Please complete 2FA setup.");
+			} else if (result.status === "needs_identifier") {
+				setError("Please provide a valid email address.");
+			} else if (result.status === "abandoned") {
+				setError("Sign in session was abandoned. Please try again.");
+			} else if (result.status === "needs_first_factor") {
+				setError("Please complete the sign-in process.");
 			} else {
-				console.error("Sign in failed", result.message);
-				setError(result.message || "Sign in failed");
-				setSuccess(false);
+				setError("Sign in failed. Please check your credentials and try again.");
 			}
 		} catch (err: any) {
 			setSuccess(false);
 			console.error("Sign in error", err);
-			setError(err.message || "Sign in failed");
+
+			// Handle specific Clerk errors
+			if (err.errors && Array.isArray(err.errors)) {
+				const errorMessages = err.errors.map((error: any) => {
+					if (error.code === "form_identifier_not_found") {
+						return "No account found with this email address.";
+					}
+					if (error.code === "form_password_incorrect") {
+						return "Incorrect password. Please try again.";
+					}
+					if (error.code === "too_many_requests") {
+						return "Too many sign in attempts. Please wait before trying again.";
+					}
+					if (error.code === "user_locked") {
+						return "Your account has been locked. Please contact support.";
+					}
+					if (error.code === "session_exists") {
+						return "You are already signed in.";
+					}
+					return error.message || "Sign in failed.";
+				});
+				setError(errorMessages[0]);
+			} else {
+				setError(err.message || "Sign in failed");
+			}
 		} finally {
 			setLoading(false);
 		}

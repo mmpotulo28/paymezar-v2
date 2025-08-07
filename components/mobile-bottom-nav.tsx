@@ -2,7 +2,6 @@
 import { usePathname, useRouter } from "next/navigation";
 import { Home, CreditCard, User, HelpCircle, MoreHorizontal, Settings, Info } from "lucide-react";
 import { useState } from "react";
-import { siteConfig } from "@/config/site";
 import { Listbox, ListboxItem } from "@heroui/react";
 
 // Utility function for conditional classNames (since '@/lib/utils' is missing)

@@ -1,13 +1,23 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Card, CardBody, CardHeader, CardFooter, Chip } from "@heroui/react";
+import { Card, CardBody, CardHeader, CardFooter, Chip, Checkbox } from "@heroui/react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
-import { AlertCircleIcon, ShieldCheck, Lock, CheckCircle2, UserPlus, KeyRound } from "lucide-react";
-import Cookies from "js-cookie";
-import { createLiskAccount, postApi } from "@/lib/helpers";
+import {
+	AlertCircleIcon,
+	ShieldCheck,
+	Lock,
+	CheckCircle2,
+	UserPlus,
+	KeyRound,
+	Mail,
+	Phone,
+	User,
+} from "lucide-react";
+import { createLiskAccount } from "@/lib/helpers";
 import { useRouter } from "next/navigation";
+import { useSignUp, useUser } from "@clerk/nextjs";
 
 export default function SignUpPage() {
 	const [form, setForm] = useState({
@@ -15,17 +25,20 @@ export default function SignUpPage() {
 		lastName: "",
 		email: "",
 		password: "",
+		phoneNumber: "",
+		username: "",
 	});
+	const [legalAccepted, setLegalAccepted] = useState(false);
+	const [verificationCode, setVerificationCode] = useState("");
 	const [loading, setLoading] = useState(false);
+	const [verifyLoading, setVerifyLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState(false);
-	const [step, setStep] = useState<1 | 2>(1);
+	const [step, setStep] = useState<1 | 2 | 3>(1); // 1: signup, 2: verify email, 3: create lisk
 	const [userInfo, setUserInfo] = useState<{
 		email: string;
 		firstName: string;
 		lastName: string;
-		apiKey?: string;
-		apiKeyRow?: any;
 		liskId?: string;
 	} | null>(null);
 	const [liskLoading, setLiskLoading] = useState(false);
@@ -33,10 +46,12 @@ export default function SignUpPage() {
 	const [liskUser, setLiskUser] = useState<any>(null);
 	const [autoCreateCountdown, setAutoCreateCountdown] = useState(5);
 	const router = useRouter();
+	const { signUp, isLoaded } = useSignUp();
+	const { user } = useUser();
 
 	// Auto-create Lisk account after 5 seconds if not clicked
 	useEffect(() => {
-		if (step === 2 && userInfo && !userInfo.liskId) {
+		if (step === 3 && userInfo && !userInfo.liskId) {
 			setAutoCreateCountdown(5);
 			const interval = setInterval(() => {
 				setAutoCreateCountdown((prev) => {
@@ -53,16 +68,24 @@ export default function SignUpPage() {
 	}, [step, userInfo]);
 
 	// Redirect to sign-in page after Lisk account creation and no errors
-	const shouldRedirectToSignIn = step === 2 && !!userInfo?.liskId && !liskError && !liskLoading;
+	const shouldRedirectToSignIn = step === 3 && !!userInfo?.liskId && !liskError && !liskLoading;
 
 	useEffect(() => {
+		let timeout: NodeJS.Timeout;
 		if (shouldRedirectToSignIn) {
-			const timeout = setTimeout(() => {
+			timeout = setTimeout(() => {
 				router.push("/auth/sign-in");
 			}, 1500);
-			return () => clearTimeout(timeout);
 		}
+		return () => clearTimeout(timeout);
 	}, [shouldRedirectToSignIn, router]);
+
+	// If already authenticated, redirect to account page
+	useEffect(() => {
+		if (user) {
+			router.replace("/account");
+		}
+	}, [user, router]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setForm({ ...form, [e.target.name]: e.target.value });
@@ -72,37 +95,188 @@ export default function SignUpPage() {
 		e.preventDefault();
 		setLoading(true);
 		setError(null);
+
+		if (!isLoaded || !signUp) {
+			setError("Sign up is not available");
+			setLoading(false);
+			return;
+		}
+
+		if (!legalAccepted) {
+			setError("You must accept the terms and conditions to continue");
+			setLoading(false);
+			return;
+		}
+
 		try {
-			const result = await postApi("/api/auth/sign-up", { user: form });
-			if (!result.error && result.data?.user) {
-				Cookies.set("paymezar_user", JSON.stringify(result.data.user), { expires: 7 });
-				setUserInfo(result.data.user);
+			// Create user with Clerk including all required fields
+			const result = await signUp.create({
+				emailAddress: form.email,
+				password: form.password,
+				firstName: form.firstName,
+				lastName: form.lastName,
+				username: form.username,
+			});
+
+			// Check the status of the sign-up attempt
+			if (result.status === "missing_requirements") {
+				// Check if there are actually missing fields
+				if (result.missingFields && result.missingFields.length > 0) {
+					setError(
+						`Please complete the following fields: ${result.missingFields.join(", ")}`,
+					);
+					setLoading(false);
+					return;
+				}
+
+				// If no missing fields but status is missing_requirements,
+				// it likely means email verification is needed
+				if (result.unverifiedFields?.includes("email_address")) {
+					// Send verification email
+					await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+
+					setUserInfo({
+						email: form.email,
+						firstName: form.firstName,
+						lastName: form.lastName,
+					});
+					setSuccess(true);
+					setStep(2);
+				} else {
+					setError("Account creation incomplete. Please try again.");
+					setLoading(false);
+					return;
+				}
+			} else if (result.status === "abandoned") {
+				setError("Sign up session was abandoned. Please try again.");
+				setLoading(false);
+				return;
+			} else if (result.status === "complete") {
+				// Account is fully created and verified
+				setUserInfo({
+					email: form.email,
+					firstName: form.firstName,
+					lastName: form.lastName,
+				});
 				setSuccess(true);
-				setStep(2);
+				setStep(3); // Skip email verification, go directly to Lisk account creation
 			} else {
-				setError(result.message || "Sign up failed");
+				// Handle other statuses or unverified email
+				if (result.unverifiedFields?.includes("email_address")) {
+					// Send verification email
+					await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+
+					setUserInfo({
+						email: form.email,
+						firstName: form.firstName,
+						lastName: form.lastName,
+					});
+					setSuccess(true);
+					setStep(2);
+				} else {
+					setError("Unable to proceed with sign up. Please try again.");
+					setLoading(false);
+					return;
+				}
 			}
 		} catch (err: any) {
-			setError(err.message || "Sign up failed");
+			console.error("Sign up error:", err);
+
+			// Handle specific Clerk errors
+			if (err.errors && Array.isArray(err.errors)) {
+				const errorMessages = err.errors.map((error: any) => {
+					if (error.code === "form_identifier_exists") {
+						return "An account with this email already exists.";
+					}
+					if (error.code === "form_username_exists") {
+						return "This username is already taken.";
+					}
+					if (error.code === "form_phone_number_exists") {
+						return "An account with this phone number already exists.";
+					}
+					if (error.code === "form_password_pwned") {
+						return "This password has been found in a data breach. Please choose a different password.";
+					}
+					if (error.code === "form_password_too_common") {
+						return "This password is too common. Please choose a more secure password.";
+					}
+					if (error.code === "form_param_format_invalid") {
+						return `Invalid format for ${error.meta?.paramName || "field"}.`;
+					}
+					return error.message || "An error occurred during sign up.";
+				});
+				setError(errorMessages[0]);
+			} else {
+				setError(err.message || "Sign up failed. Please try again.");
+			}
 		} finally {
 			setLoading(false);
 		}
 	};
 
+	const handleVerifyEmail = async (e: React.FormEvent) => {
+		e.preventDefault();
+		setVerifyLoading(true);
+		setError(null);
+
+		if (!signUp) {
+			setError("Verification not available");
+			setVerifyLoading(false);
+			return;
+		}
+
+		try {
+			const completeSignUp = await signUp.attemptEmailAddressVerification({
+				code: verificationCode,
+			});
+
+			if (completeSignUp.status === "complete") {
+				setStep(3);
+			} else if (completeSignUp.status === "abandoned") {
+				setError("Verification session was abandoned. Please start over.");
+				setTimeout(() => {
+					setStep(1);
+					setUserInfo(null);
+					setVerificationCode("");
+				}, 2000);
+			} else {
+				setError("Verification failed. Please check your code and try again.");
+			}
+		} catch (err: any) {
+			console.error("Verification error:", err);
+
+			if (err.errors && Array.isArray(err.errors)) {
+				const errorMessages = err.errors.map((error: any) => {
+					if (error.code === "form_code_incorrect") {
+						return "The verification code is incorrect.";
+					}
+					if (error.code === "verification_expired") {
+						return "The verification code has expired. Please request a new one.";
+					}
+					if (error.code === "verification_failed") {
+						return "Verification failed. Please try again.";
+					}
+					return error.message || "Verification failed.";
+				});
+				setError(errorMessages[0]);
+			} else {
+				setError(err.message || "Verification failed");
+			}
+		} finally {
+			setVerifyLoading(false);
+		}
+	};
+
 	const handleCreateLiskAccount = async () => {
 		const isInvalid =
-			!userInfo?.apiKey ||
-			liskLoading ||
-			userInfo.liskId ||
-			!userInfo.email ||
-			!userInfo.firstName ||
-			!userInfo.lastName;
+			!user || liskLoading || !userInfo?.email || !userInfo?.firstName || !userInfo?.lastName;
 		if (isInvalid) return;
 
 		setLiskLoading(true);
 		setLiskError(null);
 		try {
 			const result = await createLiskAccount({
+				id: user?.id,
 				email: userInfo.email || "",
 				firstName: userInfo.firstName || "",
 				lastName: userInfo.lastName || "",
@@ -110,14 +284,19 @@ export default function SignUpPage() {
 
 			if (!result.error && result.data) {
 				setLiskUser(result.data);
-				const linkResult = await postApi("/api/auth/link-lisk-id", {
-					apiKey: userInfo.apiKey,
-					liskId: result.data.user.id,
-				});
-				const updatedUser = { ...userInfo, liskId: result.data.user.id };
-				Cookies.set("paymezar_user", JSON.stringify(updatedUser), { expires: 7 });
+
+				// Update Clerk user metadata with Lisk ID
+				if (user) {
+					await user.update({
+						unsafeMetadata: {
+							paymentId: result.data.user.paymentIdentifier,
+							paymentEnabled: result.data.user.enabledPay,
+						},
+					});
+				}
+
+				const updatedUser = { ...userInfo };
 				setUserInfo(updatedUser);
-				if (linkResult.error) setLiskError(linkResult.message);
 			} else {
 				setLiskError(result.message || "Failed to create Lisk account");
 			}
@@ -186,6 +365,7 @@ export default function SignUpPage() {
 											required
 											variant="bordered"
 											className="flex-1"
+											startContent={<User size={16} />}
 										/>
 										<Input
 											label="Last Name"
@@ -196,8 +376,20 @@ export default function SignUpPage() {
 											required
 											variant="bordered"
 											className="flex-1"
+											startContent={<User size={16} />}
 										/>
 									</div>
+									<Input
+										label="Username"
+										name="username"
+										value={form.username}
+										onChange={handleChange}
+										autoComplete="username"
+										required
+										variant="bordered"
+										startContent={<User size={16} />}
+										description="Choose a unique username"
+									/>
 									<Input
 										label="Email"
 										type="email"
@@ -207,6 +399,19 @@ export default function SignUpPage() {
 										autoComplete="email"
 										required
 										variant="bordered"
+										startContent={<Mail size={16} />}
+									/>
+									<Input
+										label="Phone Number"
+										type="tel"
+										name="phoneNumber"
+										value={form.phoneNumber}
+										onChange={handleChange}
+										autoComplete="tel"
+										required
+										variant="bordered"
+										startContent={<Phone size={16} />}
+										description="Include country code (e.g., +27)"
 									/>
 									<Input
 										label="Password"
@@ -217,14 +422,30 @@ export default function SignUpPage() {
 										autoComplete="new-password"
 										required
 										variant="bordered"
+										startContent={<Lock size={16} />}
 									/>
+									<Checkbox
+										isSelected={legalAccepted}
+										onValueChange={setLegalAccepted}
+										size="sm"
+										className="mt-2">
+										I accept the{" "}
+										<Link href="/support/terms" color="primary" size="sm">
+											Terms & Conditions
+										</Link>{" "}
+										and{" "}
+										<Link href="/support/privacy" color="primary" size="sm">
+											Privacy Policy
+										</Link>
+									</Checkbox>
 									<Button
 										color="primary"
 										type="submit"
 										isLoading={loading}
 										className="w-full mt-2"
 										radius="full"
-										startContent={<UserPlus size={18} />}>
+										startContent={<UserPlus size={18} />}
+										disabled={!legalAccepted}>
 										Sign Up
 									</Button>
 									{error && (
@@ -234,7 +455,7 @@ export default function SignUpPage() {
 									)}
 									{success && (
 										<div className="text-green-600 text-center">
-											Account created!
+											Account created! Check your email for verification.
 										</div>
 									)}
 								</form>
@@ -255,13 +476,56 @@ export default function SignUpPage() {
 					{step === 2 && userInfo && (
 						<>
 							<CardHeader className="text-2xl font-bold text-center mb-2">
-								Step 2: Create your Lisk Account
+								Verify your email
+							</CardHeader>
+							<CardBody>
+								<div className="flex flex-col gap-4 items-center">
+									<Mail size={48} className="text-primary" />
+									<p className="text-default-700 text-center">
+										We've sent a verification code to{" "}
+										<strong>{userInfo.email}</strong>. Please enter the code
+										below to continue.
+									</p>
+									<form
+										onSubmit={handleVerifyEmail}
+										className="flex flex-col gap-4 w-full max-w-xs">
+										<Input
+											label="Verification Code"
+											value={verificationCode}
+											onChange={(e) => setVerificationCode(e.target.value)}
+											required
+											variant="bordered"
+											className="text-center"
+										/>
+										<Button
+											color="primary"
+											type="submit"
+											isLoading={verifyLoading}
+											className="w-full"
+											radius="full"
+											startContent={<CheckCircle2 size={18} />}>
+											Verify Email
+										</Button>
+									</form>
+									{error && (
+										<div className="text-red-600 text-xs text-center">
+											{error}
+										</div>
+									)}
+								</div>
+							</CardBody>
+						</>
+					)}
+					{step === 3 && userInfo && (
+						<>
+							<CardHeader className="text-2xl font-bold text-center mb-2">
+								Step 3: Create your Lisk Account
 							</CardHeader>
 							<CardBody>
 								<div className="flex flex-col gap-4 items-center">
 									<p className="text-default-700 text-center">
-										Your PayMe-Zar account is ready! Now, let's create your Lisk
-										blockchain account to enable ZAR stablecoin payments.
+										Email verified! Now, let's create your Lisk blockchain
+										account to enable ZAR stablecoin payments.
 									</p>
 									<div className="w-full max-w-xs bg-default-50 border rounded-lg p-4 flex flex-col gap-2">
 										<div>
@@ -286,28 +550,6 @@ export default function SignUpPage() {
 												{userInfo.lastName}
 											</div>
 										</div>
-										<div>
-											<span className="text-xs text-default-500">
-												API Key
-											</span>
-											<div className="font-mono text-xs break-all">
-												{userInfo.apiKey || (
-													<span className="italic text-default-400">
-														Not generated
-													</span>
-												)}
-											</div>
-										</div>
-										{userInfo.apiKeyRow && (
-											<div>
-												<span className="text-xs text-default-500">
-													API Key Status
-												</span>
-												<div className="font-mono text-xs">
-													{userInfo.apiKeyRow.status}
-												</div>
-											</div>
-										)}
 										{userInfo.liskId && (
 											<div>
 												<span className="text-xs text-default-500">

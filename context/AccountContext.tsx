@@ -8,7 +8,7 @@ import React, {
 	useCallback,
 } from "react";
 import { iTransaction, iBankAccount, iCharge } from "@/types";
-import { useSession } from "./SessionManager";
+import { useUser } from "@clerk/nextjs";
 import { postApi, getUserBalance, getBankAccounts } from "@/lib/helpers";
 
 interface AccountContextProps {
@@ -62,7 +62,7 @@ export function useAccount() {
 }
 
 export function AccountProvider({ children }: { children: ReactNode }) {
-	const { user } = useSession();
+	const { user } = useUser();
 	const [transactions, setTransactions] = useState<iTransaction[]>([]);
 	const [loadingTransactions, setLoadingTransactions] = useState(false);
 	const [transactionsError, setTransactionsError] = useState<string | null>(null);

@@ -63,15 +63,18 @@ export async function createApiToken(secretToken: string, description?: string) 
  * Creates a Lisk user account using the stablecoin API.
  */
 export async function createLiskAccount({
+	id,
 	email,
 	firstName,
 	lastName,
 }: {
+	id: string;
 	email: string;
 	firstName: string;
 	lastName: string;
 }) {
 	const userData = {
+		id,
 		email,
 		firstName,
 		lastName,
@@ -89,13 +92,13 @@ export async function createLiskAccount({
 }
 
 /**
- * Fetches a Lisk user by liskId using the API key.
+ * Fetches a Lisk user by id using the API key.
  * Returns { error, message, data, status }
  */
-export async function getLiskUserById({ liskId }: { liskId: string }) {
-	console.log("Fetching Lisk user by ID::", { liskId });
+export async function getLiskUserById({ id }: { id: string }) {
+	console.log("Fetching Lisk user by ID::", { id });
 	return await postApi(
-		`https://seal-app-qp9cc.ondigitalocean.app/api/v1/users/${liskId}`,
+		`https://seal-app-qp9cc.ondigitalocean.app/api/v1/users/${id}`,
 		{},
 		{
 			Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
@@ -252,4 +255,62 @@ export async function deleteBankAccount({ userId }: { userId: string }) {
 		},
 		"DELETE",
 	);
+}
+
+/**
+ * Formats Clerk error messages into user-friendly text
+ */
+export function formatClerkError(error: any): string {
+	if (!error) return "An unexpected error occurred";
+
+	// Handle array of errors
+	if (error.errors && Array.isArray(error.errors)) {
+		const firstError = error.errors[0];
+		if (!firstError) return "An unexpected error occurred";
+
+		// Map common error codes to user-friendly messages
+		const errorMap: Record<string, string> = {
+			form_identifier_exists: "An account with this email already exists.",
+			form_username_exists: "This username is already taken.",
+			form_phone_number_exists: "An account with this phone number already exists.",
+			form_password_pwned:
+				"This password has been found in a data breach. Please choose a different password.",
+			form_password_too_common:
+				"This password is too common. Please choose a more secure password.",
+			form_identifier_not_found: "No account found with this email address.",
+			form_password_incorrect: "Incorrect password. Please try again.",
+			form_code_incorrect: "The verification code is incorrect.",
+			verification_expired: "The verification code has expired. Please request a new one.",
+			verification_failed: "Verification failed. Please try again.",
+			too_many_requests: "Too many attempts. Please wait before trying again.",
+			user_locked: "Your account has been locked. Please contact support.",
+			session_exists: "You are already signed in.",
+		};
+
+		const userFriendlyMessage = errorMap[firstError.code];
+		if (userFriendlyMessage) return userFriendlyMessage;
+
+		// If no mapping found, use the error message
+		return firstError.message || "An error occurred. Please try again.";
+	}
+
+	// Handle single error object
+	if (error.code && typeof error.code === "string") {
+		const errorMap: Record<string, string> = {
+			form_identifier_exists: "An account with this email already exists.",
+			form_username_exists: "This username is already taken.",
+			form_phone_number_exists: "An account with this phone number already exists.",
+			form_password_pwned:
+				"This password has been found in a data breach. Please choose a different password.",
+			form_password_too_common:
+				"This password is too common. Please choose a more secure password.",
+			form_identifier_not_found: "No account found with this email address.",
+			form_password_incorrect: "Incorrect password. Please try again.",
+		};
+
+		return errorMap[error.code] || error.message || "An error occurred. Please try again.";
+	}
+
+	// Fallback to error message or generic message
+	return error.message || "An unexpected error occurred";
 }

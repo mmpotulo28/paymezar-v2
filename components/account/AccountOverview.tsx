@@ -4,10 +4,11 @@ import { Button } from "@heroui/button";
 import { useSession } from "@/context/SessionManager";
 import { RefreshCcw } from "lucide-react";
 import { useAccount } from "@/context/AccountContext";
+import { useUser } from "@clerk/nextjs";
 import { useState } from "react";
 
 export function AccountOverview() {
-	const { user, refreshUser } = useSession();
+	const { user } = useUser();
 	const { balance, loadingBalance, refreshBalance } = useAccount();
 	const [refreshing, setRefreshing] = useState(false);
 
@@ -36,7 +37,7 @@ export function AccountOverview() {
 					<div className="w-full">
 						<div className="text-xs text-default-500 font-medium mb-1">Payment Id</div>
 						<Snippet size="sm" hideSymbol variant="flat" className="w-full">
-							{user?.paymentIdentifier || "-"}
+							{(user?.publicMetadata?.paymentId as string) || "-"}
 						</Snippet>
 					</div>
 					<div>
@@ -59,7 +60,7 @@ export function AccountOverview() {
 					<div className="w-full">
 						<div className="text-xs text-default-500 font-medium mb-1">Email</div>
 						<Snippet size="sm" hideSymbol variant="flat" className="w-full">
-							{user?.email || "-"}
+							{user?.primaryEmailAddress?.emailAddress || "-"}
 						</Snippet>
 					</div>
 					<div className="flex items-end">

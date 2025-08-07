@@ -3,20 +3,17 @@ import { Button } from "@heroui/button";
 import { Tabs, Tab } from "@heroui/tabs";
 import { UserProfileCard } from "@/components/user-profile-card";
 import { RecentTransactions } from "@/components/recent-transactions";
-import { useTheme } from "next-themes";
-import { useState } from "react";
 import { Download, FileText } from "lucide-react";
 
-import { useSession } from "@/context/SessionManager";
 import { AccountOverview } from "@/components/account/AccountOverview";
 import { BalanceHistory } from "@/components/account/BalanceHistory";
 import { BankAccounts } from "@/components/account/BankAccounts";
-import { WithdrawDeposit } from "@/components/account/WithdrawDeposit";
 import { SubscriptionsList } from "@/components/account/SubscriptionsList";
-import { useAccount } from "@/context/AccountContext";
+import { useUser } from "@clerk/nextjs";
+import { User } from "@sentry/nextjs";
 
 export default function AccountPage() {
-	const { user } = useSession();
+	const { user } = useUser();
 
 	const handleExportTransactions = () => {
 		// Simulate export
@@ -31,7 +28,7 @@ export default function AccountPage() {
 	return (
 		<section className="flex flex-col items-center min-h-[70vh] py-8 gap-8 w-full">
 			{/* User Profile */}
-			{user && <UserProfileCard user={user} className="max-w-2xl w-full" />}
+			{user && <UserProfileCard className="max-w-2xl w-full" />}
 
 			{/* Account Management Tabs */}
 			<Tabs className="max-w-2xl w-full" variant="solid">
