@@ -14,6 +14,7 @@ import { Input } from "@heroui/input";
 import { link as linkStyles } from "@heroui/theme";
 import NextLink from "next/link";
 import clsx from "clsx";
+import { UserButton } from "@clerk/nextjs";
 
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
@@ -92,12 +93,11 @@ export const Navbar = () => {
 					<Button
 						isExternal
 						as={Link}
-						className="text-sm font-normal text-default-600 bg-default-100"
+						className="text-sm font-normal text-default-600 bg-default-100 min-w-10 mx-4"
 						href={siteConfig.links.sponsor}
 						startContent={<HeartFilledIcon className="text-danger" />}
-						variant="flat">
-						Sponsor
-					</Button>
+						variant="flat"></Button>
+					<UserButton className="mx-4" />
 				</NavbarItem>
 			</NavbarContent>
 
@@ -109,6 +109,7 @@ export const Navbar = () => {
 					<HeartFilledIcon className="text-danger" />
 				</Link>
 				<ThemeSwitch />
+				<UserButton className="mx-4" />
 			</NavbarContent>
 		</HeroUINavbar>
 	);
