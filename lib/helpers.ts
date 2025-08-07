@@ -73,6 +73,17 @@ export async function createLiskAccount({
 	firstName: string;
 	lastName: string;
 }) {
+	console.log("Creating Lisk account with data:", { id, email, firstName, lastName });
+
+	if (!id || !email || !firstName || !lastName) {
+		return {
+			error: true,
+			message: "Missing required fields for Lisk account creation",
+			data: null,
+			status: 400,
+		};
+	}
+
 	const userData = {
 		id,
 		email,
@@ -85,10 +96,20 @@ export async function createLiskAccount({
 		updatedAt: new Date().toISOString(),
 	};
 
-	return await postApi("https://seal-app-qp9cc.ondigitalocean.app/api/v1/users", userData, {
-		"Content-Type": "application/json",
-		Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
-	});
+	console.log("Sending Lisk user data:", userData);
+
+	const result = await postApi(
+		"https://seal-app-qp9cc.ondigitalocean.app/api/v1/users",
+		userData,
+		{
+			"Content-Type": "application/json",
+			Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
+		},
+	);
+
+	console.log("Lisk account creation result:", result);
+
+	return result;
 }
 
 /**
@@ -270,6 +291,8 @@ export function formatClerkError(error: any): string {
 
 		// Map common error codes to user-friendly messages
 		const errorMap: Record<string, string> = {
+			session_exists:
+				"You are already signed in. Please sign out first if you want to create a new account.",
 			form_identifier_exists: "An account with this email already exists.",
 			form_username_exists: "This username is already taken.",
 			form_phone_number_exists: "An account with this phone number already exists.",
@@ -284,7 +307,6 @@ export function formatClerkError(error: any): string {
 			verification_failed: "Verification failed. Please try again.",
 			too_many_requests: "Too many attempts. Please wait before trying again.",
 			user_locked: "Your account has been locked. Please contact support.",
-			session_exists: "You are already signed in.",
 		};
 
 		const userFriendlyMessage = errorMap[firstError.code];
@@ -297,6 +319,8 @@ export function formatClerkError(error: any): string {
 	// Handle single error object
 	if (error.code && typeof error.code === "string") {
 		const errorMap: Record<string, string> = {
+			session_exists:
+				"You are already signed in. Please sign out first if you want to create a new account.",
 			form_identifier_exists: "An account with this email already exists.",
 			form_username_exists: "This username is already taken.",
 			form_phone_number_exists: "An account with this phone number already exists.",
@@ -313,4 +337,12 @@ export function formatClerkError(error: any): string {
 
 	// Fallback to error message or generic message
 	return error.message || "An unexpected error occurred";
+}
+
+/**
+ * Checks if user needs Lisk onboarding
+ */
+export function needsLiskOnboarding(user: any): boolean {
+	if (!user) return false;
+	return !user.publicMetadata?.liskAccountCreated && !user.publicMetadata?.liskOnboardingSkipped;
 }

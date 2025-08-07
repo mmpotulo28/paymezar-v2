@@ -15,7 +15,6 @@ import {
 	Phone,
 	User,
 } from "lucide-react";
-import { createLiskAccount } from "@/lib/helpers";
 import { useRouter } from "next/navigation";
 import { useSignUp, useUser } from "@clerk/nextjs";
 
@@ -34,51 +33,15 @@ export default function SignUpPage() {
 	const [verifyLoading, setVerifyLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState(false);
-	const [step, setStep] = useState<1 | 2 | 3>(1); // 1: signup, 2: verify email, 3: create lisk
+	const [step, setStep] = useState<1 | 2>(1); // 1: signup, 2: verify email
 	const [userInfo, setUserInfo] = useState<{
 		email: string;
 		firstName: string;
 		lastName: string;
-		liskId?: string;
 	} | null>(null);
-	const [liskLoading, setLiskLoading] = useState(false);
-	const [liskError, setLiskError] = useState<string | null>(null);
-	const [liskUser, setLiskUser] = useState<any>(null);
-	const [autoCreateCountdown, setAutoCreateCountdown] = useState(5);
 	const router = useRouter();
 	const { signUp, isLoaded } = useSignUp();
 	const { user } = useUser();
-
-	// Auto-create Lisk account after 5 seconds if not clicked
-	useEffect(() => {
-		if (step === 3 && userInfo && !userInfo.liskId) {
-			setAutoCreateCountdown(5);
-			const interval = setInterval(() => {
-				setAutoCreateCountdown((prev) => {
-					if (prev <= 1) {
-						clearInterval(interval);
-						handleCreateLiskAccount();
-						return 0;
-					}
-					return prev - 1;
-				});
-			}, 1000);
-			return () => clearInterval(interval);
-		}
-	}, [step, userInfo]);
-
-	// Redirect to sign-in page after Lisk account creation and no errors
-	const shouldRedirectToSignIn = step === 3 && !!userInfo?.liskId && !liskError && !liskLoading;
-
-	useEffect(() => {
-		let timeout: NodeJS.Timeout;
-		if (shouldRedirectToSignIn) {
-			timeout = setTimeout(() => {
-				router.push("/auth/sign-in");
-			}, 1500);
-		}
-		return () => clearTimeout(timeout);
-	}, [shouldRedirectToSignIn, router]);
 
 	// If already authenticated, redirect to account page
 	useEffect(() => {
@@ -152,14 +115,11 @@ export default function SignUpPage() {
 				setLoading(false);
 				return;
 			} else if (result.status === "complete") {
-				// Account is fully created and verified
-				setUserInfo({
-					email: form.email,
-					firstName: form.firstName,
-					lastName: form.lastName,
-				});
+				// Account is fully created and verified - redirect to sign-in
 				setSuccess(true);
-				setStep(3); // Skip email verification, go directly to Lisk account creation
+				setTimeout(() => {
+					router.push("/auth/sign-in?message=account-created");
+				}, 1500);
 			} else {
 				// Handle other statuses or unverified email
 				if (result.unverifiedFields?.includes("email_address")) {
@@ -185,6 +145,9 @@ export default function SignUpPage() {
 			// Handle specific Clerk errors
 			if (err.errors && Array.isArray(err.errors)) {
 				const errorMessages = err.errors.map((error: any) => {
+					if (error.code === "session_exists") {
+						return "You are already signed in. Please sign out first or go to your account.";
+					}
 					if (error.code === "form_identifier_exists") {
 						return "An account with this email already exists.";
 					}
@@ -206,6 +169,13 @@ export default function SignUpPage() {
 					return error.message || "An error occurred during sign up.";
 				});
 				setError(errorMessages[0]);
+
+				// If session exists, redirect to account page
+				if (err.errors[0]?.code === "session_exists") {
+					setTimeout(() => {
+						router.push("/account");
+					}, 2000);
+				}
 			} else {
 				setError(err.message || "Sign up failed. Please try again.");
 			}
@@ -231,7 +201,10 @@ export default function SignUpPage() {
 			});
 
 			if (completeSignUp.status === "complete") {
-				setStep(3);
+				setSuccess(true);
+				setTimeout(() => {
+					router.push("/auth/sign-in?message=email-verified");
+				}, 1500);
 			} else if (completeSignUp.status === "abandoned") {
 				setError("Verification session was abandoned. Please start over.");
 				setTimeout(() => {
@@ -264,46 +237,6 @@ export default function SignUpPage() {
 			}
 		} finally {
 			setVerifyLoading(false);
-		}
-	};
-
-	const handleCreateLiskAccount = async () => {
-		const isInvalid =
-			!user || liskLoading || !userInfo?.email || !userInfo?.firstName || !userInfo?.lastName;
-		if (isInvalid) return;
-
-		setLiskLoading(true);
-		setLiskError(null);
-		try {
-			const result = await createLiskAccount({
-				id: user?.id,
-				email: userInfo.email || "",
-				firstName: userInfo.firstName || "",
-				lastName: userInfo.lastName || "",
-			});
-
-			if (!result.error && result.data) {
-				setLiskUser(result.data);
-
-				// Update Clerk user metadata with Lisk ID
-				if (user) {
-					await user.update({
-						unsafeMetadata: {
-							paymentId: result.data.user.paymentIdentifier,
-							paymentEnabled: result.data.user.enabledPay,
-						},
-					});
-				}
-
-				const updatedUser = { ...userInfo };
-				setUserInfo(updatedUser);
-			} else {
-				setLiskError(result.message || "Failed to create Lisk account");
-			}
-		} catch (err: any) {
-			setLiskError(err.message || "Failed to create Lisk account");
-		} finally {
-			setLiskLoading(false);
 		}
 	};
 
@@ -453,7 +386,12 @@ export default function SignUpPage() {
 											<AlertCircleIcon size={18} /> {error}
 										</div>
 									)}
-									{success && (
+									{success && step === 1 && (
+										<div className="text-green-600 text-center">
+											Account created! Redirecting to sign in...
+										</div>
+									)}
+									{success && step === 2 && (
 										<div className="text-green-600 text-center">
 											Account created! Check your email for verification.
 										</div>
@@ -512,85 +450,11 @@ export default function SignUpPage() {
 											{error}
 										</div>
 									)}
-								</div>
-							</CardBody>
-						</>
-					)}
-					{step === 3 && userInfo && (
-						<>
-							<CardHeader className="text-2xl font-bold text-center mb-2">
-								Step 3: Create your Lisk Account
-							</CardHeader>
-							<CardBody>
-								<div className="flex flex-col gap-4 items-center">
-									<p className="text-default-700 text-center">
-										Email verified! Now, let's create your Lisk blockchain
-										account to enable ZAR stablecoin payments.
-									</p>
-									<div className="w-full max-w-xs bg-default-50 border rounded-lg p-4 flex flex-col gap-2">
-										<div>
-											<span className="text-xs text-default-500">Email</span>
-											<div className="font-mono text-sm">
-												{userInfo.email}
-											</div>
-										</div>
-										<div>
-											<span className="text-xs text-default-500">
-												First Name
-											</span>
-											<div className="font-mono text-sm">
-												{userInfo.firstName}
-											</div>
-										</div>
-										<div>
-											<span className="text-xs text-default-500">
-												Last Name
-											</span>
-											<div className="font-mono text-sm">
-												{userInfo.lastName}
-											</div>
-										</div>
-										{userInfo.liskId && (
-											<div>
-												<span className="text-xs text-default-500">
-													Lisk ID
-												</span>
-												<div className="font-mono text-xs">
-													{userInfo.liskId}
-												</div>
-											</div>
-										)}
-									</div>
-									<Button
-										color="primary"
-										radius="full"
-										className="w-full max-w-xs mt-4"
-										onPress={handleCreateLiskAccount}
-										isLoading={liskLoading}
-										disabled={!!userInfo.liskId}>
-										{userInfo.liskId
-											? "Lisk Account Created"
-											: liskLoading
-												? "Creating Lisk Account..."
-												: `Create Lisk Account${autoCreateCountdown > 0 ? ` (${autoCreateCountdown})` : ""}`}
-									</Button>
-									<Link showAnchorIcon href="/auth/sign-in" color="primary">
-										Sign in
-									</Link>
-									{liskError && (
-										<div className="text-red-600 text-xs text-center">
-											{liskError}
-										</div>
-									)}
-									{liskUser && (
+									{success && (
 										<div className="text-green-600 text-xs text-center">
-											Lisk account created! ID: {liskUser.id}
+											Email verified! Redirecting to sign in...
 										</div>
 									)}
-									<p className="text-xs text-default-500 text-center mt-2">
-										This step is required to receive and send ZAR stablecoin on
-										the Lisk blockchain.
-									</p>
 								</div>
 							</CardBody>
 						</>

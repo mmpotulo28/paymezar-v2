@@ -4,11 +4,12 @@ import type { ThemeProviderProps } from "next-themes";
 
 import * as React from "react";
 import { HeroUIProvider } from "@heroui/system";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { AccountProvider } from "@/context/AccountContext";
 import { GlobalProvider } from "@/context/GlobalContext";
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkProvider, useUser } from "@clerk/nextjs";
+import { LiskOnboarding } from "@/components/onboarding/lisk-onboarding";
 
 export interface ProvidersProps {
 	children: React.ReactNode;
@@ -21,6 +22,33 @@ declare module "@react-types/shared" {
 	}
 }
 
+function OnboardingCheck({ children }: { children: React.ReactNode }) {
+	const { user, isLoaded } = useUser();
+	const pathname = usePathname();
+
+	// Don't show onboarding on auth pages
+	const isAuthPage = pathname?.startsWith("/auth");
+
+	// Check if user needs Lisk onboarding
+	const needsLiskOnboarding =
+		isLoaded &&
+		user &&
+		!isAuthPage &&
+		!user.publicMetadata?.liskAccountCreated &&
+		!user.publicMetadata?.liskOnboardingSkipped;
+
+	if (needsLiskOnboarding) {
+		return (
+			<>
+				{children}
+				<LiskOnboarding />
+			</>
+		);
+	}
+
+	return <>{children}</>;
+}
+
 export function Providers({ children, themeProps }: ProvidersProps) {
 	const router = useRouter();
 
@@ -29,7 +57,9 @@ export function Providers({ children, themeProps }: ProvidersProps) {
 			<HeroUIProvider navigate={router.push}>
 				<NextThemesProvider {...themeProps}>
 					<GlobalProvider>
-						<AccountProvider>{children}</AccountProvider>
+						<AccountProvider>
+							<OnboardingCheck>{children}</OnboardingCheck>
+						</AccountProvider>
 					</GlobalProvider>
 				</NextThemesProvider>
 			</HeroUIProvider>

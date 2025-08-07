@@ -37,6 +37,11 @@ export function UserProfileCard({ className = "" }: UserProfileCardProps) {
 	const fullName =
 		[user.firstName, user.lastName].filter(Boolean).join(" ") ||
 		user.primaryEmailAddress?.emailAddress;
+
+	const hasLiskAccount = user.publicMetadata?.liskAccountCreated;
+	const paymentId = user.publicMetadata?.paymentId as string;
+	const paymentEnabled = user.publicMetadata?.paymentEnabled as boolean;
+
 	return (
 		<Card className={`w-full max-w-xl shadow-lg border border-default-200  ${className}`}>
 			<CardBody className="flex flex-col sm:flex-row items-center gap-6 p-6">
@@ -47,7 +52,7 @@ export function UserProfileCard({ className = "" }: UserProfileCardProps) {
 						className="ring-2 ring-primary-400 bg-background"
 					/>
 					<span className="text-xs text-default-400 font-medium">
-						{user.organizationMemberships[0].role || "User"}
+						{user?.organizationMemberships[0]?.role || "User"}
 					</span>
 				</div>
 				<div className="flex-1 min-w-0 w-full">
@@ -66,38 +71,48 @@ export function UserProfileCard({ className = "" }: UserProfileCardProps) {
 						</div>
 						<div className="flex flex-col gap-1 col-span-1 sm:col-span-2">
 							<span className="text-xs text-default-500 font-medium">Payment Id</span>
-							<Snippet
-								hideSymbol
-								variant="bordered"
-								className="text-xs truncate max-w-full">
-								<span>
-									<Code color="primary">
-										{(user.publicMetadata["paymentId"] as string) || "-"}
-									</Code>
-								</span>
-							</Snippet>
+							{hasLiskAccount ? (
+								<Snippet
+									hideSymbol
+									variant="bordered"
+									className="text-xs truncate max-w-full">
+									<span>
+										<Code color="primary">{paymentId || "-"}</Code>
+									</span>
+								</Snippet>
+							) : (
+								<div className="text-xs text-warning italic">
+									Blockchain account not set up yet
+								</div>
+							)}
 						</div>
 						<div className="flex flex-col gap-1">
 							<span className="text-xs text-default-500 font-medium">
-								Payment Enabled
+								Payment Status
 							</span>
-							<span className="text-xs text-default-700 truncate">
-								{user.publicMetadata["paymentEnabled"] ? (
-									<span className="font-semibold">Enabled</span>
-								) : (
-									<span className="italic text-default-400">Not set</span>
-								)}
-							</span>
-						</div>
-						<div className="flex flex-col gap-1">
-							<span className="text-xs text-default-500 font-medium">Status</span>
 							<Chip
 								color={
-									user.publicMetadata["paymentEnabled"] ? "primary" : "default"
+									hasLiskAccount
+										? paymentEnabled
+											? "success"
+											: "warning"
+										: "default"
 								}
 								variant="flat">
-								{user.publicMetadata["paymentEnabled"] ? "Active" : "Inactive"}
+								{hasLiskAccount
+									? paymentEnabled
+										? "Active"
+										: "Inactive"
+									: "Pending Setup"}
 							</Chip>
+						</div>
+						<div className="flex flex-col gap-1">
+							<span className="text-xs text-default-500 font-medium">
+								Account Type
+							</span>
+							<span className="text-xs text-default-700">
+								{user?.organizationMemberships[0]?.role || "User"}
+							</span>
 						</div>
 					</div>
 				</div>

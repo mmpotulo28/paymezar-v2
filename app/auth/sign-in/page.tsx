@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Card, CardBody, CardHeader, CardFooter, Chip } from "@heroui/react";
+import { Card, CardBody, CardHeader, CardFooter, Chip, Alert } from "@heroui/react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
@@ -16,6 +16,7 @@ export default function SignInPage() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState(false);
+	const [message, setMessage] = useState<string | null>(null);
 	const router = useRouter();
 	const { signIn } = useSignIn();
 	const { user } = useUser();
@@ -26,6 +27,17 @@ export default function SignInPage() {
 			router.replace("/account");
 		}
 	}, [user, router]);
+
+	useEffect(() => {
+		// Check for success messages from sign-up
+		const params = new URLSearchParams(window.location.search);
+		const messageParam = params.get("message");
+		if (messageParam === "account-created") {
+			setMessage("Account created successfully! Please sign in to continue.");
+		} else if (messageParam === "email-verified") {
+			setMessage("Email verified successfully! Please sign in to continue.");
+		}
+	}, []);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setForm({ ...form, [e.target.name]: e.target.value });
@@ -86,6 +98,9 @@ export default function SignInPage() {
 			// Handle specific Clerk errors
 			if (err.errors && Array.isArray(err.errors)) {
 				const errorMessages = err.errors.map((error: any) => {
+					if (error.code === "session_exists") {
+						return "You are already signed in.";
+					}
 					if (error.code === "form_identifier_not_found") {
 						return "No account found with this email address.";
 					}
@@ -98,12 +113,16 @@ export default function SignInPage() {
 					if (error.code === "user_locked") {
 						return "Your account has been locked. Please contact support.";
 					}
-					if (error.code === "session_exists") {
-						return "You are already signed in.";
-					}
 					return error.message || "Sign in failed.";
 				});
 				setError(errorMessages[0]);
+
+				// If session exists, redirect to account page
+				if (err.errors[0]?.code === "session_exists") {
+					setTimeout(() => {
+						router.push("/account");
+					}, 2000);
+				}
 			} else {
 				setError(err.message || "Sign in failed");
 			}
@@ -157,6 +176,15 @@ export default function SignInPage() {
 						Sign in to your account
 					</CardHeader>
 					<CardBody>
+						{message && (
+							<Alert
+								className="mb-4"
+								color="success"
+								variant="flat"
+								title="Success!"
+								description={message}
+							/>
+						)}
 						<form className="flex flex-col gap-4" onSubmit={handleSubmit}>
 							<Input
 								label="Email"
