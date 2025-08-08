@@ -5,8 +5,7 @@ import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { postApi } from "@/lib/helpers";
-import { useSession } from "@/context/SessionManager";
+import { useUser } from "@clerk/nextjs";
 
 // Dynamically import QRCodeCanvas for SSR safety
 const QRCode = dynamic(() => import("qrcode.react").then((mod) => mod.QRCodeCanvas), {
@@ -17,7 +16,7 @@ export default function RequestPayment() {
 	const [requestAmount, setRequestAmount] = useState("");
 	const [qrVisible, setQrVisible] = useState(false);
 	const [qrValue, setQrValue] = useState("");
-	const { user } = useSession();
+	const { user } = useUser();
 	const [requestLoading, setRequestLoading] = useState(false);
 
 	const isInvalidRequestAmount = (amount: string) => {
@@ -29,7 +28,7 @@ export default function RequestPayment() {
 		if (isInvalidRequestAmount(requestAmount)) return;
 		const payload = JSON.stringify({
 			type: "paymezar-request",
-			recipient: user?.paymentIdentifier,
+			recipient: user?.unsafeMetadata?.paymentId,
 			amount: Number(requestAmount),
 			timestamp: Date.now(),
 		});
@@ -52,12 +51,14 @@ export default function RequestPayment() {
 							onChange={(e) => setRequestAmount(e.target.value)}
 							required
 							min={1}
+							disabled={requestLoading || !user}
 						/>
 						<Button
 							color="primary"
 							type="submit"
 							radius="sm"
-							className="max-w-3xs mx-0">
+							className="max-w-3xs mx-0"
+							disabled={requestLoading || !user}>
 							Generate QR Code
 						</Button>
 					</form>
@@ -86,7 +87,8 @@ export default function RequestPayment() {
 								setQrVisible(false);
 								setRequestAmount("");
 								setRequestLoading(false);
-							}}>
+							}}
+							disabled={requestLoading || !user}>
 							New Request
 						</Button>
 					</div>

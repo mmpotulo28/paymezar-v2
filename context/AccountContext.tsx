@@ -118,18 +118,23 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
 	const fetchBalance = useCallback(async () => {
 		if (!user?.id) {
+			setBalanceError("User not found.");
 			setBalance(null);
 			return;
 		}
 		setLoadingBalance(true);
+		setBalanceError(null);
 		try {
 			const response = await getUserBalance({ userId: user.id });
 			if (!response.error) {
 				setBalance({ tokens: response.data?.tokens || [] });
 			} else {
+				setBalanceError(response.message || "Failed to fetch balance.");
 				setBalance(null);
 			}
 		} catch (e) {
+			setBalanceError("Failed to fetch balance.");
+			console.error("Error fetching balance:", e);
 			setBalance(null);
 		}
 		setLoadingBalance(false);
@@ -137,10 +142,12 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
 	const fetchBankAccounts = useCallback(async () => {
 		if (!user?.id) {
+			setBankAccountsError("User not found.");
 			setBankAccounts([]);
 			return;
 		}
 		setLoadingBankAccounts(true);
+		setBankAccountsError(null);
 		try {
 			const result = await getBankAccounts({ userId: user.id });
 			if (!result.error && result.data) {
@@ -153,6 +160,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 							: [];
 				setBankAccounts(arr);
 			} else {
+				setBankAccountsError(result.message || "Failed to fetch bank accounts.");
 				setBankAccounts([]);
 			}
 		} catch (e) {
@@ -163,10 +171,12 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
 	const fetchCharges = useCallback(async () => {
 		if (!user?.id) {
+			setChargesError("User not found.");
 			setCharges([]);
 			return;
 		}
 		setLoadingCharges(true);
+		setChargesError(null);
 		try {
 			const result = await postApi(
 				`https://seal-app-qp9cc.ondigitalocean.app/api/v1/charge/${encodeURIComponent(user.id)}`,
@@ -179,6 +189,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 			if (!result.error && Array.isArray(result.data?.charges)) {
 				setCharges(result.data.charges);
 			} else if (!result.error && Array.isArray(result.data)) {
+				setChargesError(result.message || "Failed to fetch charges.");
 				setCharges(result.data);
 			} else {
 				setCharges([]);
@@ -191,6 +202,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
 	const fetchSubscriptions = useCallback(async () => {
 		if (!user?.id) {
+			setSubscriptionError("User not found.");
 			setSubscriptions([]);
 			return;
 		}
@@ -212,9 +224,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 			} else if (Array.isArray(result.data)) {
 				setSubscriptions(result.data);
 			} else {
+				setSubscriptionError("No subscriptions found.");
 				setSubscriptions([]);
 			}
 		} catch (error: any) {
+			console.error("Error fetching subscriptions:", error);
 			setSubscriptions([]);
 			setSubscriptionError(error.message || error || "Failed to fetch subscriptions.");
 		}

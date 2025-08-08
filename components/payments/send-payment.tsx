@@ -5,8 +5,9 @@ import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { AlertCircleIcon, QrCode as QrCodeIcon } from "lucide-react";
 import QrCodeScanner from "@/components/qr-code-scanner";
-import { useSession } from "@/context/SessionManager";
+
 import { postApi } from "@/lib/helpers";
+import { useUser } from "@clerk/nextjs";
 
 export default function SendPayment() {
 	const [recipient, setRecipient] = useState("");
@@ -17,8 +18,7 @@ export default function SendPayment() {
 	const [responseMsg, setResponseMsg] = useState<string | null>(null);
 	const [recipientInfo, setRecipientInfo] = useState<any>(null);
 	const [scanModalOpen, setScanModalOpen] = useState(false);
-
-	const { user, accessToken } = useSession();
+	const { user } = useUser();
 
 	const fetchRecipient = async (recipientId: string) => {
 		try {
@@ -127,7 +127,7 @@ export default function SendPayment() {
 					color="secondary"
 					radius="full"
 					startContent={<QrCodeIcon size={18} />}
-					onClick={() => setScanModalOpen(true)}
+					onPress={() => setScanModalOpen(true)}
 					type="button">
 					Scan QR
 				</Button>

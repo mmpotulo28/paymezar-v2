@@ -71,4 +71,14 @@ export const siteConfig = {
 		discord: "https://discord.gg/9b6yyZKmH4",
 		sponsor: "https://patreon.com/jrgarciadev",
 	},
+	metadata: {
+		title: {
+			default: "PayMe-Zar | ZAR Stable Coin Crypto Payments",
+		},
+		description:
+			"PayMe-Zar is a ZAR stable coin crypto payment gateway that allows you to accept payments in South African Rand (ZAR) using cryptocurrencies.",
+		icons: {
+			icon: "/favicon.ico",
+		},
+	},
 };

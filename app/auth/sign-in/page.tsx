@@ -6,7 +6,7 @@ import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
 import { AlertCircleIcon, ShieldCheck, Lock, CheckCircle2, LogIn, KeyRound } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useSignIn, useUser } from "@clerk/nextjs";
+import { useClerk, useSignIn, useUser } from "@clerk/nextjs";
 
 export default function SignInPage() {
 	const [form, setForm] = useState({
@@ -20,6 +20,7 @@ export default function SignInPage() {
 	const router = useRouter();
 	const { signIn } = useSignIn();
 	const { user } = useUser();
+	const clerk = useClerk();
 
 	useEffect(() => {
 		// If already authenticated, redirect to account page
@@ -71,7 +72,9 @@ export default function SignInPage() {
 				setSuccess(true);
 				// Get redirect URL from query params
 				const params = new URLSearchParams(window.location.search);
-				const redirect = params.get("redirect");
+				const redirect = params.get("redirect_url");
+
+				clerk.session?.reload();
 
 				setTimeout(() => {
 					if (redirect) {
@@ -84,8 +87,6 @@ export default function SignInPage() {
 				setError("Two-factor authentication required. Please complete 2FA setup.");
 			} else if (result.status === "needs_identifier") {
 				setError("Please provide a valid email address.");
-			} else if (result.status === "abandoned") {
-				setError("Sign in session was abandoned. Please try again.");
 			} else if (result.status === "needs_first_factor") {
 				setError("Please complete the sign-in process.");
 			} else {

@@ -10,8 +10,8 @@ const PLAN_PRICES: Record<string, { monthly: number; yearly: number }> = {
 
 export async function POST(req: NextRequest) {
 	try {
-		const { liskId, plan, period, amount } = await req.json();
-		if (!liskId || !plan || !period) {
+		const { id, plan, period, amount } = await req.json();
+		if (!id || !plan || !period) {
 			return NextResponse.json(
 				{ error: true, message: "Missing required fields", data: null, status: 400 },
 				{ status: 400 },
@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
 			.from("subscriptions")
 			.insert([
 				{
-					charge_id: liskId,
-					lisk_id: liskId,
+					charge_id: id,
+					id: id,
 					plan,
 					status: "active",
 					started_at: new Date().toISOString(),
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 			const paymentId = `sub-${subscription.id}`;
 			try {
 				const chargeRes = await axios.post(
-					`https://seal-app-qp9cc.ondigitalocean.app/api/v1/charge/${encodeURIComponent(liskId)}/create`,
+					`https://seal-app-qp9cc.ondigitalocean.app/api/v1/charge/${encodeURIComponent(id)}/create`,
 					{
 						paymentId,
 						amount: chargeAmount,

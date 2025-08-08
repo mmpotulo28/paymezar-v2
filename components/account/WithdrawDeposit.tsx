@@ -13,26 +13,15 @@ import {
 } from "@heroui/react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
-import {
-	AlertCircleIcon,
-	Banknote,
-	BanknoteArrowUp,
-	BanknoteIcon,
-	Info,
-	Landmark,
-	Shield,
-	Wallet,
-	AlertTriangle,
-	BanknoteArrowDown,
-} from "lucide-react";
-import { useSession } from "@/context/SessionManager";
+import { Banknote, BanknoteArrowUp, Landmark, Wallet, BanknoteArrowDown } from "lucide-react";
 import { useAccount } from "@/context/AccountContext";
 import { BANKS } from "@/lib/banks";
 import { postApi } from "@/lib/helpers";
 import Image from "next/image";
+import { useUser } from "@clerk/nextjs";
 
 export function WithdrawDeposit() {
-	const { user } = useSession();
+	const { user } = useUser();
 	const { bankAccounts, refreshBankAccounts, loadingBankAccounts, balance, loadingBalance } =
 		useAccount();
 	const [tab, setTab] = useState<"withdraw" | "deposit">("withdraw");

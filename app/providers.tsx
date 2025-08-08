@@ -64,7 +64,37 @@ export function Providers({ children, themeProps }: ProvidersProps) {
 	const router = useRouter();
 
 	return (
-		<ClerkProvider>
+		<ClerkProvider
+			signInUrl="/auth/sign-in"
+			signUpUrl="/auth/sign-up"
+			afterSignOutUrl={"/"}
+			signInFallbackRedirectUrl={"/account"}
+			appearance={{
+				variables: {
+					colorPrimary: "blue",
+					colorText: "white",
+					colorBackground: "black",
+					colorTextSecondary: "green",
+					borderRadius: "var(--radius-md)",
+					colorInputBackground: "var(--color-background)",
+					colorInputText: "var(--color-foreground)",
+					colorTextOnPrimaryBackground: "var(--color-background)",
+					colorNeutral: "darkgrey",
+				},
+
+				layout: {
+					termsPageUrl: "/support/terms",
+					privacyPageUrl: "/support/privacy",
+					helpPageUrl: "/support/faqs",
+					logoPlacement: "none",
+					shimmer: true,
+				},
+				captcha: {
+					language: "en",
+					theme: "auto",
+					size: "normal",
+				},
+			}}>
 			<HeroUIProvider navigate={router.push}>
 				<NextThemesProvider {...themeProps}>
 					<GlobalProvider>

@@ -4,17 +4,12 @@ import { Tabs, Tab } from "@heroui/tabs";
 import { UserProfileCard } from "@/components/user-profile-card";
 import { RecentTransactions } from "@/components/recent-transactions";
 import { Download, FileText } from "lucide-react";
-
 import { AccountOverview } from "@/components/account/AccountOverview";
 import { BalanceHistory } from "@/components/account/BalanceHistory";
 import { BankAccounts } from "@/components/account/BankAccounts";
 import { SubscriptionsList } from "@/components/account/SubscriptionsList";
-import { useUser } from "@clerk/nextjs";
-import { User } from "@sentry/nextjs";
 
 export default function AccountPage() {
-	const { user } = useUser();
-
 	const handleExportTransactions = () => {
 		// Simulate export
 		alert("Transactions exported!");
@@ -28,7 +23,7 @@ export default function AccountPage() {
 	return (
 		<section className="flex flex-col items-center min-h-[70vh] py-8 gap-8 w-full">
 			{/* User Profile */}
-			{user && <UserProfileCard className="max-w-2xl w-full" />}
+			{<UserProfileCard className="max-w-2xl w-full" />}
 
 			{/* Account Management Tabs */}
 			<Tabs className="max-w-2xl w-full" variant="solid">

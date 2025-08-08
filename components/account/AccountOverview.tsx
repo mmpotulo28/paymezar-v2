@@ -1,15 +1,14 @@
-import { Card, CardBody, CardHeader, Snippet } from "@heroui/react";
-import { Input } from "@heroui/input";
+import { Alert, Card, CardBody, CardHeader, Snippet } from "@heroui/react";
 import { Button } from "@heroui/button";
-import { useSession } from "@/context/SessionManager";
 import { RefreshCcw } from "lucide-react";
 import { useAccount } from "@/context/AccountContext";
 import { useUser } from "@clerk/nextjs";
 import { useState } from "react";
+import Link from "next/link";
 
 export function AccountOverview() {
 	const { user } = useUser();
-	const { balance, loadingBalance, refreshBalance } = useAccount();
+	const { balance, loadingBalance, refreshBalance, balanceError } = useAccount();
 	const [refreshing, setRefreshing] = useState(false);
 
 	const handleRefresh = async () => {
@@ -27,7 +26,7 @@ export function AccountOverview() {
 					variant="flat"
 					color="primary"
 					isLoading={refreshing}
-					onClick={handleRefresh}
+					onPress={handleRefresh}
 					startContent={<RefreshCcw size={16} />}>
 					Refresh
 				</Button>
@@ -56,6 +55,12 @@ export function AccountOverview() {
 								</>
 							)}
 						</div>
+
+						{balanceError && (
+							<Alert className="py-1" variant="bordered" color="danger">
+								{balanceError}
+							</Alert>
+						)}
 					</div>
 					<div className="w-full">
 						<div className="text-xs text-default-500 font-medium mb-1">Email</div>
@@ -63,13 +68,19 @@ export function AccountOverview() {
 							{user?.primaryEmailAddress?.emailAddress || "-"}
 						</Snippet>
 					</div>
+					<div className="w-full">
+						<div className="text-xs text-default-500 font-medium mb-1">User ID</div>
+						<Snippet size="sm" hideSymbol variant="flat" className="w-full">
+							{user?.id || "-"}
+						</Snippet>
+					</div>
 					<div className="flex items-end">
 						<Button
-							color="primary"
+							color="secondary"
 							className="w-full"
-							radius="full"
+							radius="sm"
 							href="/account/profile"
-							as="a">
+							as={Link}>
 							Manage Profile
 						</Button>
 					</div>

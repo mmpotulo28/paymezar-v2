@@ -26,7 +26,7 @@ export function SubscriptionsList() {
 						<Spinner size="sm" label="Fetching subscriptions..." />
 					</div>
 				)}
-				{!loadingSubscriptions && subscriptions.length === 0 && (
+				{!loadingSubscriptions && subscriptions.length === 0 && !subscriptionError && (
 					<div className="text-default-400 text-center py-4">No subscriptions found.</div>
 				)}
 				{subscriptionError && (

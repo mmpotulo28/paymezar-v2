@@ -1,12 +1,5 @@
-import {
-	Navbar as HeroUINavbar,
-	NavbarContent,
-	NavbarMenu,
-	NavbarMenuToggle,
-	NavbarBrand,
-	NavbarItem,
-	NavbarMenuItem,
-} from "@heroui/navbar";
+"use client";
+import { Navbar as HeroUINavbar, NavbarContent, NavbarBrand, NavbarItem } from "@heroui/navbar";
 import { Button } from "@heroui/button";
 import { Kbd } from "@heroui/kbd";
 import { Link } from "@heroui/link";
@@ -14,7 +7,7 @@ import { Input } from "@heroui/input";
 import { link as linkStyles } from "@heroui/theme";
 import NextLink from "next/link";
 import clsx from "clsx";
-import { UserButton } from "@clerk/nextjs";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
@@ -28,6 +21,7 @@ import {
 } from "@/components/icons";
 
 export const Navbar = () => {
+	const { user } = useUser();
 	const searchInput = (
 		<Input
 			aria-label="Search"
@@ -97,7 +91,7 @@ export const Navbar = () => {
 						href={siteConfig.links.sponsor}
 						startContent={<HeartFilledIcon className="text-danger" />}
 						variant="flat"></Button>
-					<UserButton className="mx-4" />
+					<UserButton />
 				</NavbarItem>
 			</NavbarContent>
 
@@ -109,7 +103,7 @@ export const Navbar = () => {
 					<HeartFilledIcon className="text-danger" />
 				</Link>
 				<ThemeSwitch />
-				<UserButton className="mx-4" />
+				{user ? <UserButton /> : <SignInButton />}
 			</NavbarContent>
 		</HeroUINavbar>
 	);

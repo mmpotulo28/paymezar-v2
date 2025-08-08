@@ -1,16 +1,26 @@
-import { Card, CardHeader, CardBody, Chip, Select, SelectItem, Spinner } from "@heroui/react";
+import {
+	Card,
+	CardHeader,
+	CardBody,
+	Chip,
+	Select,
+	SelectItem,
+	Spinner,
+	Alert,
+} from "@heroui/react";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Plus, Banknote, DeleteIcon, RefreshCcw } from "lucide-react";
 import { useState } from "react";
 import { BANKS } from "@/lib/banks";
 import { upsertBankAccount, deleteBankAccount } from "@/lib/helpers";
-import { useSession } from "@/context/SessionManager";
 import { useAccount } from "@/context/AccountContext";
+import { useUser } from "@clerk/nextjs";
 
 export function BankAccounts() {
-	const { user } = useSession();
-	const { bankAccounts, loadingBankAccounts, refreshBankAccounts } = useAccount();
+	const { user } = useUser();
+	const { bankAccounts, loadingBankAccounts, refreshBankAccounts, bankAccountsError } =
+		useAccount();
 	const [showAdd, setShowAdd] = useState(false);
 	const [form, setForm] = useState<{
 		accountHolder: string;
@@ -71,7 +81,7 @@ export function BankAccounts() {
 		setLoading(false);
 	};
 
-	const handleDeleteAccount = async (accountId: string) => {
+	const handleDeleteAccount = async () => {
 		if (!user?.id) return;
 		setLoading(true);
 		setError(null);
@@ -106,7 +116,8 @@ export function BankAccounts() {
 						color="primary"
 						className="p-0 min-h-0 min-w-10"
 						startContent={<Plus size={16} />}
-						onPress={() => setShowAdd((v) => !v)}>
+						onPress={() => setShowAdd((v) => !v)}
+						disabled={loading || !user}>
 						{showAdd ? "Cancel" : ""}
 					</Button>
 					<Button
@@ -115,7 +126,8 @@ export function BankAccounts() {
 						color="secondary"
 						isLoading={refreshing}
 						onPress={handleRefresh}
-						startContent={<RefreshCcw size={16} />}>
+						startContent={<RefreshCcw size={16} />}
+						disabled={loading}>
 						Refresh
 					</Button>
 				</div>
@@ -165,7 +177,8 @@ export function BankAccounts() {
 							type="submit"
 							className="w-full"
 							radius="md"
-							isLoading={loading}>
+							isLoading={loading}
+							disabled={loading || !user}>
 							Save Account
 						</Button>
 						{error && <div className="text-red-600 text-xs">{error}</div>}
@@ -177,7 +190,14 @@ export function BankAccounts() {
 						<Spinner color="primary" label="Loading..." />
 					</div>
 				)}
-				{!loadingBankAccounts && bankAccounts.length === 0 && (
+
+				{bankAccountsError && (
+					<Alert variant="bordered" color="danger">
+						{bankAccountsError}
+					</Alert>
+				)}
+
+				{!loadingBankAccounts && bankAccounts.length === 0 && !bankAccountsError && (
 					<div className="text-default-400 text-center py-4">No bank accounts found.</div>
 				)}
 				{bankAccounts.map((acc) => (
@@ -208,8 +228,8 @@ export function BankAccounts() {
 								size="sm"
 								color="danger"
 								variant="flat"
-								onPress={() => handleDeleteAccount(acc.id)}
-								disabled={loading}>
+								onPress={() => handleDeleteAccount()}
+								disabled={loading || !user}>
 								<DeleteIcon size={16} />
 							</Button>
 						</div>

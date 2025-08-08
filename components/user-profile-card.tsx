@@ -5,6 +5,7 @@ import { Snippet } from "@heroui/snippet";
 import { Code } from "@heroui/code";
 import { Lock } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
+import UnAuthorizedContent from "./UnAuthorizedContent";
 
 export interface UserProfileCardProps {
 	className?: string;
@@ -13,26 +14,7 @@ export interface UserProfileCardProps {
 export function UserProfileCard({ className = "" }: UserProfileCardProps) {
 	const { user } = useUser();
 
-	if (!user) {
-		return (
-			<Card className={`w-full max-w-xl shadow-lg border border-default-200 ${className}`}>
-				<CardBody className="flex flex-col items-center justify-center gap-6 p-8">
-					<div className="flex flex-col items-center gap-3">
-						<Lock size={48} className="text-primary" />
-						<span className="text-xl font-bold text-default-800 text-center">
-							You need to be authenticated to access this content
-						</span>
-						<span className="text-default-500 text-center text-sm">
-							Please sign in to view your profile and account details.
-						</span>
-						<Link showAnchorIcon color="primary" className="mt-2" href="/auth/sign-in">
-							Sign In
-						</Link>
-					</div>
-				</CardBody>
-			</Card>
-		);
-	}
+	if (!user) return <UnAuthorizedContent />;
 
 	const fullName =
 		[user.firstName, user.lastName].filter(Boolean).join(" ") ||
@@ -107,12 +89,8 @@ export function UserProfileCard({ className = "" }: UserProfileCardProps) {
 							</Chip>
 						</div>
 						<div className="flex flex-col gap-1">
-							<span className="text-xs text-default-500 font-medium">
-								Account Type
-							</span>
-							<span className="text-xs text-default-700">
-								{user?.organizationMemberships[0]?.role || "User"}
-							</span>
+							<span className="text-xs text-default-500 font-medium">User ID</span>
+							<span className="text-xs text-default-700">{user?.id}</span>
 						</div>
 					</div>
 				</div>
