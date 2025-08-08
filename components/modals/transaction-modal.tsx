@@ -1,6 +1,6 @@
-import { useSession } from "@/context/SessionManager";
 import { statusColorMap } from "@/lib/helpers";
 import { iTransaction } from "@/types";
+import { useUser } from "@clerk/nextjs";
 import {
 	Button,
 	Chip,
@@ -21,7 +21,7 @@ interface iTransactionModalProps {
 }
 
 const TransactionModal: React.FC<iTransactionModalProps> = ({ isOpen, onClose, selected }) => {
-	const { user } = useSession();
+	const { user } = useUser();
 	const isIncoming = selected && user ? selected.userId !== user.id : false;
 
 	return (
