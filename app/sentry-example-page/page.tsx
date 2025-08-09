@@ -18,6 +18,7 @@ export default function Page() {
   useEffect(() => {
     async function checkConnectivity() {
       const result = await Sentry.diagnoseSdkConnectivity();
+
       setIsConnected(result !== "sentry-unreachable");
     }
     checkConnectivity();
@@ -27,15 +28,15 @@ export default function Page() {
     <div>
       <Head>
         <title>sentry-example-page</title>
-        <meta name="description" content="Test Sentry for your Next.js app!" />
+        <meta content="Test Sentry for your Next.js app!" name="description" />
       </Head>
 
       <main>
         <div className="flex-spacer" />
         <svg
+          fill="none"
           height="40"
           width="40"
-          fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -48,15 +49,17 @@ export default function Page() {
         <p className="description">
           Click the button below, and view the sample error on the Sentry{" "}
           <a
-            target="_blank"
             href="https://mpotulom.sentry.io/issues/?project=4509784772116480"
+            rel="noreferrer"
+            target="_blank"
           >
             Issues Page
           </a>
           . For more details about setting up Sentry,{" "}
           <a
-            target="_blank"
             href="https://docs.sentry.io/platforms/javascript/guides/nextjs/"
+            rel="noreferrer"
+            target="_blank"
           >
             read our docs
           </a>
@@ -64,6 +67,7 @@ export default function Page() {
         </p>
 
         <button
+          disabled={!isConnected}
           type="button"
           onClick={async () => {
             await Sentry.startSpan(
@@ -73,6 +77,7 @@ export default function Page() {
               },
               async () => {
                 const res = await fetch("/api/sentry-example-api");
+
                 if (!res.ok) {
                   setHasSentError(true);
                 }
@@ -82,7 +87,6 @@ export default function Page() {
               "This error is raised on the frontend of the example page.",
             );
           }}
-          disabled={!isConnected}
         >
           <span>Throw Sample Error</span>
         </button>

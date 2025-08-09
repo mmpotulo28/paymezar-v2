@@ -7,7 +7,6 @@ import {
   HelpCircle,
   FileText,
   ShieldCheck,
-  BookOpen,
   ChevronRight,
   Users,
 } from "lucide-react";
@@ -17,31 +16,31 @@ const supportLinks = [
     title: "Contact Us",
     description: "Get in touch with our support team for personalized help.",
     href: "/support/contact",
-    icon: <Mail size={24} className="text-primary" />,
+    icon: <Mail className="text-primary" size={24} />,
   },
   {
     title: "FAQs",
     description: "Find answers to the most common questions.",
     href: "/support/faq",
-    icon: <HelpCircle size={24} className="text-success" />,
+    icon: <HelpCircle className="text-success" size={24} />,
   },
   {
     title: "Privacy Policy",
     description: "Learn how we protect your data and privacy.",
     href: "/support/privacy",
-    icon: <ShieldCheck size={24} className="text-warning" />,
+    icon: <ShieldCheck className="text-warning" size={24} />,
   },
   {
     title: "Terms & Conditions",
     description: "Read the terms that govern your use of PayMe-Zar.",
     href: "/support/terms",
-    icon: <FileText size={24} className="text-secondary" />,
+    icon: <FileText className="text-secondary" size={24} />,
   },
   {
     title: "Community",
     description: "Join our Discord and connect with other users.",
     href: "https://discord.gg/9b6yyZKmH4",
-    icon: <Users size={24} className="text-indigo-500" />,
+    icon: <Users className="text-indigo-500" size={24} />,
     external: true,
   },
 ];
@@ -74,7 +73,7 @@ export default function SupportPage() {
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-semibold">{link.title}</span>
                   {link.external && (
-                    <Chip size="sm" color="secondary" variant="flat">
+                    <Chip color="secondary" size="sm" variant="flat">
                       External
                     </Chip>
                   )}
@@ -83,13 +82,13 @@ export default function SupportPage() {
               </div>
               <Button
                 as={Link}
-                href={link.href}
-                color="primary"
-                variant="light"
-                endContent={<ChevronRight size={18} />}
-                target={link.external ? "_blank" : undefined}
-                rel={link.external ? "noopener noreferrer" : undefined}
                 className="ml-2"
+                color="primary"
+                endContent={<ChevronRight size={18} />}
+                href={link.href}
+                rel={link.external ? "noopener noreferrer" : undefined}
+                target={link.external ? "_blank" : undefined}
+                variant="light"
               >
                 Open
               </Button>

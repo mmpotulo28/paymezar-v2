@@ -6,13 +6,13 @@ import { AboutCta } from "@/components/about/about-cta";
 import { AboutFooter } from "@/components/about/about-footer";
 
 export default function AboutPage() {
-	return (
-		<div className="flex flex-col items-center min-h-[80vh] py-12 px-4 gap-10">
-			<AboutHero />
-			<AboutFeatures />
-			<AboutTeam />
-			<AboutCta />
-			<AboutFooter />
-		</div>
-	);
+  return (
+    <div className="flex flex-col items-center min-h-[80vh] py-12 px-4 gap-10">
+      <AboutHero />
+      <AboutFeatures />
+      <AboutTeam />
+      <AboutCta />
+      <AboutFooter />
+    </div>
+  );
 }
