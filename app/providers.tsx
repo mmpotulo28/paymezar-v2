@@ -13,101 +13,98 @@ import { GlobalProvider } from "@/context/GlobalContext";
 import { LiskOnboarding } from "@/components/onboarding/lisk-onboarding";
 
 export interface ProvidersProps {
-  children: React.ReactNode;
-  themeProps?: ThemeProviderProps;
+	children: React.ReactNode;
+	themeProps?: ThemeProviderProps;
 }
 
 declare module "@react-types/shared" {
-  interface RouterConfig {
-    routerOptions: NonNullable<
-      Parameters<ReturnType<typeof useRouter>["push"]>[1]
-    >;
-  }
+	interface RouterConfig {
+		routerOptions: NonNullable<Parameters<ReturnType<typeof useRouter>["push"]>[1]>;
+	}
 }
 
 function OnboardingCheck({ children }: { children: React.ReactNode }) {
-  const { user, isLoaded } = useUser();
-  const pathname = usePathname();
+	const { user, isLoaded } = useUser();
+	const pathname = usePathname();
 
-  // Don't show onboarding on auth pages
-  const isAuthPage = pathname?.startsWith("/auth");
+	// Don't show onboarding on auth pages
+	const isAuthPage = pathname?.startsWith("/auth");
 
-  // Check if user needs Lisk onboarding
-  const needsLiskOnboarding =
-    isLoaded &&
-    user &&
-    !isAuthPage &&
-    !user.unsafeMetadata?.liskAccountCreated &&
-    !user.unsafeMetadata?.liskOnboardingSkipped;
+	// Check if user needs Lisk onboarding
+	const needsLiskOnboarding =
+		isLoaded &&
+		user &&
+		!isAuthPage &&
+		!user.unsafeMetadata?.liskAccountCreated &&
+		!user.unsafeMetadata?.liskOnboardingSkipped;
 
-  // Debug logging
-  if (isLoaded && user) {
-    console.log("Onboarding check:", {
-      userId: user.id,
-      isAuthPage,
-      liskAccountCreated: user.unsafeMetadata?.liskAccountCreated,
-      liskOnboardingSkipped: user.unsafeMetadata?.liskOnboardingSkipped,
-      needsLiskOnboarding,
-    });
-  }
+	// Debug logging
+	if (isLoaded && user) {
+		console.log("Onboarding check:", {
+			userId: user.id,
+			isAuthPage,
+			liskAccountCreated: user.unsafeMetadata?.liskAccountCreated,
+			liskOnboardingSkipped: user.unsafeMetadata?.liskOnboardingSkipped,
+			needsLiskOnboarding,
+		});
+	}
 
-  if (needsLiskOnboarding) {
-    return (
-      <>
-        {children}
-        <LiskOnboarding />
-      </>
-    );
-  }
+	if (needsLiskOnboarding) {
+		return (
+			<>
+				{children}
+				<LiskOnboarding />
+			</>
+		);
+	}
 
-  return <>{children}</>;
+	return <>{children}</>;
 }
 
 export function Providers({ children, themeProps }: ProvidersProps) {
-  const router = useRouter();
+	const router = useRouter();
 
-  return (
-    <ClerkProvider
-      afterSignOutUrl={"/"}
-      appearance={{
-        variables: {
-          colorPrimary: "blue",
-          colorText: "white",
-          colorBackground: "black",
-          colorTextSecondary: "green",
-          borderRadius: "var(--radius-md)",
-          colorInputBackground: "var(--color-background)",
-          colorInputText: "var(--color-foreground)",
-          colorTextOnPrimaryBackground: "var(--color-background)",
-          colorNeutral: "darkgrey",
-        },
+	return (
+		<ClerkProvider
+			afterSignOutUrl={"/"}
+			appearance={{
+				variables: {
+					colorPrimary: "var(bg-primary)",
+					colorText: "text-foreground",
+					colorBackground: "bg-background",
+					colorTextSecondary: "text-secondary-500",
+					borderRadius: "10px",
+					colorInputBackground: "bg-default-500",
+					colorInputText: "text-default-700",
+					colorTextOnPrimaryBackground: "text-primary-foreground",
+					colorNeutral: "bg-default-500",
+				},
 
-        layout: {
-          termsPageUrl: "/support/terms",
-          privacyPageUrl: "/support/privacy",
-          helpPageUrl: "/support/faqs",
-          logoPlacement: "none",
-          shimmer: true,
-        },
-        captcha: {
-          language: "en",
-          theme: "auto",
-          size: "normal",
-        },
-      }}
-      signInFallbackRedirectUrl={"/account"}
-      signInUrl="/auth/sign-in"
-      signUpUrl="/auth/sign-up"
-    >
-      <HeroUIProvider navigate={router.push}>
-        <NextThemesProvider {...themeProps}>
-          <GlobalProvider>
-            <AccountProvider>
-              <OnboardingCheck>{children}</OnboardingCheck>
-            </AccountProvider>
-          </GlobalProvider>
-        </NextThemesProvider>
-      </HeroUIProvider>
-    </ClerkProvider>
-  );
+				layout: {
+					termsPageUrl: "/support/terms",
+					privacyPageUrl: "/support/privacy",
+					helpPageUrl: "/support/faqs",
+					logoPlacement: "none",
+					shimmer: true,
+				},
+				captcha: {
+					language: "en",
+					theme: "auto",
+					size: "normal",
+				},
+			}}
+			signInFallbackRedirectUrl={"/account"}
+			signInUrl="/auth/sign-in"
+			signUpUrl="/auth/sign-up">
+			<HeroUIProvider navigate={router.push}>
+				<NextThemesProvider {...themeProps}>
+					<GlobalProvider>
+						<AccountProvider>
+							<OnboardingCheck>{children}</OnboardingCheck>
+						</AccountProvider>
+					</GlobalProvider>
+				</NextThemesProvider>
+			</HeroUIProvider>
+		</ClerkProvider>
+	);
 }
