@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
 
 import { supabase } from "@/lib/db";
-import { user } from "@heroui/theme";
 
 const PLAN_PRICES: Record<string, { monthly: number; yearly: number }> = {
 	starter: { monthly: 0, yearly: 0 },
