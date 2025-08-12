@@ -73,11 +73,12 @@ export interface iCharge {
 
 export interface iSubscription {
 	id: string;
-	userId: string;
+	user_id: string;
+	charge_id: string;
 	plan: string;
 	planDetails?: iPricingPlan;
 	period: "monthly" | "yearly";
-	status: "active" | "canceled" | "past_due";
+	status: "active" | "canceled" | "past_due" | "pending";
 	started_at: string; // ISO date-time string
 	ended_at: string | null; // ISO date-time string or null if still active
 	created_at: string; // ISO date-time string
