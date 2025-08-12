@@ -36,6 +36,13 @@ const supportLinks = [
 		external: true,
 	},
 ];
+// Add About page link
+supportLinks.push({
+	title: "About",
+	description: "Learn more about PayMe-Zar and our mission.",
+	href: "/about",
+	icon: <HelpCircle className="text-primary" size={24} />,
+});
 
 export default function SupportPage() {
 	return (

@@ -11,6 +11,7 @@ import { ClerkProvider, useUser } from "@clerk/nextjs";
 import { AccountProvider } from "@/context/AccountContext";
 import { GlobalProvider } from "@/context/GlobalContext";
 import { LiskOnboarding } from "@/components/onboarding/lisk-onboarding";
+import { heroui, lightLayout } from "@heroui/theme";
 
 export interface ProvidersProps {
 	children: React.ReactNode;
@@ -64,32 +65,35 @@ function OnboardingCheck({ children }: { children: React.ReactNode }) {
 export function Providers({ children, themeProps }: ProvidersProps) {
 	const router = useRouter();
 
+	const { colors } = heroui().config.theme.extend;
+
 	return (
 		<ClerkProvider
 			afterSignOutUrl={"/"}
 			appearance={{
 				variables: {
-					colorPrimary: "var(bg-primary)",
-					colorText: "text-foreground",
-					colorBackground: "bg-background",
-					colorTextSecondary: "text-secondary-500",
-					borderRadius: "10px",
-					colorInputBackground: "bg-default-500",
-					colorInputText: "text-default-700",
-					colorTextOnPrimaryBackground: "text-primary-foreground",
-					colorNeutral: "bg-default-500",
+					colorPrimary: colors.primary[500],
+					colorText: colors.background[500], // zinc-900
+					colorBackground: colors.background[500], // white
+					colorTextSecondary: colors.secondary[500], // zinc-500
+					borderRadius: lightLayout.radius?.small,
+					colorInputBackground: colors.background[500], // zinc-100
+					colorInputText: colors.foreground[500], // zinc-900
+					colorTextOnPrimaryBackground: colors.foreground[500], // white
+					colorNeutral: colors.default[500], // zinc-400
 				},
 
 				layout: {
 					termsPageUrl: "/support/terms",
 					privacyPageUrl: "/support/privacy",
-					helpPageUrl: "/support/faqs",
+					helpPageUrl: "/support/help-centre",
+					logoImageUrl: "/images/amsa-logo.png",
 					logoPlacement: "none",
 					shimmer: true,
 				},
 				captcha: {
 					language: "en",
-					theme: "auto",
+					theme: "dark",
 					size: "normal",
 				},
 			}}
