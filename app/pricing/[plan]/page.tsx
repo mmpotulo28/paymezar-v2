@@ -43,7 +43,7 @@ export default function SubscriptionPage() {
 	const [success, setSuccess] = useState<string | null>(null);
 	const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
 	const [amount, setAmount] = useState<number>(0);
-	const [canSubscribe, setCanSubscribe] = useState<boolean>(false);
+	const [canSubscribe, setCanSubscribe] = useState<boolean>(true);
 
 	useEffect(() => {
 		if (!plan) {
@@ -56,10 +56,12 @@ export default function SubscriptionPage() {
 	}, [plan, period, router]);
 
 	useEffect(() => {
-		if (user && subscriptions.length > 0) {
-			const hasActiveSubscription = subscriptions.some(
-				(sub) => sub.status === "active" && sub.plan === planKey,
-			);
+		if (user && subscriptions?.length > 0) {
+			const hasActiveSubscription =
+				subscriptions?.some((sub) => sub.status === "active" && sub.plan === planKey) ||
+				false;
+
+			console.log("use hasActiveSubscription:", hasActiveSubscription);
 			setCanSubscribe(!hasActiveSubscription);
 		} else {
 			setCanSubscribe(false);
