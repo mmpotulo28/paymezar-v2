@@ -43,7 +43,7 @@ export default function SubscriptionPage() {
 	const [success, setSuccess] = useState<string | null>(null);
 	const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
 	const [amount, setAmount] = useState<number>(0);
-	const [canSubscribe, setCanSubscribe] = useState<boolean>(true);
+	const [isCurrent, setIsCurrent] = useState<boolean>(true);
 
 	useEffect(() => {
 		if (!plan) {
@@ -57,14 +57,15 @@ export default function SubscriptionPage() {
 
 	useEffect(() => {
 		if (user && subscriptions?.length > 0) {
-			const hasActiveSubscription =
-				subscriptions?.some((sub) => sub.status === "active" && sub.plan === planKey) ||
-				false;
+			const isCurrent = subscriptions.some(
+				(sub) => sub.plan.toLowerCase() === plan.name.toLowerCase(),
+			);
 
-			console.log("use hasActiveSubscription:", hasActiveSubscription);
-			setCanSubscribe(!hasActiveSubscription);
+			console.log("isCurrent:", isCurrent);
+			setIsCurrent(!!isCurrent);
 		} else {
-			setCanSubscribe(false);
+			console.log("User is not subscribed");
+			setIsCurrent(false);
 		}
 	}, [user, subscriptions, planKey]);
 
@@ -211,9 +212,9 @@ export default function SubscriptionPage() {
 							<Button
 								className="w-full"
 								color="primary"
-								disabled={loading || !canSubscribe}
+								disabled={loading || isCurrent}
 								endContent={
-									canSubscribe && (
+									!isCurrent && (
 										<Chip color="success" radius="sm" size="sm" variant="solid">
 											{amount} ZAR
 										</Chip>
@@ -222,11 +223,12 @@ export default function SubscriptionPage() {
 								isLoading={loading}
 								size="lg"
 								startContent={
-									canSubscribe ? <Zap size={18} /> : <AlertCircle size={18} />
+									!isCurrent ? <Zap size={18} /> : <AlertCircle size={18} />
 								}
 								onPress={handleSubscribe}>
-								{!canSubscribe && "Already subscribed"}
-								{canSubscribe && (
+								{!!isCurrent ? (
+									"Already subscribed"
+								) : (
 									<>
 										{plan.price.monthly === 0 && plan.price.yearly === 0
 											? "Activate Free Plan"
