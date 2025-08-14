@@ -1,7 +1,6 @@
 "use client";
 
 import type { ThemeProviderProps } from "next-themes";
-
 import * as React from "react";
 import { HeroUIProvider } from "@heroui/system";
 import { useRouter, usePathname } from "next/navigation";
@@ -12,6 +11,7 @@ import { AccountProvider } from "@/context/AccountContext";
 import { GlobalProvider } from "@/context/GlobalContext";
 import { LiskOnboarding } from "@/components/onboarding/lisk-onboarding";
 import { heroui, lightLayout } from "@heroui/theme";
+import { ToastProvider } from "@heroui/react";
 
 export interface ProvidersProps {
 	children: React.ReactNode;
@@ -102,6 +102,9 @@ export function Providers({ children, themeProps }: ProvidersProps) {
 			signUpUrl="/auth/sign-up">
 			<HeroUIProvider navigate={router.push}>
 				<NextThemesProvider {...themeProps}>
+					<ToastProvider
+						toastProps={{ shouldShowTimeoutProgress: true, closeIcon: true }}
+					/>
 					<GlobalProvider>
 						<AccountProvider>
 							<OnboardingCheck>{children}</OnboardingCheck>

@@ -1,5 +1,15 @@
 "use client";
-import { Card, CardHeader, CardBody, Chip, Button, Spinner, Snippet } from "@heroui/react";
+import {
+	Card,
+	CardHeader,
+	CardBody,
+	Chip,
+	Button,
+	Spinner,
+	Snippet,
+	addToast,
+	Toast,
+} from "@heroui/react";
 import { RefreshCcw } from "lucide-react";
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
@@ -24,6 +34,13 @@ export function ChargesList({ className = "" }: { className?: string }) {
 		setPaySuccess(null);
 
 		try {
+			addToast({
+				title: "Payment in progress...",
+				description: "Your payment is being processed.",
+				variant: "flat",
+				color: "secondary",
+				shouldShowTimeoutProgress: true,
+			});
 			// 1. Do the transfer using the correct endpoint
 			const transferRes = await axios.request({
 				method: "POST",
@@ -44,6 +61,13 @@ export function ChargesList({ className = "" }: { className?: string }) {
 			}
 
 			// 2. Update charge status to COMPLETE after payment
+			addToast({
+				title: "Completing charge!",
+				description:
+					"Your payment has been processed successfully. now completing your charge...",
+				variant: "flat",
+				color: "success",
+			});
 			await axios.request({
 				method: "PUT",
 				url: `https://seal-app-qp9cc.ondigitalocean.app/api/v1/charge/${encodeURIComponent(user?.id || "")}/${encodeURIComponent(charge.id)}/update`,
@@ -54,6 +78,12 @@ export function ChargesList({ className = "" }: { className?: string }) {
 				data: { status: "COMPLETE" },
 			});
 
+			addToast({
+				title: "Charge completed!",
+				description: "Your charge has been completed successfully.",
+				variant: "flat",
+				color: "success",
+			});
 			setPaySuccess("Payment successful!");
 
 			// 3. Find related subscription and update status to active
@@ -70,6 +100,12 @@ export function ChargesList({ className = "" }: { className?: string }) {
 					{ "Content-Type": "application/json" },
 					"PUT",
 				);
+				addToast({
+					title: "Subscription activated!",
+					description: "Your subscription has been activated successfully.",
+					variant: "flat",
+					color: "success",
+				});
 				await refreshSubscriptions();
 			} else {
 				setPayError("No related subscription found for this charge.");
@@ -77,6 +113,13 @@ export function ChargesList({ className = "" }: { className?: string }) {
 
 			await refreshCharges();
 		} catch (err: any) {
+			addToast({
+				title: "Payment failed",
+				description: err.message || "An error occurred while processing your payment.",
+				variant: "flat",
+				color: "danger",
+			});
+			console.error("Payment error:", err);
 			setPayError(err.message || "Payment failed");
 		}
 		setPayLoading(null);
