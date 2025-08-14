@@ -8,7 +8,6 @@ import {
 	Spinner,
 	Snippet,
 	addToast,
-	Toast,
 } from "@heroui/react";
 import { RefreshCcw } from "lucide-react";
 import { useState } from "react";

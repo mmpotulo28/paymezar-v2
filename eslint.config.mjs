@@ -100,10 +100,10 @@ export default defineConfig([
 			"prettier/prettier": "warn",
 			"no-unused-vars": "error",
 			"unused-imports/no-unused-vars": "error",
-			"unused-imports/no-unused-imports": "warn",
+			"unused-imports/no-unused-imports": "error",
 
 			"@typescript-eslint/no-unused-vars": [
-				"warn",
+				"error",
 				{
 					args: "after-used",
 					ignoreRestSiblings: false,
