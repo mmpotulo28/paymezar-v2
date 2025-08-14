@@ -10,6 +10,7 @@ import {
 	RadioGroup,
 	Divider,
 	Alert,
+	addToast,
 } from "@heroui/react";
 import { Button } from "@heroui/button";
 import {
@@ -31,7 +32,7 @@ import UnAuthorizedContent from "@/components/UnAuthorizedContent";
 import { useAccount } from "@/context/AccountContext";
 
 export default function SubscriptionPage() {
-	const { subscriptions } = useAccount();
+	const { subscriptions, refreshSubscriptions } = useAccount();
 	const { user } = useUser();
 	const router = useRouter();
 	const params = useParams();
@@ -47,6 +48,12 @@ export default function SubscriptionPage() {
 
 	useEffect(() => {
 		if (!plan) {
+			addToast({
+				title: "Plan not found",
+				description: "The selected plan could not be found.",
+				variant: "flat",
+				color: "danger",
+			});
 			router.replace("/pricing");
 		}
 		const newAmount =
@@ -79,6 +86,13 @@ export default function SubscriptionPage() {
 		setError(null);
 		setSuccess(null);
 		try {
+			addToast({
+				title: "Creating subscription...",
+				description: "Your subscription is being created.",
+				variant: "flat",
+				color: "secondary",
+				shouldShowTimeoutProgress: true,
+			});
 			const result = await postApi("/api/subscription/create", {
 				id: user.id,
 				plan: planKey,
@@ -87,11 +101,30 @@ export default function SubscriptionPage() {
 			});
 
 			if (!result.error) {
+				addToast({
+					title: "Subscription created",
+					description: "Your subscription has been created successfully.",
+					variant: "flat",
+					color: "success",
+				});
 				setSuccess("Subscription created successfully!");
+				refreshSubscriptions();
 			} else {
+				addToast({
+					title: "Subscription creation failed",
+					description: result.message || "Failed to create subscription.",
+					variant: "flat",
+					color: "danger",
+				});
 				setError(result.message || "Failed to create subscription.");
 			}
 		} catch (e: any) {
+			addToast({
+				title: "Subscription creation failed",
+				description: e.message || "Failed to create subscription.",
+				variant: "flat",
+				color: "danger",
+			});
 			console.error("Subscription error:", e);
 			setError(e.message || "Failed to create subscription.");
 		}
