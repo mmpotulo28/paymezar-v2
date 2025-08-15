@@ -62,7 +62,10 @@ const options: AgentOptions = {
 };
 
 // The agent loader code executes immediately on instantiation.
-new BrowserAgent(options);
+if (typeof window !== "undefined") {
+	new BrowserAgent(options);
+}
+
 export interface ProvidersProps {
 	children: React.ReactNode;
 	themeProps?: ThemeProviderProps;
