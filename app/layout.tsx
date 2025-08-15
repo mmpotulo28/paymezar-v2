@@ -9,6 +9,7 @@ import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import Scripts from "./scripts";
 
 export const metadata: Metadata = {
 	title: {
@@ -31,7 +32,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<html suppressHydrationWarning lang="en">
-			<head></head>
+			<head>
+				<Scripts />
+			</head>
 			<body
 				className={clsx(
 					"min-h-screen text-foreground bg-background font-sans antialiased",

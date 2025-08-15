@@ -108,6 +108,7 @@ export default function SubscriptionPage() {
 					color: "success",
 				});
 				setSuccess("Subscription created successfully!");
+				console.log("Subscription created:", result);
 				refreshSubscriptions();
 			} else {
 				addToast({
@@ -127,6 +128,7 @@ export default function SubscriptionPage() {
 			});
 			console.error("Subscription error:", e);
 			setError(e.message || "Failed to create subscription.");
+			throw e;
 		}
 		setLoading(false);
 	};
