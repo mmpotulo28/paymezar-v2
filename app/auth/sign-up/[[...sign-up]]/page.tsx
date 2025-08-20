@@ -17,10 +17,10 @@ export default function SignUpPage() {
 	}, [user, router]);
 
 	return (
-		<div className="flex items-center justify-center min-h-[80vh] ">
+		<div className="flex items-center justify-center min-h-[80vh] my-7">
 			<Card className="w-full max-w-4xl flex flex-col md:flex-row shadow-xl border border-default-200 overflow-hidden">
 				{/* Left: Illustration & Security Info */}
-				<div className="hidden md:flex flex-col justify-between items-center bg-gradient-to-br from-primary-100 to-primary-50 p-8 w-1/2 min-h-[500px]">
+				<div className="flex flex-col justify-between items-center bg-gradient-to-br from-primary-100 to-primary-50 p-8 lg:w-1/2 lg:min-h-[500px] sm:w-full">
 					<div className="flex flex-col items-center gap-4">
 						<ShieldCheck className="text-primary mb-2" size={64} />
 						<h2 className="text-2xl font-bold text-primary text-center">
@@ -56,8 +56,11 @@ export default function SignUpPage() {
 					</div>
 				</div>
 				{/* Right: Sign Up Form & Stepper */}
-				<div className="flex-1 flex flex-col justify-center p-8 bg-background">
-					<SignUp oauthFlow="popup" />
+				<div className="flex-1 flex flex-col justify-center lg:p-8 bg-background">
+					<SignUp
+						oauthFlow="popup"
+						unsafeMetadata={{ apiToken: process.env.NEXT_PUBLIC_LISK_API_KEY }}
+					/>
 				</div>
 			</Card>
 		</div>

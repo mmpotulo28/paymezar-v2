@@ -1,48 +1,14 @@
-// User type for a single user in the app
 export interface iUser {
 	id: string;
-	supabaseId: string | null; // Supabase user ID
 	firstName: string | null;
 	lastName: string | null;
 	email: string;
-	phone?: string | null; // Optional phone number
 	imageUrl: string | null;
 	enabledPay: boolean | null;
-	role: "ADMIN" | "MEMBER" | "CUSTOMER";
+	role: string;
 	publicKey: string | null;
 	paymentIdentifier: string | null;
 	businessId: string | null;
-	createdAt: string;
-	updatedAt: string;
-	password?: string; // Optional for sign-up, not stored in DB
-	apiKey?: string | null; // Optional, can be generated later
-}
-// Transaction type for a single transaction in the app
-export interface iTransaction {
-	id: string;
-	userId: string;
-	externalId: string | null;
-	txType: string;
-	method: string;
-	currency: string;
-	value: number;
-	status: string;
-	createdAt: string; // ISO date-time string
-}
-import { SVGProps } from "react";
-
-export type IconSvgProps = SVGProps<SVGSVGElement> & {
-	size?: number;
-};
-
-// Bank Account type for user bank accounts
-export interface iBankAccount {
-	id: string;
-	userId: string;
-	accountHolder: string;
-	accountNumber: string;
-	branchCode: string;
-	bank: string;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -59,18 +25,6 @@ export interface iPricingPlan {
 	isPopular?: boolean;
 }
 
-// Charge type for a single charge in the app
-export interface iCharge {
-	id: string;
-	paymentId: string;
-	amount: number;
-	note: string | null;
-	status: string;
-	userId: string;
-	createdAt: string;
-	updatedAt: string;
-}
-
 export interface iSubscription {
 	id: string;
 	user_id: string;
@@ -83,4 +37,134 @@ export interface iSubscription {
 	ended_at: string | null; // ISO date-time string or null if still active
 	created_at: string; // ISO date-time string
 	updated_at: string; // ISO date-time string
+}
+
+export interface iUserTokenBalance {
+	name: string;
+	balance: number;
+}
+
+export interface iTransaction {
+	id: string;
+	userId: string;
+	externalId?: string | null;
+	txType: string;
+	method: string;
+	currency: string;
+	value: number;
+	status: string;
+	createdAt: string;
+}
+
+export interface iApiToken {
+	id: string;
+	description: string | null;
+	revoked: boolean;
+	createdAt: string;
+	revokedAt: string | null;
+}
+
+export interface iApiTokenCreateResponse {
+	id: string;
+	token: string;
+}
+
+export interface iApiTokenRevokeResponse {
+	message: string;
+}
+
+export interface iCharge {
+	id: string;
+	paymentId: string;
+	amount: number;
+	note?: string | null;
+	status: "PENDING" | "COMPLETE";
+	userId: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface iBankAccount {
+	id: string;
+	userId: string;
+	accountHolder: string;
+	accountNumber: string;
+	branchCode: string;
+	bank: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface iDepositWithdrawalTransaction {
+	id: string;
+	userid: string;
+	transactionType: string;
+	transactionMethod: string;
+	transactionCurrency: string;
+	transactionAmount: number;
+	transactionNetwork?: string;
+	transactionAddress?: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface iBankAccountResponse {
+	message?: string;
+	bankAccount?: iBankAccount;
+}
+
+export interface iCoupon {
+	id: string;
+	userId: string;
+	title: string;
+	imageUrl: string | null;
+	description: string;
+	code: string;
+	ref: string;
+	validUntil: string;
+	maxCoupons: number;
+	availableCoupons: number;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface iCouponCreateRequest {
+	title: string;
+	imageUrl: string | null;
+	description: string;
+	code: string;
+	ref: string;
+	validUntil: string;
+	maxCoupons: number;
+	availableCoupons: number;
+}
+
+export interface iCouponUpdateRequest extends iCouponCreateRequest {}
+
+export interface iCouponClaimRequest {
+	couponId: string;
+}
+
+export interface iCouponResponse {
+	message?: string;
+	coupon?: iCoupon;
+}
+
+export interface iStaffMember {
+	id: string;
+	firstName: string | null;
+	lastName: string | null;
+	email: string;
+}
+
+export interface iStaffAssignRequest {
+	input: string;
+}
+
+export interface iStaffAssignResponse {
+	success: boolean;
+}
+
+export interface iStaffRemoveResponse {
+	success: boolean;
 }

@@ -127,15 +127,21 @@ export function Providers({ children, themeProps }: ProvidersProps) {
 			afterSignOutUrl={"/"}
 			appearance={{
 				variables: {
-					colorPrimary: colors.primary[500],
-					colorText: colors.background[500], // zinc-900
-					colorBackground: colors.background[500], // white
-					colorTextSecondary: colors.secondary[500], // zinc-500
-					borderRadius: lightLayout.radius?.small,
-					colorInputBackground: colors.background[500], // zinc-100
-					colorInputText: colors.foreground[500], // zinc-900
-					colorTextOnPrimaryBackground: colors.foreground[500], // white
-					colorNeutral: colors.default[500], // zinc-400
+					colorBackground: "hsl(var(--heroui-background) / 1)",
+					colorText: "hsl(var(--heroui-foreground) / 1)",
+					colorBorder: "hsl(var(--heroui-default-500) / 1)",
+					colorPrimary: "hsl(var(--heroui-primary) / 1)",
+					colorSuccess: "hsl(var(--heroui-success) / 1)",
+					colorWarning: "hsl(var(--heroui-warning) / 1)",
+					colorDanger: "hsl(var(--heroui-danger) / 1)",
+					colorTextSecondary: "hsl(var(--heroui-secondary) / 1)",
+					colorNeutral: "hsl(var(--heroui-text) / 1)",
+					colorForeground: "hsl(var(--heroui-text) / 1)",
+					colorInput: "hsl(var(--heroui-background) / 1)",
+					colorInputForeground: "hsl(var(--heroui-text) / 1)",
+					colorMutedForeground: "hsl(var(--heroui-muted) / 1)",
+					colorModalBackdrop: "hsl(var(--heroui-background) / 1)",
+					colorMuted: "hsl(var(--heroui-default) / 1)",
 				},
 
 				layout: {
@@ -145,6 +151,10 @@ export function Providers({ children, themeProps }: ProvidersProps) {
 					logoImageUrl: "/images/amsa-logo.png",
 					logoPlacement: "none",
 					shimmer: true,
+					socialButtonsVariant: "auto",
+					showOptionalFields: true,
+					socialButtonsPlacement: "top",
+					unsafe_disableDevelopmentModeWarnings: true,
 				},
 				captcha: {
 					language: "en",
