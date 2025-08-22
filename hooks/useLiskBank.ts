@@ -1,14 +1,21 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import { useUser } from "@clerk/nextjs";
-import { iBankAccount, iBankAccountResponse } from "@/types";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE as string;
+import { useOrganization, useUser } from "@clerk/nextjs";
+import {
+	iBankAccount,
+	iBankAccountResponse,
+	iCreateTransactionParams,
+	iCreateTransactionResponse,
+	iUpsertBankAccountParams,
+} from "@/types";
+import useCache from "./useCache";
+const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
 export interface iUseLiskBank {
-	bankAccount: iBankAccount | null;
-	loading: boolean;
-	error: string | null;
+	bankAccount: iBankAccount | undefined;
+	bankLoading: boolean;
+	bankError: string | undefined;
+	bankMessage: string | undefined;
 	upsertBankAccount: (data: {
 		userId: string;
 		accountHolder: string;
@@ -18,161 +25,183 @@ export interface iUseLiskBank {
 	}) => Promise<iBankAccountResponse | undefined>;
 	getBankAccount: (userId: string) => Promise<iBankAccount | undefined>;
 	deleteBankAccount: (userId: string) => Promise<{ message: string } | undefined>;
-	createTransaction: (data: {
-		userId: string;
-		transactionType: string;
-		transactionMethod: string;
-		transactionCurrency: string;
-		transactionAmount: number;
-		transactionNetwork?: string;
-		transactionAddress?: string;
-	}) => Promise<any>;
+	createTransaction: (
+		data: iCreateTransactionParams,
+	) => Promise<iCreateTransactionResponse | undefined>;
 }
 
-export function useLiskBank(): iUseLiskBank {
+export function useLiskBank(mode: "user" | "organization" = "user"): iUseLiskBank {
+	const [bankAccount, setBankAccount] = useState<iBankAccount | undefined>(undefined);
+	const [bankLoading, setBankLoading] = useState(false);
+	const [bankError, setBankError] = useState<string | undefined>(undefined);
+	const [bankMessage, setBankMessage] = useState<string | undefined>(undefined);
+
 	const { user } = useUser();
-	const [bankAccount, setBankAccount] = useState<iBankAccount | null>(null);
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const { organization } = useOrganization();
+	const { getCache, setCache } = useCache();
+	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
 
-	const upsertBankAccount = async ({
-		userId,
-		accountHolder,
-		accountNumber,
-		branchCode,
-		bankName,
-	}: {
-		userId: string;
-		accountHolder: string;
-		accountNumber: string;
-		branchCode: string;
-		bankName: string;
-	}) => {
-		setLoading(true);
-		setError(null);
-		try {
-			const { data } = await axios.post<iBankAccountResponse>(
-				`${API_BASE}/bank/${encodeURIComponent(userId)}`,
-				{ accountHolder, accountNumber, branchCode, bankName },
-				{
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+	useEffect(() => {
+		// Fetch API key from cookies
+		const fetchApiKey = () => {
+			const key = (
+				mode === "user"
+					? user?.unsafeMetadata.apiToken
+					: organization?.publicMetadata.apiToken
+			) as string;
+
+			setApiKey(`Bearer ${key}` || undefined);
+		};
+
+		fetchApiKey();
+	}, [user, organization, mode]);
+
+	const upsertBankAccount = useCallback(
+		async ({
+			userId,
+			accountHolder,
+			accountNumber,
+			branchCode,
+			bankName,
+		}: iUpsertBankAccountParams) => {
+			setBankLoading(true);
+			setBankError(undefined);
+			try {
+				const { data } = await axios.post<iBankAccountResponse>(
+					`${API_BASE}/bank/${encodeURIComponent(userId)}`,
+					{ accountHolder, accountNumber, branchCode, bankName },
+					{
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: apiKey,
+						},
 					},
-				},
-			);
-			setBankAccount(data.bankAccount ?? null);
-			return data;
-		} catch (err: any) {
-			setError(err?.response?.data?.message || "Failed to upsert bank account");
-		} finally {
-			setLoading(false);
-		}
+				);
+				setBankAccount(data.bankAccount ?? undefined);
+				setBankMessage("Bank account created successfully");
+				return data;
+			} catch (err: any) {
+				setBankError(err?.response?.data?.message || "Failed to upsert bank account");
+			} finally {
+				setBankLoading(false);
+			}
 
-		return undefined;
-	};
+			return undefined;
+		},
+		[],
+	);
 
-	const getBankAccount = async (userId: string) => {
-		setLoading(true);
-		setError(null);
+	const getBankAccount = useCallback(async (userId: string) => {
+		setBankLoading(true);
+		setBankError(undefined);
+		const cacheKey = `bank_account_${userId}`;
 		try {
+			const cached = getCache(cacheKey);
+			if (cached) {
+				setBankAccount(cached);
+				setBankLoading(false);
+				return;
+			}
+
 			const { data } = await axios.get<iBankAccount>(
 				`${API_BASE}/bank/${encodeURIComponent(userId)}`,
 				{
 					headers: {
-						Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+						Authorization: apiKey,
 					},
 				},
 			);
 			setBankAccount(data);
+			setCache(cacheKey, data);
 			return data;
 		} catch (err: any) {
-			setError(
+			setBankError(
 				err?.response?.data?.message ||
 					(err?.response?.status === 404
 						? "Bank account not found"
 						: "Failed to fetch bank account"),
 			);
 		} finally {
-			setLoading(false);
+			setBankLoading(false);
 		}
-	};
+	}, []);
 
-	const deleteBankAccount = async (userId: string) => {
-		setLoading(true);
-		setError(null);
-		try {
-			const { data } = await axios.delete<{ message: string }>(
-				`${API_BASE}/bank/${encodeURIComponent(userId)}`,
-				{
-					headers: {
-						Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+	const deleteBankAccount = useCallback(
+		async (userId: string): Promise<{ message: string } | undefined> => {
+			setBankLoading(true);
+			setBankError(undefined);
+			try {
+				const { data } = await axios.delete<{ message: string }>(
+					`${API_BASE}/bank/${encodeURIComponent(userId)}`,
+					{
+						headers: {
+							Authorization: apiKey,
+						},
 					},
-				},
-			);
-			setBankAccount(null);
-			return data;
-		} catch (err: any) {
-			setError(
-				err?.response?.data?.message ||
-					(err?.response?.status === 404
-						? "Bank account not found"
-						: "Failed to delete bank account"),
-			);
-		} finally {
-			setLoading(false);
-		}
-	};
+				);
+				setBankAccount(undefined);
+				setBankMessage("Bank account deleted successfully");
+				return data;
+			} catch (err: any) {
+				setBankError(
+					err?.response?.data?.message ||
+						(err?.response?.status === 404
+							? "Bank account not found"
+							: "Failed to delete bank account"),
+				);
+			} finally {
+				setBankLoading(false);
+			}
+		},
+		[],
+	);
 
-	const createTransaction = async ({
-		userId,
-		transactionType,
-		transactionMethod,
-		transactionCurrency,
-		transactionAmount,
-		transactionNetwork,
-		transactionAddress,
-	}: {
-		userId: string;
-		transactionType: string;
-		transactionMethod: string;
-		transactionCurrency: string;
-		transactionAmount: number;
-		transactionNetwork?: string;
-		transactionAddress?: string;
-	}) => {
-		setLoading(true);
-		setError(null);
-		try {
-			const { data } = await axios.post(
-				`${API_BASE}/create-transaction/${encodeURIComponent(userId)}`,
-				{
-					transactionType,
-					transactionMethod,
-					transactionCurrency,
-					transactionAmount,
-					transactionNetwork,
-					transactionAddress,
-				},
-				{
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+	const createTransaction = useCallback(
+		async ({
+			userId,
+			transactionType,
+			transactionMethod,
+			transactionCurrency,
+			transactionAmount,
+			transactionNetwork,
+			transactionAddress,
+		}: iCreateTransactionParams): Promise<iCreateTransactionResponse | undefined> => {
+			setBankLoading(true);
+			setBankError(undefined);
+			try {
+				const { data } = await axios.post<iCreateTransactionResponse>(
+					`${API_BASE}/create-transaction/${encodeURIComponent(userId)}`,
+					{
+						transactionType,
+						transactionMethod,
+						transactionCurrency,
+						transactionAmount,
+						transactionNetwork,
+						transactionAddress,
 					},
-				},
-			);
-			return data;
-		} catch (err: any) {
-			setError(err?.response?.data?.message || "Failed to create transaction");
-		} finally {
-			setLoading(false);
-		}
-	};
+					{
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: apiKey,
+						},
+					},
+				);
+				setBankMessage("Transaction created successfully");
+				return data;
+			} catch (err: any) {
+				setBankError(err?.response?.data?.message || "Failed to create transaction");
+			} finally {
+				setBankLoading(false);
+			}
+		},
+		[],
+	);
 
 	return {
 		bankAccount,
-		loading,
-		error,
+		bankLoading,
+		bankError,
+		bankMessage,
 		upsertBankAccount,
 		getBankAccount,
 		deleteBankAccount,

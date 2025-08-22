@@ -8,7 +8,6 @@ import { ClerkProvider, useUser } from "@clerk/nextjs";
 import { AccountProvider } from "@/context/AccountContext";
 import { GlobalProvider } from "@/context/GlobalContext";
 import { LiskOnboarding } from "@/components/onboarding/lisk-onboarding";
-import { heroui, lightLayout } from "@heroui/theme";
 import { ToastProvider } from "@heroui/react";
 import { AgentOptions } from "@newrelic/browser-agent/loaders/agent";
 
@@ -119,8 +118,6 @@ function OnboardingCheck({ children }: { children: React.ReactNode }) {
 
 export function Providers({ children, themeProps }: ProvidersProps) {
 	const router = useRouter();
-
-	const { colors } = heroui().config.theme.extend;
 
 	return (
 		<ClerkProvider

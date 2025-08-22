@@ -32,8 +32,8 @@ import UnAuthorizedContent from "@/components/UnAuthorizedContent";
 import { useAccount } from "@/context/AccountContext";
 
 export default function SubscriptionPage() {
-	const { subscriptions, refreshSubscriptions } = useAccount();
 	const { user } = useUser();
+	const { subscriptions, refreshSubscriptions } = useAccount();
 	const router = useRouter();
 	const params = useParams();
 	const planKey = String(params.plan || "").toLowerCase();
@@ -74,7 +74,7 @@ export default function SubscriptionPage() {
 			console.log("User is not subscribed");
 			setIsCurrent(false);
 		}
-	}, [user, subscriptions, planKey]);
+	}, [user, subscriptions, planKey, plan.name]);
 
 	const handleSubscribe = async () => {
 		if (!user?.id || !user?.unsafeMetadata?.paymentId) {
@@ -109,7 +109,7 @@ export default function SubscriptionPage() {
 				});
 				setSuccess("Subscription created successfully!");
 				console.log("Subscription created:", result);
-				refreshSubscriptions();
+				refreshSubscriptions(user?.id);
 			} else {
 				addToast({
 					title: "Subscription creation failed",

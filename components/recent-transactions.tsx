@@ -1,95 +1,77 @@
 "use client";
 import { Card, CardHeader, CardBody, Chip } from "@heroui/react";
 import { Link } from "@heroui/react";
-
-import { iTransaction } from "@/types";
 import { useAccount } from "@/context/AccountContext";
 
-export interface Transaction {
-  id: string;
-  to?: string;
-  from?: string;
-  amount: number;
-  status: string;
-  date: string;
-  direction: string; // "in" or "out"
-}
-
 export interface RecentTransactionsProps {
-  transactions?: iTransaction[];
-  className?: string;
+	className?: string;
 }
 
-export function RecentTransactions({
-  transactions: _transactions,
-  className = "",
-}: RecentTransactionsProps) {
-  const { transactions } = useAccount();
+export function RecentTransactions({ className = "" }: RecentTransactionsProps) {
+	const { transactions } = useAccount();
 
-  return (
-    <Card className={`w-full max-w-2xl ${className}`}>
-      <CardHeader className="flex items-center justify-between">
-        <span className="text-xl font-bold">Recent Transactions</span>
-        <Link isBlock showAnchorIcon href="/account/transactions" size="sm">
-          View All
-        </Link>
-      </CardHeader>
-      <CardBody>
-        <div className="flex flex-col gap-3">
-          {transactions.length === 0 && (
-            <div className="text-default-400 text-center py-4">
-              No transactions found.
-            </div>
-          )}
-          {transactions?.slice(0, 3).map((tx) => (
-            <div
-              key={tx.id}
-              className="w-full text-left rounded-xl border border-default-200 bg-default-50 hover:bg-default-100 transition flex flex-col sm:flex-row items-start justify-center gap-2 p-4 cursor-pointer"
-            >
-              <div className="flex-1 flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs text-default-500 truncate max-w-[120px]">
-                    {tx.id}
-                  </span>
-                  <Chip
-                    color={
-                      tx.status === "Completed"
-                        ? "success"
-                        : tx.status === "Pending"
-                          ? "warning"
-                          : "default"
-                    }
-                    size="sm"
-                    variant="flat"
-                  >
-                    {tx.status}
-                  </Chip>
-                </div>
-                <span className="text-xs text-default-400">
-                  {tx.createdAt.split("T")[0]}
-                </span>
-                <span className="text-xs text-default-600">
-                  Type: {tx.txType} | Method: {tx.method}
-                </span>
-                {tx.externalId && (
-                  <span className="text-xs text-default-400">
-                    External Ref: {tx.externalId}
-                  </span>
-                )}
-              </div>
-              <div className="flex md:flex-col sm:flex-row md:items-end sm:items-start gap-1 min-w-[90px]">
-                <span className="font-mono text-base font-bold text-primary">
-                  {tx.value.toLocaleString("en-ZA", {
-                    style: "currency",
-                    currency: "ZAR",
-                  })}
-                </span>
-                <span className="text-xs text-default-500">{tx.currency}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardBody>
-    </Card>
-  );
+	return (
+		<Card className={`w-full max-w-2xl ${className}`}>
+			<CardHeader className="flex items-center justify-between">
+				<span className="text-xl font-bold">Recent Transactions</span>
+				<Link isBlock showAnchorIcon href="/account/transactions" size="sm">
+					View All
+				</Link>
+			</CardHeader>
+			<CardBody>
+				<div className="flex flex-col gap-3">
+					{transactions.length === 0 && (
+						<div className="text-default-400 text-center py-4">
+							No transactions found.
+						</div>
+					)}
+					{transactions?.slice(0, 3).map((tx) => (
+						<div
+							key={tx.id}
+							className="w-full text-left rounded-xl border border-default-200 bg-default-50 hover:bg-default-100 transition flex flex-col sm:flex-row items-start justify-center gap-2 p-4 cursor-pointer">
+							<div className="flex-1 flex flex-col gap-1">
+								<div className="flex items-center gap-2">
+									<span className="font-mono text-xs text-default-500 truncate max-w-[120px]">
+										{tx.id}
+									</span>
+									<Chip
+										color={
+											tx.status === "Completed"
+												? "success"
+												: tx.status === "Pending"
+													? "warning"
+													: "default"
+										}
+										size="sm"
+										variant="flat">
+										{tx.status}
+									</Chip>
+								</div>
+								<span className="text-xs text-default-400">
+									{tx.createdAt.split("T")[0]}
+								</span>
+								<span className="text-xs text-default-600">
+									Type: {tx.txType} | Method: {tx.method}
+								</span>
+								{tx.externalId && (
+									<span className="text-xs text-default-400">
+										External Ref: {tx.externalId}
+									</span>
+								)}
+							</div>
+							<div className="flex md:flex-col sm:flex-row md:items-end sm:items-start gap-1 min-w-[90px]">
+								<span className="font-mono text-base font-bold text-primary">
+									{tx.value.toLocaleString("en-ZA", {
+										style: "currency",
+										currency: "ZAR",
+									})}
+								</span>
+								<span className="text-xs text-default-500">{tx.currency}</span>
+							</div>
+						</div>
+					))}
+				</div>
+			</CardBody>
+		</Card>
+	);
 }

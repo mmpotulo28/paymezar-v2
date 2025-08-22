@@ -168,3 +168,64 @@ export interface iStaffAssignResponse {
 export interface iStaffRemoveResponse {
 	success: boolean;
 }
+
+// transaction types
+export interface iCreateTransactionResponse {
+	message: string;
+	transaction: iTransaction;
+}
+
+export interface iCreateTransactionParams {
+	userId: string;
+	transactionType: string;
+	transactionMethod: string;
+	transactionCurrency: string;
+	transactionAmount: number;
+	transactionNetwork?: string;
+	transactionAddress?: string;
+}
+
+export interface iUpsertBankAccountParams {
+	userId: string;
+	accountHolder: string;
+	accountNumber: string;
+	branchCode: string;
+	bankName: string;
+}
+
+// business types
+export interface iMintStableCoinsResponse {
+	message: string;
+	transaction: Record<string, unknown>;
+	receipt: Record<string, unknown>;
+}
+
+export interface iPendingTx {
+	id: "string";
+	userId: "string";
+	txType: "string";
+	method: "string";
+	creditCurrency: "string";
+	creditValue: 1;
+	status: "string";
+	createdAt: "2025-08-22T18:06:25.305Z";
+	updatedAt: "2025-08-22T18:06:25.305Z";
+	details: {};
+	user: {
+		id: "string";
+		firstName: "string";
+		lastName: "string";
+		email: "hello@example.com";
+		publicKey: null;
+		paymentIdentifier: "string";
+		role: "string";
+	};
+}
+
+export interface iPendingTxResponse {
+	transactions: iPendingTx[];
+	total: 1;
+	page: 1;
+	pageSize: 1;
+	totalPages: 1;
+}

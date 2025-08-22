@@ -9,14 +9,13 @@ import {
 	Select,
 	SelectItem,
 	Switch,
-	Divider,
 	Chip,
 	Tooltip,
 	Spinner,
 } from "@heroui/react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { PricingTable, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import jsonPackage from "@/package.json";
 import {
 	Bell,
@@ -33,7 +32,7 @@ import {
 export default function SettingsPage() {
 	const { theme, setTheme } = useTheme();
 	const { user } = useUser();
-	const [apiBase, setApiBase] = useState(process.env.NEXT_PUBLIC_API_BASE || "");
+	const [apiBase, setApiBase] = useState(process.env.NEXT_PUBLIC_LISK_API_BASE || "");
 	const [apiToken, setApiToken] = useState<string>("");
 	const [saving, setSaving] = useState(false);
 	const [saveMsg, setSaveMsg] = useState<string | null>(null);
@@ -65,6 +64,7 @@ export default function SettingsPage() {
 			setSaveMsg("Settings saved! (Note: Environment changes require a restart)");
 		} catch (error) {
 			setSaveMsg("Failed to save onboarding info.");
+			console.error("Error saving onboarding info:", error);
 		} finally {
 			setTimeout(() => {
 				setSaving(false);

@@ -1,65 +1,57 @@
 "use client";
-import React, {
-	createContext,
-	useContext,
-	useEffect,
-	useState,
-	ReactNode,
-	useCallback,
-} from "react";
+import React, { createContext, useContext, useEffect, ReactNode } from "react";
 import { useUser } from "@clerk/nextjs";
 
-import { iTransaction, iBankAccount, iCharge, iSubscription } from "@/types";
-import { postApi, getUserBalance, getBankAccounts } from "@/lib/helpers";
-import { PLAN_DETAILS } from "@/lib/constants";
+import { iTransaction, iBankAccount, iCharge, iSubscription, iUserTokenBalance } from "@/types";
 import { useLiskTransactions } from "@/hooks/useLiskTransactions";
-
-const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE || "";
-
+import { useLiskBank } from "@/hooks/useLiskBank";
+import { useLiskCharges } from "@/hooks/useLiskCharges";
+import useSubscriptions from "@/hooks/useSubscriptions";
+import { useLiskBalances } from "@/hooks/useLiskBalances";
 interface AccountContextProps {
 	transactions: iTransaction[];
-	loadingTransactions: boolean;
-	transactionsError: string | null;
-	refreshTransactions: (id: string) => Promise<void>;
-	balance: { tokens: { name: string; balance: string }[] } | null;
-	loadingBalance: boolean;
-	refreshBalance: (id: string) => Promise<void>;
-	balanceError: string | null;
-	bankAccounts: iBankAccount[];
-	loadingBankAccounts: boolean;
-	refreshBankAccounts: (id: string) => Promise<void>;
-	bankAccountsError: string | null;
+	transactionsLoading: boolean;
+	transactionsError: string | undefined;
+	refreshTransactions: (id: string) => Promise<iTransaction[]>;
+	balances: iUserTokenBalance[];
+	balancesLoading: boolean;
+	refreshBalances: (id: string) => Promise<iUserTokenBalance[]>;
+	balancesError: string | undefined;
+	bankAccount: iBankAccount | undefined;
+	bankLoading: boolean;
+	refreshBankAccount: (id: string) => Promise<iBankAccount | undefined>;
+	bankError: string | undefined;
 	charges: iCharge[];
-	loadingCharges: boolean;
-	refreshCharges: (id: string) => Promise<void>;
-	chargesError: string | null;
+	chargeLoading: boolean;
+	refreshCharges: (id: string) => Promise<iCharge[]>;
+	chargesError: string | undefined;
 	subscriptions: iSubscription[];
-	loadingSubscriptions: boolean;
-	refreshSubscriptions: (id: string) => Promise<void>;
-	subscriptionError: string | null;
+	subscriptionLoading: boolean;
+	refreshSubscriptions: (id: string) => Promise<iSubscription[]>;
+	subscriptionError: string | undefined;
 }
 
 const AccountContext = createContext<AccountContextProps>({
 	transactions: [],
-	loadingTransactions: false,
-	transactionsError: null,
-	refreshTransactions: async () => {},
-	balance: null,
-	loadingBalance: false,
-	refreshBalance: async () => {},
-	balanceError: null,
-	bankAccounts: [],
-	loadingBankAccounts: false,
-	refreshBankAccounts: async () => {},
-	bankAccountsError: null,
+	transactionsLoading: false,
+	transactionsError: undefined,
+	refreshTransactions: async () => [],
+	balances: [],
+	balancesLoading: false,
+	refreshBalances: async () => [],
+	balancesError: undefined,
+	bankAccount: undefined,
+	bankLoading: false,
+	refreshBankAccount: async () => undefined,
+	bankError: undefined,
 	charges: [],
-	loadingCharges: false,
-	refreshCharges: async () => {},
-	chargesError: null,
+	chargeLoading: false,
+	refreshCharges: async () => [],
+	chargesError: undefined,
 	subscriptions: [],
-	loadingSubscriptions: false,
-	refreshSubscriptions: async () => {},
-	subscriptionError: null,
+	subscriptionLoading: false,
+	refreshSubscriptions: async () => [],
+	subscriptionError: undefined,
 });
 
 export function useAccount() {
@@ -68,50 +60,50 @@ export function useAccount() {
 
 export function AccountProvider({ children }: { children: ReactNode }) {
 	const { user } = useUser();
-	const {
-		balances: balance,
-		balancesError: balanceError,
-		balancesLoading: loadingBalance,
-		fetchUserBalances: fetchBalance,
+	const { transactions, fetchTransactions, transactionsError, transactionsLoading } =
+		useLiskTransactions();
 
-		transactions,
-		fetchUserTransactions: fetchTransactions,
-		transactionsError,
-		transactionLoading: loadingTransactions,
-	} = useLiskTransactions();
+	const { balances, balancesLoading, balancesError, fetchBalances } = useLiskBalances();
 
-	const {} = useLiskBank();
+	const { bankAccount, getBankAccount, bankError, bankLoading } = useLiskBank();
+
+	const { charges, fetchCharges, chargeError, chargeLoading } = useLiskCharges();
+
+	const { subscriptions, fetchSubscriptions, subscriptionError, subscriptionLoading } =
+		useSubscriptions();
 
 	useEffect(() => {
 		if (!user) return;
 		fetchTransactions(user?.id);
-		fetchBalance(user?.id);
-		fetchBankAccounts(user?.id);
+		fetchBalances(user?.id);
+		getBankAccount(user?.id);
 		fetchCharges(user?.id);
 		fetchSubscriptions(user?.id);
-	}, [fetchTransactions, fetchBalance, fetchBankAccounts, fetchCharges, fetchSubscriptions]);
+	}, [fetchTransactions, fetchBalances, getBankAccount, fetchCharges, fetchSubscriptions]);
 
 	return (
 		<AccountContext.Provider
 			value={{
 				transactions,
-				loadingTransactions,
+				transactionsLoading,
 				refreshTransactions: fetchTransactions,
 				transactionsError,
-				balance,
-				loadingBalance,
-				refreshBalance: fetchBalance,
-				balanceError,
-				bankAccounts,
-				loadingBankAccounts,
-				refreshBankAccounts: fetchBankAccounts,
-				bankAccountsError,
+
+				balances,
+				balancesLoading,
+				refreshBalances: fetchBalances,
+				balancesError,
+
+				bankAccount,
+				bankLoading,
+				refreshBankAccount: getBankAccount,
+				bankError,
 				charges,
-				loadingCharges,
+				chargeLoading,
 				refreshCharges: fetchCharges,
-				chargesError,
+				chargesError: chargeError,
 				subscriptions,
-				loadingSubscriptions,
+				subscriptionLoading,
 				refreshSubscriptions: fetchSubscriptions,
 				subscriptionError,
 			}}>

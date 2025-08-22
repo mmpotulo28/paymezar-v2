@@ -51,7 +51,7 @@ export default function SupportPage() {
 				<CardHeader className="flex flex-col items-center gap-2">
 					<h1 className="text-3xl font-bold text-center">Support Center</h1>
 					<p className="text-default-500 text-center max-w-xl">
-						We're here to help! Find answers, get in touch, or learn more about
+						We&apos;re here to help! Find answers, get in touch, or learn more about
 						PayMe-Zar.
 					</p>
 				</CardHeader>

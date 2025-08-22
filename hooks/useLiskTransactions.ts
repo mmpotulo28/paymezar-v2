@@ -1,107 +1,120 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { iUserTokenBalance, iTransaction } from "@/types";
-import { useUser } from "@clerk/nextjs";
+import { useOrganization, useUser } from "@clerk/nextjs";
+import useCache from "./useCache";
+const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE as string;
-
-export interface ILiskTransactions {
-	balances: iUserTokenBalance[];
-	balancesLoading: boolean;
-	balancesError: string | null;
-	fetchUserBalances: (userId: string) => Promise<void>;
-
+export interface iUseLiskTransactions {
 	transactions: iTransaction[];
 	transactionsLoading: boolean;
-	transactionsError: string | null;
-	fetchUserTransactions: (userId: string) => Promise<void>;
+	transactionsError: string | undefined;
+	fetchTransactions: (userId: string) => Promise<iTransaction[]>;
 
-	transaction: iTransaction | null;
+	transaction: iTransaction | undefined;
 	transactionLoading: boolean;
-	transactionError: string | null;
-	fetchSingleTransaction: (userId: string, transactionId: string) => Promise<void>;
+	transactionError: string | undefined;
+	fetchSingleTransaction: (
+		userId: string,
+		transactionId: string,
+	) => Promise<iTransaction | undefined>;
 }
 
-export function useLiskTransactions(): ILiskTransactions {
-	const { user } = useUser();
-	const [balances, setBalances] = useState<iUserTokenBalance[]>([]);
-	const [balancesLoading, setBalancesLoading] = useState(false);
-	const [balancesError, setBalancesError] = useState<string | null>(null);
-
+export function useLiskTransactions(mode: "user" | "organization" = "user"): iUseLiskTransactions {
 	const [transactions, setTransactions] = useState<iTransaction[]>([]);
 	const [transactionsLoading, setTransactionsLoading] = useState(false);
-	const [transactionsError, setTransactionsError] = useState<string | null>(null);
+	const [transactionsError, setTransactionsError] = useState<string | undefined>(undefined);
 
-	const [transaction, setTransaction] = useState<iTransaction | null>(null);
+	const [transaction, setTransaction] = useState<iTransaction | undefined>(undefined);
 	const [transactionLoading, setTransactionLoading] = useState(false);
-	const [transactionError, setTransactionError] = useState<string | null>(null);
+	const [transactionError, setTransactionError] = useState<string | undefined>(undefined);
 
-	const fetchUserBalances = async (userId: string) => {
-		setBalancesLoading(true);
-		setBalancesError(null);
-		try {
-			const { data } = await axios.get<{ tokens: iUserTokenBalance[] }>(
-				`${API_BASE}/${userId}/balance`,
-				{ headers: { Authorization: (user?.unsafeMetadata.apiToken as string) || "" } },
-			);
-			setBalances(data.tokens || []);
-		} catch (err: any) {
-			if (err?.response?.status === 400) setBalancesError("Invalid user ID.");
-			else if (err?.response?.status === 401) setBalancesError("Unauthorized.");
-			else if (err?.response?.status === 404) setBalancesError("User not found.");
-			else setBalancesError("Failed to fetch balances.");
-		} finally {
-			setBalancesLoading(false);
-		}
-	};
+	const { user } = useUser();
+	const { organization } = useOrganization();
+	const { getCache, setCache } = useCache();
+	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
 
-	const fetchUserTransactions = async (userId: string) => {
-		setTransactionsLoading(true);
-		setTransactionsError(null);
-		try {
-			const { data } = await axios.get<{ transactions: iTransaction[] }>(
-				`${API_BASE}/${userId}/transactions`,
-				{ headers: { Authorization: (user?.unsafeMetadata.apiToken as string) || "" } },
-			);
-			setTransactions(data.transactions || []);
-		} catch (err: any) {
-			if (err?.response?.status === 400) setTransactionsError("Invalid user ID.");
-			else if (err?.response?.status === 401) setTransactionsError("Unauthorized.");
-			else setTransactionsError("Failed to fetch transactions.");
-		} finally {
-			setTransactionsLoading(false);
-		}
-	};
+	useEffect(() => {
+		// Fetch API key
+		const fetchApiKey = () => {
+			const key = (
+				mode === "user"
+					? user?.unsafeMetadata.apiToken
+					: organization?.publicMetadata.apiToken
+			) as string;
 
-	const fetchSingleTransaction = async (userId: string, transactionId: string) => {
-		setTransactionLoading(true);
-		setTransactionError(null);
-		try {
-			const { data } = await axios.get<iTransaction>(
-				`${API_BASE}/${userId}/transactions/${transactionId}`,
-				{ headers: { Authorization: (user?.unsafeMetadata.apiToken as string) || "" } },
-			);
-			setTransaction(data);
-		} catch (err: any) {
-			if (err?.response?.status === 400) setTransactionError("Invalid parameters.");
-			else if (err?.response?.status === 401) setTransactionError("Unauthorized.");
-			else if (err?.response?.status === 404) setTransactionError("Transaction not found.");
-			else setTransactionError("Failed to fetch transaction.");
-		} finally {
-			setTransactionLoading(false);
-		}
-	};
+			setApiKey(`Bearer ${key}` || undefined);
+		};
+
+		fetchApiKey();
+	}, [user, organization, mode]);
+
+	const fetchTransactions = useCallback(
+		async (userId: string) => {
+			setTransactionsLoading(true);
+			setTransactionsError(undefined);
+			const cacheKey = `user_transactions_${userId}`;
+			try {
+				const cached = getCache<iTransaction[]>(cacheKey);
+				if (cached) {
+					setTransactions(cached);
+					setTransactionsLoading(false);
+					return [...cached];
+				}
+
+				const { data } = await axios.get<{ transactions: iTransaction[] }>(
+					`${API_BASE}/${userId}/transactions`,
+					{ headers: { Authorization: apiKey } },
+				);
+				setTransactions(data.transactions || []);
+				if (data.transactions) setCache(cacheKey, data.transactions);
+				return data.transactions || [];
+			} catch (err: any) {
+				if (err?.response?.status === 400) setTransactionsError("Invalid user ID.");
+				else if (err?.response?.status === 401) setTransactionsError("Unauthorized.");
+				else setTransactionsError("Failed to fetch transactions.");
+				console.error(err);
+			} finally {
+				setTransactionsLoading(false);
+			}
+
+			return [];
+		},
+		[apiKey],
+	);
+
+	const fetchSingleTransaction = useCallback(
+		async (userId: string, transactionId: string) => {
+			setTransactionLoading(true);
+			setTransactionError(undefined);
+			const cacheKey = `transaction_${userId}_${transactionId}`;
+			try {
+				const { data } = await axios.get<iTransaction | undefined>(
+					`${API_BASE}/${userId}/transactions/${transactionId}`,
+					{ headers: { Authorization: apiKey } },
+				);
+				setTransaction(data);
+				if (data) setCache(cacheKey, data);
+				return data;
+			} catch (err: any) {
+				if (err?.response?.status === 400) setTransactionError("Invalid parameters.");
+				else if (err?.response?.status === 401) setTransactionError("Unauthorized.");
+				else if (err?.response?.status === 404)
+					setTransactionError("Transaction not found.");
+				else setTransactionError("Failed to fetch transaction.");
+				console.error(err);
+			} finally {
+				setTransactionLoading(false);
+			}
+		},
+		[apiKey],
+	);
 
 	return {
-		balances,
-		balancesLoading,
-		balancesError,
-		fetchUserBalances,
-
 		transactions,
 		transactionsLoading,
 		transactionsError,
-		fetchUserTransactions,
+		fetchTransactions,
 
 		transaction,
 		transactionLoading,

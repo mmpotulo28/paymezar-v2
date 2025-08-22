@@ -1,37 +1,64 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { IUserTokenBalance } from "@/types/users";
-import { useUser } from "@clerk/nextjs";
+import {
+	iMintStableCoinsResponse,
+	iPendingTx,
+	iPendingTxResponse,
+	iUserTokenBalance,
+} from "@/types/";
+import { useOrganization, useUser } from "@clerk/nextjs";
+import useCache from "./useCache";
+const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE as string;
+export interface iUseBusiness {
+	float: iUserTokenBalance[];
+	loadingFloat: boolean;
+	floatError: string | undefined;
+	fetchFloat: () => Promise<iUserTokenBalance[]>;
 
-function setCache(key: string, value: any) {
-	Cookies.set(key, JSON.stringify({ value, ts: Date.now() }), { expires: 1 / 1440 }); // 1 min
+	gasLoading: boolean;
+	gasSuccess: string | undefined;
+	gasError: string | undefined;
+	enableBusinessGas: () => Promise<void>;
+	enableUserGas: (userId: string) => Promise<void>;
+
+	mintForm: {
+		transactionAmount: string;
+		transactionRecipient: string;
+		transactionNotes: string;
+	};
+	mintLoading: boolean;
+	mintSuccess: string | undefined;
+	mintError: string | undefined;
+	setMintForm: React.Dispatch<
+		React.SetStateAction<{
+			transactionAmount: string;
+			transactionRecipient: string;
+			transactionNotes: string;
+		}>
+	>;
+	mintStableCoins: () => Promise<iMintStableCoinsResponse | undefined>;
+
+	pendingTx: iPendingTx[];
+	pendingLoading: boolean;
+	pendingError: string | undefined;
+	fetchPendingTx: () => Promise<iPendingTxResponse>;
+
+	userGasLoading: boolean;
+	userGasSuccess: string | undefined;
+	userGasError: string | undefined;
 }
 
-function getCache(key: string) {
-	const raw = Cookies.get(key);
-	if (!raw) return null;
-	try {
-		const { value, ts } = JSON.parse(raw);
-		if (Date.now() - ts < 60000) return value; // valid for 1 min
-	} catch {
-		return null;
-	}
-	return null;
-}
-
-export function useLiskBusiness() {
-	const { user } = useUser();
-	const [float, setFloat] = useState<IUserTokenBalance[]>([]);
+export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBusiness {
+	const [float, setFloat] = useState<iUserTokenBalance[]>([]);
 	const [loadingFloat, setLoadingFloat] = useState(false);
-	const [floatError, setFloatError] = useState<string | null>(null);
+	const [floatError, setFloatError] = useState<string | undefined>(undefined);
 
 	const [gasLoading, setGasLoading] = useState(false);
-	const [gasSuccess, setGasSuccess] = useState<string | null>(null);
-	const [gasError, setGasError] = useState<string | null>(null);
+	const [gasSuccess, setGasSuccess] = useState<string | undefined>(undefined);
+	const [gasError, setGasError] = useState<string | undefined>(undefined);
 
 	const [mintForm, setMintForm] = useState({
 		transactionAmount: "",
@@ -39,87 +66,115 @@ export function useLiskBusiness() {
 		transactionNotes: "",
 	});
 	const [mintLoading, setMintLoading] = useState(false);
-	const [mintSuccess, setMintSuccess] = useState<string | null>(null);
-	const [mintError, setMintError] = useState<string | null>(null);
+	const [mintSuccess, setMintSuccess] = useState<string | undefined>(undefined);
+	const [mintError, setMintError] = useState<string | undefined>(undefined);
 
-	const [pendingTx, setPendingTx] = useState<any>({});
+	const [pendingTx, setPendingTx] = useState<iPendingTx[]>([]);
 	const [pendingLoading, setPendingLoading] = useState(false);
-	const [pendingError, setPendingError] = useState<string | null>(null);
+	const [pendingError, setPendingError] = useState<string | undefined>(undefined);
 
 	const [userGasLoading, setUserGasLoading] = useState(false);
-	const [userGasSuccess, setUserGasSuccess] = useState<string | null>(null);
-	const [userGasError, setUserGasError] = useState<string | null>(null);
+	const [userGasSuccess, setUserGasSuccess] = useState<string | undefined>(undefined);
+	const [userGasError, setUserGasError] = useState<string | undefined>(undefined);
+
+	const { user } = useUser();
+	const { organization } = useOrganization();
+	const { getCache, setCache } = useCache();
+	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
+
+	useEffect(() => {
+		// Fetch API key from cookies
+		const fetchApiKey = () => {
+			const key = (
+				mode === "user"
+					? user?.unsafeMetadata.apiToken
+					: organization?.publicMetadata.apiToken
+			) as string;
+
+			setApiKey(key || undefined);
+		};
+
+		fetchApiKey();
+	}, [user, organization, mode]);
 
 	// Fetch float balances
-	const fetchFloat = async () => {
+	const fetchFloat = useCallback(async () => {
 		setLoadingFloat(true);
-		setFloatError(null);
+		setFloatError(undefined);
 		const cacheKey = "float_balances";
-		const cached = getCache(cacheKey);
-		if (cached) {
-			setFloat(cached);
-			setLoadingFloat(false);
-			return;
-		}
+
 		try {
-			const { data } = await axios.get<{ tokens: IUserTokenBalance[] }>(`${API_BASE}/float`, {
-				headers: { Authorization: (user?.unsafeMetadata.apiToken as string) || "" },
+			const cached = getCache(cacheKey);
+			if (cached) {
+				setFloat(cached);
+				setLoadingFloat(false);
+				return cached;
+			}
+
+			const { data } = await axios.get<{ tokens: iUserTokenBalance[] }>(`${API_BASE}/float`, {
+				headers: { Authorization: apiKey },
 			});
 			setFloat(data.tokens || []);
 			setCache(cacheKey, data.tokens || []);
+			return data.tokens || [];
 		} catch (err: any) {
 			setFloatError("Failed to fetch token balances.");
 		} finally {
 			setLoadingFloat(false);
 		}
-	};
+
+		return [];
+	}, [apiKey]);
 
 	// Enable gas
-	const handleEnableGas = async () => {
+	const enableBusinessGas = useCallback(async () => {
 		setGasLoading(true);
-		setGasSuccess(null);
-		setGasError(null);
+		setGasSuccess(undefined);
+		setGasError(undefined);
 		try {
-			await axios.post(
+			const { data } = await axios.post(
 				`${API_BASE}/enable-gas`,
 				{},
-				{ headers: { Authorization: (user?.unsafeMetadata.apiToken as string) || "" } },
+				{ headers: { Authorization: apiKey } },
 			);
 			setGasSuccess("Gas allocation successful.");
+			return data;
 		} catch (err: any) {
 			setGasError("Failed to enable gas.");
 		} finally {
 			setGasLoading(false);
 		}
-	};
+	}, [apiKey]);
 
 	// Enable gas for a user
-	const enableUserGas = async (userId: string) => {
-		setUserGasLoading(true);
-		setUserGasSuccess(null);
-		setUserGasError(null);
-		try {
-			await axios.post(
-				`${API_BASE}/activate-pay/${userId}`,
-				{},
-				{ headers: { Authorization: (user?.unsafeMetadata.apiToken as string) || "" } },
-			);
-			setUserGasSuccess("Gas payment activated successfully for user.");
-		} catch (err: any) {
-			setUserGasError("Failed to activate gas payment for user.");
-		} finally {
-			setUserGasLoading(false);
-		}
-	};
+	const enableUserGas = useCallback(
+		async (userId: string) => {
+			setUserGasLoading(true);
+			setUserGasSuccess(undefined);
+			setUserGasError(undefined);
+			try {
+				await axios.post(
+					`${API_BASE}/activate-pay/${userId}`,
+					{},
+					{ headers: { Authorization: apiKey } },
+				);
+				setUserGasSuccess("Gas payment activated successfully for user.");
+			} catch (err: any) {
+				setUserGasError("Failed to activate gas payment for user.");
+			} finally {
+				setUserGasLoading(false);
+			}
+		},
+		[apiKey],
+	);
 
-	// Mint stablecoins
-	const handleMint = async (e: React.FormEvent) => {
-		e.preventDefault();
+	// Mint stableCoins
+	const mintStableCoins = useCallback(async () => {
 		setMintLoading(true);
-		setMintSuccess(null);
-		setMintError(null);
+		setMintSuccess(undefined);
+		setMintError(undefined);
 		try {
-			await axios.post(
+			const { data } = await axios.post<iMintStableCoinsResponse>(
 				`${API_BASE}/mint`,
 				{
 					transactionAmount: Number(mintForm.transactionAmount),
@@ -129,54 +184,59 @@ export function useLiskBusiness() {
 				{
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+						Authorization: apiKey,
 					},
 				},
 			);
-			setMintSuccess("Mint operation successful.");
+			setMintSuccess(data.message || "Mint operation successful.");
 			setMintForm({ transactionAmount: "", transactionRecipient: "", transactionNotes: "" });
 			fetchFloat();
+			return data;
 		} catch (err: any) {
 			setMintError("Failed to mint tokens.");
+			console.error(err);
 		} finally {
 			setMintLoading(false);
 		}
-	};
+	}, [apiKey]);
 
 	// Fetch paginated pending transactions
-	const fetchPendingTx = async (page = 1, pageSize = 10) => {
-		setPendingLoading(true);
-		setPendingError(null);
-		const cacheKey = `pending_tx`;
-		const cached = getCache(cacheKey);
-		if (cached) {
-			setPendingTx(cached);
-			setPendingLoading(false);
-			return;
-		}
-		try {
-			const { data } = await axios.get<{
-				transactions: any[];
-				total: number;
-				page: number;
-				pageSize: number;
-				totalPages: number;
-			}>(`${API_BASE}/transactions/pending?page=${page}&pageSize=${pageSize}`, {
-				headers: { Authorization: (user?.unsafeMetadata.apiToken as string) || "" },
-			});
-			setPendingTx(data);
-			setCache(cacheKey, data);
-		} catch (err: any) {
-			setPendingError("Failed to fetch pending transactions.");
-		} finally {
-			setPendingLoading(false);
-		}
-	};
+	const fetchPendingTx = useCallback(
+		async (page = 1, pageSize = 10) => {
+			setPendingLoading(true);
+			setPendingError(undefined);
+			const cacheKey = `pending_tx`;
+			const cached = getCache(cacheKey);
+			if (cached) {
+				setPendingTx(cached);
+				setPendingLoading(false);
+				return cached;
+			}
+			try {
+				const { data } = await axios.get<iPendingTxResponse>(
+					`${API_BASE}/transactions/pending?page=${page}&pageSize=${pageSize}`,
+					{
+						headers: { Authorization: (user?.unsafeMetadata.apiToken as string) || "" },
+					},
+				);
+				setPendingTx(data.transactions);
+				setCache(cacheKey, data);
+				return data;
+			} catch (err: any) {
+				setPendingError("Failed to fetch pending transactions.");
+			} finally {
+				setPendingLoading(false);
+			}
+
+			return [];
+		},
+		[apiKey],
+	);
 
 	useEffect(() => {
 		fetchFloat();
 		fetchPendingTx(1, 10);
-	}, []);
+	}, [fetchFloat, fetchPendingTx]);
 
 	return {
 		float,
@@ -187,7 +247,7 @@ export function useLiskBusiness() {
 		gasLoading,
 		gasSuccess,
 		gasError,
-		handleEnableGas,
+		enableBusinessGas,
 		userGasLoading,
 		userGasSuccess,
 		userGasError,
@@ -198,7 +258,7 @@ export function useLiskBusiness() {
 		mintLoading,
 		mintSuccess,
 		mintError,
-		handleMint,
+		mintStableCoins,
 
 		pendingTx,
 		pendingLoading,

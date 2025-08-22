@@ -1,40 +1,59 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import { useUser } from "@clerk/nextjs";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE as string;
+import { useOrganization, useUser } from "@clerk/nextjs";
+import useCache from "./useCache";
+const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
 export interface ICharge {
 	id: string;
 	paymentId: string;
 	amount: number;
-	note?: string | null;
+	note?: string | undefined;
 	status: "PENDING" | "COMPLETE";
 	userId: string;
 	createdAt: string;
 	updatedAt: string;
 }
 
-export function useLiskCharges() {
-	const { user } = useUser();
+export function useLiskCharges(mode: "user" | "organization" = "user") {
 	const [charges, setCharges] = useState<ICharge[]>([]);
 	const [chargesLoading, setChargesLoading] = useState(false);
-	const [chargesError, setChargesError] = useState<string | null>(null);
+	const [chargesError, setChargesError] = useState<string | undefined>(undefined);
 
-	const [charge, setCharge] = useState<ICharge | null>(null);
+	const [charge, setCharge] = useState<ICharge | undefined>(undefined);
 	const [chargeLoading, setChargeLoading] = useState(false);
-	const [chargeError, setChargeError] = useState<string | null>(null);
+	const [chargeError, setChargeError] = useState<string | undefined>(undefined);
 
 	const [createLoading, setCreateLoading] = useState(false);
-	const [createError, setCreateError] = useState<string | null>(null);
-	const [createdCharge, setCreatedCharge] = useState<ICharge | null>(null);
+	const [createError, setCreateError] = useState<string | undefined>(undefined);
+	const [createdCharge, setCreatedCharge] = useState<ICharge | undefined>(undefined);
 
 	const [updateLoading, setUpdateLoading] = useState(false);
-	const [updateError, setUpdateError] = useState<string | null>(null);
+	const [updateError, setUpdateError] = useState<string | undefined>(undefined);
 
 	const [deleteLoading, setDeleteLoading] = useState(false);
-	const [deleteError, setDeleteError] = useState<string | null>(null);
-	const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
+	const [deleteError, setDeleteError] = useState<string | undefined>(undefined);
+	const [deleteSuccess, setDeleteSuccess] = useState<string | undefined>(undefined);
+
+	const { user } = useUser();
+	const { organization } = useOrganization();
+	const { getCache, setCache } = useCache();
+	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
+
+	useEffect(() => {
+		// Fetch API key from cookies
+		const fetchApiKey = () => {
+			const key = (
+				mode === "user"
+					? user?.unsafeMetadata.apiToken
+					: organization?.publicMetadata.apiToken
+			) as string;
+
+			setApiKey(`Bearer ${key}` || undefined);
+		};
+
+		fetchApiKey();
+	}, [user, organization, mode]);
 
 	// Create a new charge
 	const createCharge = async ({
@@ -49,8 +68,8 @@ export function useLiskCharges() {
 		note?: string;
 	}) => {
 		setCreateLoading(true);
-		setCreateError(null);
-		setCreatedCharge(null);
+		setCreateError(undefined);
+		setCreatedCharge(undefined);
 		try {
 			const { data } = await axios.post<ICharge>(
 				`${API_BASE}/charge/${userId}/create`,
@@ -58,7 +77,7 @@ export function useLiskCharges() {
 				{
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+						Authorization: apiKey,
 					},
 				},
 			);
@@ -72,107 +91,131 @@ export function useLiskCharges() {
 			setCreateLoading(false);
 		}
 
-		return null;
+		return undefined;
 	};
 
 	// Get all charges for a user
-	const fetchCharges = async (userId: string) => {
-		setChargesLoading(true);
-		setChargesError(null);
-		try {
-			const { data } = await axios.get<{ charges: ICharge[] }>(
-				`${API_BASE}/charge/${userId}`,
-				{ headers: { Authorization: (user?.unsafeMetadata.apiToken as string) || "" } },
-			);
-			setCharges(data.charges || []);
-		} catch (err: any) {
-			if (err?.response?.status === 400) setChargesError("Invalid parameter.");
-			else if (err?.response?.status === 401) setChargesError("Unauthorized.");
-			else setChargesError("Failed to fetch charges.");
-		} finally {
-			setChargesLoading(false);
-		}
-	};
+	const fetchCharges = useCallback(
+		async (userId: string) => {
+			setChargesLoading(true);
+			setChargesError(undefined);
+			const cacheKey = `user_charges_${userId}`;
+			try {
+				const cached = getCache(cacheKey);
+				if (cached) {
+					setCharges(cached);
+					setChargesLoading(false);
+					return cached;
+				}
+
+				const { data } = await axios.get<{ charges: ICharge[] }>(
+					`${API_BASE}/charge/${userId}`,
+					{ headers: { Authorization: apiKey } },
+				);
+				setCharges(data.charges || []);
+				setCache(cacheKey, data.charges || []);
+			} catch (err: any) {
+				if (err?.response?.status === 400) setChargesError("Invalid parameter.");
+				else if (err?.response?.status === 401) setChargesError("Unauthorized.");
+				else setChargesError("Failed to fetch charges.");
+			} finally {
+				setChargesLoading(false);
+			}
+		},
+		[apiKey],
+	);
 
 	// Get a specific charge by chargeId
-	const fetchCharge = async (chargeId: string) => {
-		setChargeLoading(true);
-		setChargeError(null);
-		setCharge(null);
-		try {
-			const { data } = await axios.get<ICharge>(`${API_BASE}/retrieve-charge/${chargeId}`, {
-				headers: { Authorization: (user?.unsafeMetadata.apiToken as string) || "" },
-			});
-			setCharge(data);
-		} catch (err: any) {
-			if (err?.response?.status === 400) setChargeError("Invalid parameters.");
-			else if (err?.response?.status === 401) setChargeError("Unauthorized.");
-			else if (err?.response?.status === 404) setChargeError("Charge not found.");
-			else setChargeError("Failed to fetch charge.");
-		} finally {
-			setChargeLoading(false);
-		}
-	};
+	const fetchCharge = useCallback(
+		async (chargeId: string) => {
+			setChargeLoading(true);
+			setChargeError(undefined);
+			setCharge(undefined);
+			try {
+				const { data } = await axios.get<ICharge>(
+					`${API_BASE}/retrieve-charge/${chargeId}`,
+					{
+						headers: { Authorization: apiKey },
+					},
+				);
+				setCharge(data);
+			} catch (err: any) {
+				if (err?.response?.status === 400) setChargeError("Invalid parameters.");
+				else if (err?.response?.status === 401) setChargeError("Unauthorized.");
+				else if (err?.response?.status === 404) setChargeError("Charge not found.");
+				else setChargeError("Failed to fetch charge.");
+			} finally {
+				setChargeLoading(false);
+			}
+		},
+		[apiKey],
+	);
 
 	// Update a charge (note or status)
-	const updateCharge = async ({
-		userId,
-		chargeId,
-		note,
-		status,
-	}: {
-		userId: string;
-		chargeId: string;
-		note?: string;
-		status?: "PENDING" | "COMPLETE";
-	}) => {
-		setUpdateLoading(true);
-		setUpdateError(null);
-		try {
-			const { data } = await axios.put<ICharge>(
-				`${API_BASE}/charge/${userId}/${chargeId}/update`,
-				{ note, status },
-				{
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+	const updateCharge = useCallback(
+		async ({
+			userId,
+			chargeId,
+			note,
+			status,
+		}: {
+			userId: string;
+			chargeId: string;
+			note?: string;
+			status?: "PENDING" | "COMPLETE";
+		}) => {
+			setUpdateLoading(true);
+			setUpdateError(undefined);
+			try {
+				const { data } = await axios.put<ICharge>(
+					`${API_BASE}/charge/${userId}/${chargeId}/update`,
+					{ note, status },
+					{
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: apiKey,
+						},
 					},
-				},
-			);
-			setCharge(data);
-			return data;
-		} catch (err: any) {
-			if (err?.response?.status === 400) setUpdateError("Validation error.");
-			else if (err?.response?.status === 401) setUpdateError("Unauthorized.");
-			else if (err?.response?.status === 404) setUpdateError("Charge not found.");
-			else setUpdateError("Failed to update charge.");
-		} finally {
-			setUpdateLoading(false);
-		}
+				);
+				setCharge(data);
+				return data;
+			} catch (err: any) {
+				if (err?.response?.status === 400) setUpdateError("Validation error.");
+				else if (err?.response?.status === 401) setUpdateError("Unauthorized.");
+				else if (err?.response?.status === 404) setUpdateError("Charge not found.");
+				else setUpdateError("Failed to update charge.");
+			} finally {
+				setUpdateLoading(false);
+			}
 
-		return null;
-	};
+			return undefined;
+		},
+		[apiKey],
+	);
 
 	// Delete a charge
-	const deleteCharge = async ({ userId, chargeId }: { userId: string; chargeId: string }) => {
-		setDeleteLoading(true);
-		setDeleteError(null);
-		setDeleteSuccess(null);
-		try {
-			const { data } = await axios.delete<{ message: string }>(
-				`${API_BASE}/charge/${userId}/${chargeId}/delete`,
-				{ headers: { Authorization: (user?.unsafeMetadata.apiToken as string) || "" } },
-			);
-			setDeleteSuccess(data.message || "Charge deleted");
-			return data;
-		} catch (err: any) {
-			if (err?.response?.status === 400) setDeleteError("Invalid parameters.");
-			else if (err?.response?.status === 401) setDeleteError("Unauthorized.");
-			else setDeleteError("Failed to delete charge.");
-		} finally {
-			setDeleteLoading(false);
-		}
-	};
+	const deleteCharge = useCallback(
+		async ({ userId, chargeId }: { userId: string; chargeId: string }) => {
+			setDeleteLoading(true);
+			setDeleteError(undefined);
+			setDeleteSuccess(undefined);
+			try {
+				const { data } = await axios.delete<{ message: string }>(
+					`${API_BASE}/charge/${userId}/${chargeId}/delete`,
+					{ headers: { Authorization: apiKey } },
+				);
+				setDeleteSuccess(data.message || "Charge deleted");
+				return data;
+			} catch (err: any) {
+				if (err?.response?.status === 400) setDeleteError("Invalid parameters.");
+				else if (err?.response?.status === 401) setDeleteError("Unauthorized.");
+				else setDeleteError("Failed to delete charge.");
+			} finally {
+				setDeleteLoading(false);
+			}
+		},
+		[apiKey],
+	);
 
 	return {
 		charges,

@@ -1,130 +1,190 @@
-import { use, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import { IApiToken, IApiTokenCreateResponse, IApiTokenRevokeResponse } from "@/types/users";
-import { useUser } from "@clerk/nextjs";
+import { useOrganization, useUser } from "@clerk/nextjs";
+import { iApiToken, iApiTokenCreateResponse, iApiTokenRevokeResponse } from "@/types";
+import useCache from "./useCache";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE as string;
+const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
-export function useLiskApiTokens() {
+export interface iUseLiskApiTokens {
+	tokens: iApiToken[];
+	apiTokenLoading: boolean;
+	apiTokenError: string | undefined;
+	fetchTokens: () => Promise<void>;
+	createToken: (description: string) => Promise<void>;
+	createTokenLoading: boolean;
+	createTokenError: string | undefined;
+	createdToken: iApiTokenCreateResponse | undefined;
+	updateToken: (id: string, description: string) => Promise<void>;
+	updateTokenLoading: boolean;
+	updateTokenError: string | undefined;
+	revokeToken: (id: string) => Promise<void>;
+	revokeTokenLoading: boolean;
+	revokeTokenError: string | undefined;
+	revokeTokenSuccess: string | undefined;
+}
+
+export function useLiskApiTokens(mode: "user" | "organization" = "user"): iUseLiskApiTokens {
+	const [tokens, setTokens] = useState<iApiToken[]>([]);
+	const [apiTokenLoading, setApiTokenLoading] = useState(false);
+	const [apiTokenError, setApiTokenError] = useState<string | undefined>(undefined);
+
+	const [createTokenLoading, setCreateTokenLoading] = useState(false);
+	const [createTokenError, setCreateTokenError] = useState<string | undefined>(undefined);
+	const [createdToken, setCreatedToken] = useState<iApiTokenCreateResponse | undefined>(
+		undefined,
+	);
+
+	const [updateTokenLoading, setUpdateTokenLoading] = useState(false);
+	const [updateTokenError, setUpdateTokenError] = useState<string | undefined>(undefined);
+
+	const [revokeTokenLoading, setRevokeTokenLoading] = useState(false);
+	const [revokeTokenError, setRevokeTokenError] = useState<string | undefined>(undefined);
+	const [revokeTokenSuccess, setRevokeTokenSuccess] = useState<string | undefined>(undefined);
+
 	const { user } = useUser();
-	const [tokens, setTokens] = useState<IApiToken[]>([]);
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const { organization } = useOrganization();
+	const { getCache, setCache } = useCache();
+	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
 
-	const [createLoading, setCreateLoading] = useState(false);
-	const [createError, setCreateError] = useState<string | null>(null);
-	const [createdToken, setCreatedToken] = useState<IApiTokenCreateResponse | null>(null);
+	useEffect(() => {
+		// Fetch API key from cookies
+		const fetchApiKey = () => {
+			const key = (
+				mode === "user"
+					? user?.unsafeMetadata.apiToken
+					: organization?.publicMetadata.apiToken
+			) as string;
 
-	const [updateLoading, setUpdateLoading] = useState(false);
-	const [updateError, setUpdateError] = useState<string | null>(null);
+			setApiKey(`Bearer ${key}` || undefined);
+		};
 
-	const [revokeLoading, setRevokeLoading] = useState(false);
-	const [revokeError, setRevokeError] = useState<string | null>(null);
-	const [revokeSuccess, setRevokeSuccess] = useState<string | null>(null);
+		fetchApiKey();
+	}, [user, organization, mode]);
 
-	const fetchTokens = async () => {
-		setLoading(true);
-		setError(null);
+	const fetchTokens = useCallback(async () => {
+		const cacheKey = "api_tokens";
+		setApiTokenLoading(true);
+		setApiTokenError(undefined);
 		try {
-			const { data } = await axios.get<IApiToken[]>(`${API_BASE}/tokens`, {
-				headers: { Authorization: (user?.unsafeMetadata.apiToken as string) || "" },
+			const cached = getCache(cacheKey);
+			if (cached) {
+				setTokens(cached);
+				setApiTokenLoading(false);
+				return;
+			}
+
+			const { data } = await axios.get<iApiToken[]>(`${API_BASE}/tokens`, {
+				headers: {
+					Authorization: apiKey,
+				},
 			});
 			setTokens(data);
+			setCache(cacheKey, data);
 		} catch (err: any) {
-			setError("Failed to fetch tokens.");
+			setApiTokenError("Failed to fetch tokens.");
 		} finally {
-			setLoading(false);
+			setApiTokenLoading(false);
 		}
-	};
+	}, [apiKey]);
 
-	const createToken = async (description: string) => {
-		setCreateLoading(true);
-		setCreateError(null);
-		setCreatedToken(null);
-		try {
-			const { data } = await axios.post<IApiTokenCreateResponse>(
-				`${API_BASE}/tokens`,
-				{ description },
-				{
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+	const createToken = useCallback(
+		async (description: string) => {
+			setCreateTokenLoading(true);
+			setCreateTokenError(undefined);
+			setCreatedToken(undefined);
+			try {
+				const { data } = await axios.post<iApiTokenCreateResponse>(
+					`${API_BASE}/tokens`,
+					{ description },
+					{
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+						},
 					},
-				},
-			);
-			setCreatedToken(data);
-			await fetchTokens();
-		} catch (err: any) {
-			setCreateError("Failed to create token.");
-		} finally {
-			setCreateLoading(false);
-		}
-	};
+				);
+				setCreatedToken(data);
+				await fetchTokens();
+			} catch (err: any) {
+				setCreateTokenError("Failed to create token.");
+			} finally {
+				setCreateTokenLoading(false);
+			}
+		},
+		[apiKey],
+	);
 
-	const updateToken = async (id: string, description: string) => {
-		setUpdateLoading(true);
-		setUpdateError(null);
-		try {
-			await axios.patch<IApiToken>(
-				`${API_BASE}/tokens/${id}`,
-				{ description },
-				{
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+	const updateToken = useCallback(
+		async (id: string, description: string) => {
+			setUpdateTokenLoading(true);
+			setUpdateTokenError(undefined);
+			try {
+				await axios.patch<iApiToken>(
+					`${API_BASE}/tokens/${id}`,
+					{ description },
+					{
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+						},
 					},
-				},
-			);
-			await fetchTokens();
-		} catch (err: any) {
-			setUpdateError("Failed to update token.");
-		} finally {
-			setUpdateLoading(false);
-		}
-	};
+				);
+				await fetchTokens();
+			} catch (err: any) {
+				setUpdateTokenError("Failed to update token.");
+			} finally {
+				setUpdateTokenLoading(false);
+			}
+		},
+		[apiKey],
+	);
 
-	const revokeToken = async (id: string) => {
-		setRevokeLoading(true);
-		setRevokeError(null);
-		setRevokeSuccess(null);
-		try {
-			const { data } = await axios.post<IApiTokenRevokeResponse>(
-				`${API_BASE}/tokens/revoke`,
-				{ id },
-				{
-					headers: {
-						"Content-Type": "application/json",
-						Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+	const revokeToken = useCallback(
+		async (id: string) => {
+			setRevokeTokenLoading(true);
+			setRevokeTokenError(undefined);
+			setRevokeTokenSuccess(undefined);
+			try {
+				const { data } = await axios.post<iApiTokenRevokeResponse>(
+					`${API_BASE}/tokens/revoke`,
+					{ id },
+					{
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+						},
 					},
-				},
-			);
-			setRevokeSuccess(data.message);
-			await fetchTokens();
-		} catch (err: any) {
-			setRevokeError("Failed to revoke token.");
-		} finally {
-			setRevokeLoading(false);
-		}
-	};
+				);
+				setRevokeTokenSuccess(data.message);
+				await fetchTokens();
+			} catch (err: any) {
+				setRevokeTokenError("Failed to revoke token.");
+			} finally {
+				setRevokeTokenLoading(false);
+			}
+		},
+		[apiKey],
+	);
 
 	return {
 		tokens,
-		loading,
-		error,
+		apiTokenLoading,
+		apiTokenError,
 		fetchTokens,
 
 		createToken,
-		createLoading,
-		createError,
+		createTokenLoading,
+		createTokenError,
 		createdToken,
 
 		updateToken,
-		updateLoading,
-		updateError,
+		updateTokenLoading,
+		updateTokenError,
 
 		revokeToken,
-		revokeLoading,
-		revokeError,
-		revokeSuccess,
+		revokeTokenLoading,
+		revokeTokenError,
+		revokeTokenSuccess,
 	};
 }
