@@ -3,10 +3,12 @@ import { Card, CardHeader, CardBody, Chip, Button, Spinner, Alert } from "@herou
 import { RefreshCcw } from "lucide-react";
 
 import { useAccount } from "@/context/AccountContext";
+import { useUser } from "@clerk/nextjs";
 
 export function SubscriptionsList() {
-	const { subscriptions, loadingSubscriptions, refreshSubscriptions, subscriptionError } =
+	const { subscriptions, subscriptionLoading, refreshSubscriptions, subscriptionError } =
 		useAccount();
+	const { user } = useUser();
 
 	return (
 		<Card className="w-full max-w-2xl">
@@ -14,21 +16,21 @@ export function SubscriptionsList() {
 				<span className="text-xl font-bold">Subscriptions</span>
 				<Button
 					color="primary"
-					isLoading={loadingSubscriptions}
+					isLoading={subscriptionLoading}
 					size="sm"
 					startContent={<RefreshCcw size={16} />}
 					variant="flat"
-					onPress={refreshSubscriptions}>
+					onPress={() => refreshSubscriptions(user?.id || "")}>
 					Refresh
 				</Button>
 			</CardHeader>
 			<CardBody>
-				{loadingSubscriptions && (
+				{subscriptionLoading && (
 					<div className="text-default-400 text-center py-4">
 						<Spinner label="Fetching subscriptions..." size="sm" />
 					</div>
 				)}
-				{!loadingSubscriptions && subscriptions.length === 0 && !subscriptionError && (
+				{!subscriptionLoading && subscriptions.length === 0 && !subscriptionError && (
 					<div className="text-default-400 text-center py-4">No subscriptions found.</div>
 				)}
 				{subscriptionError && (

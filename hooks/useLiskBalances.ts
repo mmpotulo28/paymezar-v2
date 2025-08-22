@@ -31,7 +31,7 @@ export function useLiskBalances(mode: "user" | "organization" = "user"): iUseLis
 					: organization?.publicMetadata.apiToken
 			) as string;
 
-			setApiKey(`Bearer ${key}` || undefined);
+			setApiKey(`Bearer ${key}`);
 		};
 
 		fetchApiKey();

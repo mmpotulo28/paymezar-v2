@@ -34,7 +34,7 @@ export const useLiskUsers = (mode: "user" | "organization" = "user"): useLiskUse
 					: organization?.publicMetadata.apiToken
 			) as string;
 
-			setApiKey(`Bearer ${key}` || undefined);
+			setApiKey(`Bearer ${key}`);
 		};
 
 		fetchApiKey();

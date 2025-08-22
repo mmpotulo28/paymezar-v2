@@ -50,7 +50,7 @@ export function useLiskBank(mode: "user" | "organization" = "user"): iUseLiskBan
 					: organization?.publicMetadata.apiToken
 			) as string;
 
-			setApiKey(`Bearer ${key}` || undefined);
+			setApiKey(`Bearer ${key}`);
 		};
 
 		fetchApiKey();
@@ -67,6 +67,7 @@ export function useLiskBank(mode: "user" | "organization" = "user"): iUseLiskBan
 			setBankLoading(true);
 			setBankError(undefined);
 			try {
+				if (!apiKey) throw new Error("API key is missing");
 				const { data } = await axios.post<iBankAccountResponse>(
 					`${API_BASE}/bank/${encodeURIComponent(userId)}`,
 					{ accountHolder, accountNumber, branchCode, bankName },

@@ -43,7 +43,7 @@ export function useLiskTransactions(mode: "user" | "organization" = "user"): iUs
 					: organization?.publicMetadata.apiToken
 			) as string;
 
-			setApiKey(`Bearer ${key}` || undefined);
+			setApiKey(`Bearer ${key}`);
 		};
 
 		fetchApiKey();

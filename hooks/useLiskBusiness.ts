@@ -91,7 +91,7 @@ export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBus
 					: organization?.publicMetadata.apiToken
 			) as string;
 
-			setApiKey(key || undefined);
+			setApiKey(`Bearer ${key}`);
 		};
 
 		fetchApiKey();

@@ -31,7 +31,7 @@ export function useLiskTransfer(mode: "user" | "organization" = "user") {
 					: organization?.publicMetadata.apiToken
 			) as string;
 
-			setApiKey(`Bearer ${key}` || undefined);
+			setApiKey(`Bearer ${key}`);
 		};
 
 		fetchApiKey();
