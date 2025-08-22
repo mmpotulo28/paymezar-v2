@@ -19,7 +19,7 @@ import { useAccount } from "@/context/AccountContext";
 import { iCharge } from "@/types";
 
 export function ChargesList({ className = "" }: { className?: string }) {
-	const { charges, loadingCharges, refreshCharges, subscriptions, refreshSubscriptions } =
+	const { charges, chargeLoading, refreshCharges, subscriptions, refreshSubscriptions } =
 		useAccount();
 	const { user } = useUser();
 	const [payLoading, setPayLoading] = useState<string | null>(null);
@@ -105,12 +105,12 @@ export function ChargesList({ className = "" }: { className?: string }) {
 					variant: "flat",
 					color: "success",
 				});
-				await refreshSubscriptions();
+				await refreshSubscriptions(user?.id || "");
 			} else {
 				setPayError("No related subscription found for this charge.");
 			}
 
-			await refreshCharges();
+			await refreshCharges(user?.id || "");
 		} catch (err: any) {
 			addToast({
 				title: "Payment failed",
@@ -134,22 +134,22 @@ export function ChargesList({ className = "" }: { className?: string }) {
 				<span className="text-xl font-bold">Your Charges</span>
 				<Button
 					color="primary"
-					isLoading={loadingCharges}
+					isLoading={chargeLoading}
 					size="sm"
 					startContent={<RefreshCcw size={16} />}
 					variant="flat"
-					onClick={refreshCharges}>
+					onPress={() => refreshCharges(user?.id || "")}>
 					Refresh
 				</Button>
 			</CardHeader>
 
 			<CardBody>
-				{loadingCharges && (
+				{chargeLoading && (
 					<div className="text-default-400 text-center py-4">
 						<Spinner label="Fetching charges..." size="sm" />
 					</div>
 				)}
-				{!loadingCharges && charges.length === 0 && (
+				{!chargeLoading && charges.length === 0 && (
 					<div className="text-default-400 text-center py-4">No charges found.</div>
 				)}
 				<div className="flex flex-col gap-3">
@@ -173,7 +173,7 @@ export function ChargesList({ className = "" }: { className?: string }) {
 							</span>
 							<Chip
 								color={
-									charge.status === "COMPLETED"
+									charge.status === "COMPLETE"
 										? "success"
 										: charge.status === "PENDING"
 											? "warning"

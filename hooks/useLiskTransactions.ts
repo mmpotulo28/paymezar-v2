@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import { iUserTokenBalance, iTransaction } from "@/types";
+import { iTransaction } from "@/types";
 import { useOrganization, useUser } from "@clerk/nextjs";
 import useCache from "./useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;

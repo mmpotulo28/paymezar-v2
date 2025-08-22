@@ -1,7 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import Cookies from "js-cookie";
 import { iUser } from "@/types";
 import { useOrganization, useUser } from "@clerk/nextjs";
 import useCache from "./useCache";

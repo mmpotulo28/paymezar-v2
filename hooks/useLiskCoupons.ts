@@ -1,13 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useOrganization, useUser } from "@clerk/nextjs";
-import {
-	iCoupon,
-	iCouponCreateRequest,
-	iCouponUpdateRequest,
-	iCouponClaimRequest,
-	iCouponResponse,
-} from "@/types";
+import { iCoupon, iCouponCreateRequest, iCouponUpdateRequest, iCouponResponse } from "@/types";
 import useCache from "./useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
