@@ -5,8 +5,8 @@ import { Button } from "@heroui/button";
 import { AlertCircleIcon, CheckCircle2, Rocket } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-
-import { createLiskAccount, getLiskUserById } from "@/lib/helpers";
+import { useLiskUsers } from "@/hooks/useLiskUsers";
+import { iUser } from "@/types";
 
 export function LiskOnboarding() {
 	const { user } = useUser();
@@ -15,16 +15,17 @@ export function LiskOnboarding() {
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState(false);
 	const [autoCreateCountdown, setAutoCreateCountdown] = useState(10);
+	const { createUser, getUser, singleUser, errorUsers } = useLiskUsers();
 
 	const handleCreateLiskAccount = useCallback(async () => {
-		if (
+		const isMissingUserInfo =
 			!user?.id ||
 			!user?.firstName ||
 			!user?.lastName ||
-			!user?.primaryEmailAddress?.emailAddress
-		) {
-			setError("Missing user information. Please try refreshing the page.");
+			!user?.primaryEmailAddress?.emailAddress;
 
+		if (isMissingUserInfo) {
+			setError("Missing user information. Please try refreshing the page.");
 			return;
 		}
 
@@ -33,23 +34,23 @@ export function LiskOnboarding() {
 		try {
 			// First, check if Lisk user already exists
 			console.log("Checking if Lisk user already exists...");
-			const existingUserResult = await getLiskUserById({ id: user.id });
+			await getUser({ id: user.id });
 
-			if (!existingUserResult.error && existingUserResult.data?.user) {
+			if (singleUser) {
 				// User already exists in Lisk, just update Clerk metadata
-				console.log("Lisk user already exists:", existingUserResult.data.user);
+				console.log("Lisk user already exists:", singleUser.id);
 
 				await user.update({
 					unsafeMetadata: {
 						liskAccountCreated: true,
-						paymentId: existingUserResult.data.user.paymentIdentifier,
-						paymentEnabled: existingUserResult.data.user.enabledPay,
+						paymentId: singleUser?.paymentIdentifier,
+						paymentEnabled: singleUser?.enabledPay,
 					},
 				});
 
 				setSuccess(true);
 				setTimeout(() => {
-					router.refresh(); // Refresh to update user metadata
+					user.reload(); // Refresh to update user metadata
 				}, 2000);
 
 				return;
@@ -57,20 +58,20 @@ export function LiskOnboarding() {
 
 			// User doesn't exist, create new one
 			console.log("Creating new Lisk user...");
-			const result = await createLiskAccount({
+			await createUser({
 				id: user.id,
-				email: user.primaryEmailAddress.emailAddress,
+				email: user.primaryEmailAddress?.emailAddress,
 				firstName: user.firstName,
 				lastName: user.lastName,
 			});
 
-			if (!result.error && result.data) {
+			if (!errorUsers && singleUser) {
 				// Update Clerk user metadata with Lisk account info
 				await user.update({
 					unsafeMetadata: {
 						liskAccountCreated: true,
-						paymentId: result.data.user.paymentIdentifier,
-						paymentEnabled: result.data.user.enabledPay,
+						paymentId: (singleUser as iUser)?.paymentIdentifier,
+						paymentEnabled: (singleUser as iUser)?.enabledPay,
 					},
 				});
 
@@ -79,7 +80,7 @@ export function LiskOnboarding() {
 					router.refresh(); // Refresh to update user metadata
 				}, 2000);
 			} else {
-				setError(result.message || "Failed to create Lisk account");
+				setError(errorUsers || "Failed to create Lisk account");
 			}
 		} catch (err: any) {
 			console.error("Lisk account creation error:", err);
@@ -87,7 +88,7 @@ export function LiskOnboarding() {
 		} finally {
 			setLoading(false);
 		}
-	}, [router, user]);
+	}, [createUser, errorUsers, getUser, router, singleUser, user]);
 
 	// Auto-create Lisk account after 10 seconds if not clicked
 	useEffect(() => {
@@ -96,7 +97,6 @@ export function LiskOnboarding() {
 				if (prev <= 1) {
 					clearInterval(interval);
 					handleCreateLiskAccount();
-
 					return 0;
 				}
 

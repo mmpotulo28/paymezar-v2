@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardBody, CardHeader, CardFooter, addToast } from "@heroui/react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
@@ -7,113 +7,63 @@ import { AlertCircleIcon, QrCode as QrCodeIcon } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 
 import QrCodeScanner from "@/components/qr-code-scanner";
-import { postApi } from "@/lib/helpers";
+import { useAccount } from "@/context/AccountContext";
 
 export default function SendPayment() {
 	const [recipient, setRecipient] = useState("");
 	const [amount, setAmount] = useState("");
 	const [note, setNote] = useState("");
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-	const [responseMsg, setResponseMsg] = useState<string | null>(null);
 	const [recipientInfo, setRecipientInfo] = useState<any>(null);
 	const [scanModalOpen, setScanModalOpen] = useState(false);
 	const { user } = useUser();
 	const formRef = useRef<HTMLFormElement>(null);
+	const [error, setError] = useState<string | null>(null);
 
-	const fetchRecipient = async (recipientId: string) => {
-		try {
-			const result = await postApi(
-				`https://seal-app-qp9cc.ondigitalocean.app/api/v1/recipient/${encodeURIComponent(recipientId)}`,
-				{},
-				{
-					Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
-				},
-				"GET",
-			);
+	const { makeTransfer, transferMessage, transferError, transferLoading } = useAccount();
 
-			if (!result.error) {
-				setRecipientInfo(result.data);
-
-				return result.data;
-			} else {
-				setRecipientInfo(null);
-				throw new Error(
-					result.message || "Recipient not found or invalid recipient identifier.",
-				);
-			}
-		} catch (error: any) {
-			setRecipientInfo(null);
-			throw new Error(
-				error.message || "Recipient not found or invalid recipient identifier.",
-			);
-		}
-	};
-
-	const handleTransfer = async () => {
-		setLoading(true);
-		setError(null);
-		setResponseMsg(null);
-		setRecipientInfo(null);
-		addToast({
-			title: "Payment Request",
-			description: "Please wait while we process your payment request.",
-			severity: "primary",
-			color: "secondary",
-		});
-
-		try {
-			await fetchRecipient(recipient);
-
-			if (!user?.id) throw new Error("You must be logged in to send payments.");
-
-			const res = await postApi(
-				`https://seal-app-qp9cc.ondigitalocean.app/api/v1/transfer/${encodeURIComponent(user.id)}`,
-				{
-					transactionAmount: Number(amount),
-					transactionRecipient: recipient,
-					transactionNotes: note,
-				},
-				{
-					"Content-Type": "application/json",
-					Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
-				},
-				"POST",
-			);
-
-			if (!res.error) {
-				addToast({
-					title: "Transfer Successful!",
-					description: res.message || "Transfer executed successfully",
-					severity: "success",
-					color: "success",
-				});
-			} else {
-				throw new Error(res.message || "Transfer failed");
-			}
-		} catch (err: any) {
+	useEffect(() => {
+		if (transferMessage) {
 			addToast({
-				title: "Transfer Failed!",
-				description: err.message || "Transfer failed",
-				severity: "danger",
+				title: "Success",
+				description: transferMessage,
+				variant: "bordered",
+				color: "success",
+			});
+		}
+		if (transferError) {
+			addToast({
+				title: "Error",
+				description: transferError,
+				variant: "bordered",
 				color: "danger",
 			});
-			console.error("Transfer error:", err);
-			setError(err.message || "Transfer failed");
-		} finally {
-			setLoading(false);
 		}
+	}, [transferMessage, transferError]);
+
+	const handleTransfer = async () => {
+		if (!recipient || !amount) return;
+		if (!user?.id) return;
+
+		const transferData = {
+			userId: user?.id,
+			transactionAmount: Number(amount),
+			transactionRecipient: recipient,
+			transactionNotes: note,
+		};
+
+		await makeTransfer(transferData);
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+
 		await handleTransfer();
+
 		setRecipient("");
 		setAmount("");
 		setNote("");
+
 		setTimeout(() => {
-			setResponseMsg(null);
-			setError(null);
 			setRecipientInfo(null);
 		}, 3000);
 	};
@@ -196,14 +146,19 @@ export default function SendPayment() {
 					<Button
 						className="max-w-3xs mx-0"
 						color="primary"
-						disabled={loading}
-						isLoading={loading}
+						disabled={transferLoading}
+						isLoading={transferLoading}
 						radius="sm"
 						type="submit">
-						{loading ? "Processing..." : "Send Payment"}
+						{transferLoading ? "Processing..." : "Send Payment"}
 					</Button>
-					{responseMsg && <div className="text-green-600 text-center">{responseMsg}</div>}
-					{error && <div className="text-red-600 text-center">{error}</div>}
+					{transferMessage && (
+						<div className="text-green-600 text-center">{transferMessage}</div>
+					)}
+					{transferError && (
+						<div className="text-red-600 text-center">{transferError}</div>
+					)}
+					{error && <div className="text-red-500 text-center">{error}</div>}
 				</form>
 			</CardBody>
 			<CardFooter className="flex items-center justify-end">

@@ -2,20 +2,16 @@ import { Alert, Card, CardBody, CardHeader, Snippet } from "@heroui/react";
 import { Button } from "@heroui/button";
 import { RefreshCcw } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-import { useState } from "react";
 import Link from "next/link";
 
 import { useAccount } from "@/context/AccountContext";
 
 export function AccountOverview() {
 	const { user } = useUser();
-	const { balances, balancesLoading, balancesError, refreshBalances } = useAccount();
-	const [refreshing, setRefreshing] = useState(false);
+	const { balances, balancesLoading, balancesError, fetchBalances } = useAccount();
 
 	const handleRefresh = async () => {
-		setRefreshing(true);
-		await refreshBalances(user?.id || "");
-		setRefreshing(false);
+		await fetchBalances(user?.id || "");
 	};
 
 	return (
@@ -24,7 +20,7 @@ export function AccountOverview() {
 				<span>Account Overview</span>
 				<Button
 					color="primary"
-					isLoading={refreshing}
+					isLoading={balancesLoading}
 					size="sm"
 					startContent={<RefreshCcw size={16} />}
 					variant="flat"

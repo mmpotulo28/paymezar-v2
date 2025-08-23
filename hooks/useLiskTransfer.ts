@@ -1,21 +1,56 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useOrganization, useUser } from "@clerk/nextjs";
-import useCache from "./useCache";
+import { useCache } from "./useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
-export function useLiskTransfer(mode: "user" | "organization" = "user") {
+export interface iUseLiskTransfer {
+	recipient: any;
+	recipientLoading: boolean;
+	recipientError: string | undefined;
+	fetchRecipient: (id: string) => Promise<any>;
+
+	transferLoading: boolean;
+	transferMessage: string | undefined;
+	transferError: string | undefined;
+	makeTransfer: ({
+		userId,
+		transactionAmount,
+		transactionRecipient,
+		transactionNotes,
+	}: {
+		userId: string;
+		transactionAmount: number;
+		transactionRecipient: string;
+		transactionNotes?: string;
+	}) => Promise<void>;
+
+	batchTransferLoading: boolean;
+	batchTransferMessage: string | undefined;
+	batchTransferError: string | undefined;
+	makeBatchTransfer: ({
+		userId,
+		payments,
+		transactionNotes,
+	}: {
+		userId: string;
+		payments: { recipient: string; amount: number }[];
+		transactionNotes?: string;
+	}) => Promise<void>;
+}
+
+export function useLiskTransfer(mode: "user" | "organization" = "user"): iUseLiskTransfer {
 	const [recipient, setRecipient] = useState<any>(undefined);
 	const [recipientLoading, setRecipientLoading] = useState(false);
 	const [recipientError, setRecipientError] = useState<string | undefined>(undefined);
 
 	const [transferLoading, setTransferLoading] = useState(false);
-	const [transferSuccess, setTransferSuccess] = useState<string | undefined>(undefined);
+	const [transferMessage, setTransferMessage] = useState<string | undefined>(undefined);
 	const [transferError, setTransferError] = useState<string | undefined>(undefined);
 
-	const [batchLoading, setBatchLoading] = useState(false);
-	const [batchSuccess, setBatchSuccess] = useState<string | undefined>(undefined);
-	const [batchError, setBatchError] = useState<string | undefined>(undefined);
+	const [batchTransferLoading, setBatchTransferLoading] = useState(false);
+	const [batchTransferMessage, setBatchTransferMessage] = useState<string | undefined>(undefined);
+	const [batchTransferError, setBatchTransferError] = useState<string | undefined>(undefined);
 
 	const { user } = useUser();
 	const { organization } = useOrganization();
@@ -27,10 +62,11 @@ export function useLiskTransfer(mode: "user" | "organization" = "user") {
 		const fetchApiKey = () => {
 			const key = (
 				mode === "user"
-					? user?.unsafeMetadata.apiToken
+					? process.env.NEXT_PUBLIC_LISK_API_KEY
 					: organization?.publicMetadata.apiToken
 			) as string;
 
+			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
 			setApiKey(`Bearer ${key}`);
 		};
 
@@ -72,7 +108,7 @@ export function useLiskTransfer(mode: "user" | "organization" = "user") {
 				setRecipientLoading(false);
 			}
 		},
-		[apiKey],
+		[apiKey, getCache, setCache],
 	);
 
 	// Single transfer
@@ -89,7 +125,7 @@ export function useLiskTransfer(mode: "user" | "organization" = "user") {
 			transactionNotes?: string;
 		}) => {
 			setTransferLoading(true);
-			setTransferSuccess(undefined);
+			setTransferMessage(undefined);
 			setTransferError(undefined);
 			try {
 				const { data } = await axios.post(
@@ -106,7 +142,7 @@ export function useLiskTransfer(mode: "user" | "organization" = "user") {
 						},
 					},
 				);
-				setTransferSuccess(data.message || "Transfer executed successfully.");
+				setTransferMessage(data.message || "Transfer executed successfully.");
 				return data;
 			} catch (err: any) {
 				if (err?.response?.status === 400) {
@@ -134,9 +170,9 @@ export function useLiskTransfer(mode: "user" | "organization" = "user") {
 			payments: { recipient: string; amount: number }[];
 			transactionNotes?: string;
 		}) => {
-			setBatchLoading(true);
-			setBatchSuccess(undefined);
-			setBatchError(undefined);
+			setBatchTransferLoading(true);
+			setBatchTransferMessage(undefined);
+			setBatchTransferError(undefined);
 			try {
 				const { data } = await axios.post(
 					`${API_BASE}/transfer/batch/${userId}`,
@@ -151,37 +187,40 @@ export function useLiskTransfer(mode: "user" | "organization" = "user") {
 						},
 					},
 				);
-				setBatchSuccess(data.message || "Batch transfer executed successfully.");
+				setBatchTransferMessage(data.message || "Batch transfer executed successfully.");
 				return data;
 			} catch (err: any) {
 				if (err?.response?.status === 400) {
-					setBatchError("Invalid input or validation error.");
+					setBatchTransferError("Invalid input or validation error.");
 				} else if (err?.response?.status === 401) {
-					setBatchError("Unauthorized.");
+					setBatchTransferError("Unauthorized.");
 				} else {
-					setBatchError("Failed to execute batch transfer.");
+					setBatchTransferError("Failed to execute batch transfer.");
 				}
 			} finally {
-				setBatchLoading(false);
+				setBatchTransferLoading(false);
 			}
 		},
 		[apiKey],
 	);
 
 	return {
+		// recipient
 		recipient,
 		recipientLoading,
 		recipientError,
 		fetchRecipient,
 
+		// single transfer
 		transferLoading,
-		transferSuccess,
+		transferMessage,
 		transferError,
 		makeTransfer,
 
-		batchLoading,
-		batchSuccess,
-		batchError,
+		// batch transfer
+		batchTransferLoading,
+		batchTransferMessage,
+		batchTransferError,
 		makeBatchTransfer,
 	};
 }

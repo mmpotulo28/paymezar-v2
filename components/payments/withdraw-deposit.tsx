@@ -5,157 +5,53 @@ import { Button } from "@heroui/button";
 import { Banknote, BanknoteArrowUp, Wallet, BanknoteArrowDown } from "lucide-react";
 import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
-
 import { useAccount } from "@/context/AccountContext";
 import { BANKS } from "@/lib/banks";
-import { postApi } from "@/lib/helpers";
 
 export function WithdrawDeposit() {
 	const { user } = useUser();
 	const {
 		bankAccount,
-		refreshBankAccount,
+		getBankAccount,
 		bankLoading,
+		bankError,
 		balances,
 		balancesLoading,
-		refreshBalances,
+		fetchBalances,
+		balancesError,
+
+		// withdraw
+		withdraw,
+		withdrawError,
+		withdrawMessage,
+		withdrawLoading,
+
+		// deposit
+		deposit,
+		depositError,
+		depositMessage,
+		depositLoading,
 	} = useAccount();
-	const [tab, setTab] = useState<"withdraw" | "deposit">("withdraw");
-
-	// Withdraw state
-	const [withdrawAmount, setWithdrawAmount] = useState("");
-	const [withdrawLoading, setWithdrawLoading] = useState(false);
-	const [withdrawSuccess, setWithdrawSuccess] = useState<string | null>(null);
-	const [withdrawError, setWithdrawError] = useState<string | null>(null);
-
-	// Deposit state
-	const [depositAmount, setDepositAmount] = useState("");
-	const [depositLoading, setDepositLoading] = useState(false);
-	const [depositSuccess, setDepositSuccess] = useState<string | null>(null);
-	const [depositError, setDepositError] = useState<string | null>(null);
+	const [withdrawAmount, setWithdrawAmount] = useState<string>("");
+	const [depositAmount, setDepositAmount] = useState<string>("");
+	const isTestnet = true;
 
 	useEffect(() => {
 		if (!user) return;
 
-		refreshBalances(user?.id || "");
-		refreshBankAccount(user?.id || "");
-	}, [refreshBalances, refreshBankAccount, user]);
-
-	const userBalance =
-		balances?.find((t) => t.name === "ZAR")?.balance ?? balances?.[0]?.balance ?? "0.00";
-
-	const isTestnet = true; // Set to true to disable deposit/withdraw on testnet
+		fetchBalances(user?.id || "");
+		getBankAccount(user?.id || "");
+	}, [fetchBalances, getBankAccount, user]);
 
 	const handleWithdraw = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setWithdrawLoading(true);
-		setWithdrawError(null);
-		setWithdrawSuccess(null);
-
-		if (!user?.id) {
-			setWithdrawError("User not found.");
-			setWithdrawLoading(false);
-
-			return;
-		}
-		if (!withdrawAmount || isNaN(Number(withdrawAmount)) || Number(withdrawAmount) <= 0) {
-			setWithdrawError("Please enter a valid amount.");
-			setWithdrawLoading(false);
-
-			return;
-		}
-		if (!bankAccount) {
-			setWithdrawError("Please select a bank account.");
-			setWithdrawLoading(false);
-
-			return;
-		}
-		if (!bankAccount) {
-			setWithdrawError("Selected bank account not found.");
-			setWithdrawLoading(false);
-
-			return;
-		}
-
-		const result = await postApi(
-			`https://seal-app-qp9cc.ondigitalocean.app/api/v1/withdraw/${encodeURIComponent(user.id)}`,
-			{
-				amount: Number(withdrawAmount),
-				bankAccountId: bankAccount.id,
-			},
-			{
-				"Content-Type": "application/json",
-				Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
-			},
-			"POST",
-		);
-
-		if (!result.error) {
-			setWithdrawSuccess("Withdrawal request submitted successfully!");
-			setWithdrawAmount("");
-			await refreshBankAccount(user.id);
-		} else {
-			setWithdrawError(result.message || "Failed to submit withdrawal.");
-		}
-		setWithdrawLoading(false);
+		await withdraw(withdrawAmount);
 	};
 
 	const handleDeposit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setDepositLoading(true);
-		setDepositError(null);
-		setDepositSuccess(null);
 
-		if (!user?.id) {
-			setDepositError("User not found.");
-			setDepositLoading(false);
-
-			return;
-		}
-		const isValidAmount =
-			!depositAmount || isNaN(Number(depositAmount)) || Number(depositAmount) <= 0;
-
-		if (isValidAmount) {
-			setDepositError("Please enter a valid amount.");
-			setDepositLoading(false);
-
-			return;
-		}
-		if (!bankAccount) {
-			setDepositError("Please select a bank account.");
-			setDepositLoading(false);
-
-			return;
-		}
-
-		if (!bankAccount) {
-			setDepositError("Selected bank account not found.");
-			setDepositLoading(false);
-
-			return;
-		}
-
-		const result = await postApi(
-			`https://seal-app-qp9cc.ondigitalocean.app/api/v1/deposit/${encodeURIComponent(user.id)}`,
-			{
-				amount: Number(depositAmount),
-				bankAccountId: bankAccount.id,
-			},
-			{
-				"Content-Type": "application/json",
-				Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
-			},
-			"POST",
-		);
-
-		if (!result.error) {
-			setDepositSuccess("Deposit request submitted successfully!");
-			setDepositAmount("");
-			await refreshBankAccount(user.id);
-		} else {
-			setDepositError(result.message || "Failed to submit deposit.");
-		}
-		setDepositLoading(false);
+		await deposit(depositAmount);
 	};
 
 	return (
@@ -168,7 +64,7 @@ export function WithdrawDeposit() {
 				<div className="flex items-center gap-3 mt-2">
 					<span className="text-xs text-default-500 font-medium">Your ZAR Balance:</span>
 					<Chip className="font-mono text-base px-3 py-1" color="primary" variant="flat">
-						{balancesLoading ? "Loading..." : `${userBalance} ZAR`}
+						{balancesLoading ? "Loading..." : `${balances[0]?.balance} ZAR`}
 					</Chip>
 				</div>
 
@@ -180,14 +76,45 @@ export function WithdrawDeposit() {
 						variant="bordered"
 					/>
 				)}
+
+				{withdrawError && (
+					<Alert
+						color={"danger"}
+						description={withdrawError}
+						title={`Error!`}
+						variant="bordered"
+					/>
+				)}
+
+				{depositError && (
+					<Alert
+						color={"danger"}
+						description={depositError}
+						title={`Error!`}
+						variant="bordered"
+					/>
+				)}
+
+				{bankError && (
+					<Alert
+						color={"danger"}
+						description={bankError}
+						title={`Error!`}
+						variant="bordered"
+					/>
+				)}
+
+				{balancesError && (
+					<Alert
+						color={"danger"}
+						description={balancesError}
+						title={`Error!`}
+						variant="bordered"
+					/>
+				)}
 			</CardHeader>
 			<CardBody>
-				<Tabs
-					className="mb-4"
-					color="secondary"
-					selectedKey={tab}
-					variant="solid"
-					onSelectionChange={(key) => setTab(key as "withdraw" | "deposit")}>
+				<Tabs className="mb-4" color="secondary" variant="solid">
 					<Tab key="withdraw" title="Withdraw">
 						<form className="flex flex-col gap-4" onSubmit={handleWithdraw}>
 							<Input
@@ -195,7 +122,7 @@ export function WithdrawDeposit() {
 								endContent={
 									<Tooltip content="Maximum: your available balance">
 										<span className="text-xs text-default-400">
-											Max: {userBalance} ZAR
+											Max: {balances[0]?.balance} ZAR
 										</span>
 									</Tooltip>
 								}
@@ -244,12 +171,12 @@ export function WithdrawDeposit() {
 									Withdraw
 								</Button>
 							</Tooltip>
-							{withdrawSuccess && (
+							{withdrawMessage && (
 								<Chip
 									className="w-full justify-center"
 									color="success"
 									variant="flat">
-									{withdrawSuccess}
+									{withdrawMessage}
 								</Chip>
 							)}
 							{withdrawError && (
@@ -309,12 +236,12 @@ export function WithdrawDeposit() {
 									Deposit
 								</Button>
 							</Tooltip>
-							{depositSuccess && (
+							{depositMessage && (
 								<Chip
 									className="w-full justify-center"
 									color="success"
 									variant="flat">
-									{depositSuccess}
+									{depositMessage}
 								</Chip>
 							)}
 							{depositError && (

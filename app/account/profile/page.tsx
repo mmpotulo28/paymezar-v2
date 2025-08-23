@@ -5,9 +5,9 @@ import { UploadCloud, User, Mail, Phone } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import Head from "next/head";
 
-import { postApi } from "@/lib/helpers";
 import UnAuthorizedContent from "@/components/UnAuthorizedContent";
 import { siteConfig } from "@/config/site";
+import axios from "axios";
 
 export default function ProfilePage() {
 	const { user } = useUser();
@@ -52,11 +52,10 @@ export default function ProfilePage() {
 			formData.append("file", file);
 			formData.append("userId", user.id);
 
-			// Use postApi for consistency
-			const result = await postApi("/api/account/image-upload", formData, {}, "POST");
+			const result = await axios.post("/api/account/image-upload", formData);
 
-			if (result.error || !result.data?.url)
-				throw new Error(result.message || "Failed to upload image");
+			if (result.status !== 200 && result.status !== 201)
+				throw new Error(result.data?.message || "Failed to upload image");
 			setForm((f) => ({ ...f, imageUrl: result.data.url }));
 			setSuccess("Profile image uploaded!");
 		} catch (err: any) {
@@ -75,7 +74,7 @@ export default function ProfilePage() {
 		try {
 			if (!user?.id) throw new Error("User not found.");
 
-			const result = await postApi(
+			const result = await axios.put(
 				"/api/account/update-profile",
 				{
 					id: user.id,
@@ -86,12 +85,11 @@ export default function ProfilePage() {
 					imageUrl: form.imageUrl,
 					phone: form.phone,
 				},
-				{ "Content-Type": "application/json" },
-				"PUT",
+				{ headers: { "Content-Type": "application/json" } },
 			);
 
-			if (result.error) {
-				throw new Error(result.message || "Failed to update profile.");
+			if (result.status !== 200 && result.status !== 201) {
+				throw new Error(result.data?.message || "Failed to update profile.");
 			}
 
 			setSuccess("Profile updated successfully!");

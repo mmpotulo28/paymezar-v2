@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { iUserTokenBalance } from "@/types";
 import { useOrganization, useUser } from "@clerk/nextjs";
-import useCache from "./useCache";
+import { useCache } from "./useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
 export interface iUseLiskBalances {
@@ -27,10 +27,11 @@ export function useLiskBalances(mode: "user" | "organization" = "user"): iUseLis
 		const fetchApiKey = () => {
 			const key = (
 				mode === "user"
-					? user?.unsafeMetadata.apiToken
+					? process.env.NEXT_PUBLIC_LISK_API_KEY
 					: organization?.publicMetadata.apiToken
 			) as string;
 
+			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
 			setApiKey(`Bearer ${key}`);
 		};
 
@@ -72,7 +73,7 @@ export function useLiskBalances(mode: "user" | "organization" = "user"): iUseLis
 
 			return [];
 		},
-		[apiKey],
+		[apiKey, getCache, setCache],
 	);
 
 	return {

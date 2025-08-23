@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useOrganization, useUser } from "@clerk/nextjs";
 import { iApiToken, iApiTokenCreateResponse, iApiTokenRevokeResponse } from "@/types";
-import useCache from "./useCache";
+import { useCache } from "./useCache";
 
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
@@ -52,10 +52,11 @@ export function useLiskApiTokens(mode: "user" | "organization" = "user"): iUseLi
 		const fetchApiKey = () => {
 			const key = (
 				mode === "user"
-					? user?.unsafeMetadata.apiToken
+					? process.env.NEXT_PUBLIC_LISK_API_KEY
 					: organization?.publicMetadata.apiToken
 			) as string;
 
+			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
 			setApiKey(`Bearer ${key}`);
 		};
 
@@ -83,10 +84,11 @@ export function useLiskApiTokens(mode: "user" | "organization" = "user"): iUseLi
 			setCache(cacheKey, data);
 		} catch (err: any) {
 			setApiTokenError("Failed to fetch tokens.");
+			console.error("Error fetching tokens:", err);
 		} finally {
 			setApiTokenLoading(false);
 		}
-	}, [apiKey]);
+	}, [apiKey, getCache, setCache]);
 
 	const createToken = useCallback(
 		async (description: string) => {
@@ -100,7 +102,7 @@ export function useLiskApiTokens(mode: "user" | "organization" = "user"): iUseLi
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+							Authorization: apiKey,
 						},
 					},
 				);
@@ -108,11 +110,12 @@ export function useLiskApiTokens(mode: "user" | "organization" = "user"): iUseLi
 				await fetchTokens();
 			} catch (err: any) {
 				setCreateTokenError("Failed to create token.");
+				console.error("Error creating token:", err);
 			} finally {
 				setCreateTokenLoading(false);
 			}
 		},
-		[apiKey],
+		[apiKey, fetchTokens],
 	);
 
 	const updateToken = useCallback(
@@ -126,18 +129,19 @@ export function useLiskApiTokens(mode: "user" | "organization" = "user"): iUseLi
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+							Authorization: apiKey,
 						},
 					},
 				);
 				await fetchTokens();
 			} catch (err: any) {
 				setUpdateTokenError("Failed to update token.");
+				console.error("Error updating token:", err);
 			} finally {
 				setUpdateTokenLoading(false);
 			}
 		},
-		[apiKey],
+		[apiKey, fetchTokens],
 	);
 
 	const revokeToken = useCallback(
@@ -152,7 +156,7 @@ export function useLiskApiTokens(mode: "user" | "organization" = "user"): iUseLi
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: (user?.unsafeMetadata.apiToken as string) || "",
+							Authorization: apiKey,
 						},
 					},
 				);
@@ -160,11 +164,12 @@ export function useLiskApiTokens(mode: "user" | "organization" = "user"): iUseLi
 				await fetchTokens();
 			} catch (err: any) {
 				setRevokeTokenError("Failed to revoke token.");
+				console.error("Error revoking token:", err);
 			} finally {
 				setRevokeTokenLoading(false);
 			}
 		},
-		[apiKey],
+		[apiKey, fetchTokens],
 	);
 
 	return {

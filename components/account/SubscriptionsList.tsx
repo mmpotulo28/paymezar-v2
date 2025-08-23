@@ -6,7 +6,7 @@ import { useAccount } from "@/context/AccountContext";
 import { useUser } from "@clerk/nextjs";
 
 export function SubscriptionsList() {
-	const { subscriptions, subscriptionLoading, refreshSubscriptions, subscriptionError } =
+	const { subscriptions, subscriptionLoading, fetchSubscriptions, subscriptionError } =
 		useAccount();
 	const { user } = useUser();
 
@@ -20,7 +20,7 @@ export function SubscriptionsList() {
 					size="sm"
 					startContent={<RefreshCcw size={16} />}
 					variant="flat"
-					onPress={() => refreshSubscriptions(user?.id || "")}>
+					onPress={() => fetchSubscriptions(user?.id || "")}>
 					Refresh
 				</Button>
 			</CardHeader>

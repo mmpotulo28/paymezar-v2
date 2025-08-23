@@ -8,7 +8,7 @@ import {
 	iUserTokenBalance,
 } from "@/types/";
 import { useOrganization, useUser } from "@clerk/nextjs";
-import useCache from "./useCache";
+import { useCache } from "./useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
 export interface iUseBusiness {
@@ -86,10 +86,11 @@ export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBus
 		const fetchApiKey = () => {
 			const key = (
 				mode === "user"
-					? user?.unsafeMetadata.apiToken
+					? process.env.NEXT_PUBLIC_LISK_API_KEY
 					: organization?.publicMetadata.apiToken
 			) as string;
 
+			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
 			setApiKey(`Bearer ${key}`);
 		};
 
@@ -100,16 +101,17 @@ export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBus
 	const fetchFloat = useCallback(async () => {
 		setLoadingFloat(true);
 		setFloatError(undefined);
+		if (!user || apiKey) return;
+
 		const cacheKey = "float_balances";
+		const cached = getCache(cacheKey);
+		if (cached) {
+			setFloat(cached);
+			setLoadingFloat(false);
+			return cached;
+		}
 
 		try {
-			const cached = getCache(cacheKey);
-			if (cached) {
-				setFloat(cached);
-				setLoadingFloat(false);
-				return cached;
-			}
-
 			const { data } = await axios.get<{ tokens: iUserTokenBalance[] }>(`${API_BASE}/float`, {
 				headers: { Authorization: apiKey },
 			});
@@ -118,12 +120,13 @@ export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBus
 			return data.tokens || [];
 		} catch (err: any) {
 			setFloatError("Failed to fetch token balances.");
+			console.error("Failed to fetch token balances:", err);
 		} finally {
 			setLoadingFloat(false);
 		}
 
 		return [];
-	}, [apiKey]);
+	}, [apiKey, getCache, setCache, user]);
 
 	// Enable gas
 	const enableBusinessGas = useCallback(async () => {
@@ -140,6 +143,7 @@ export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBus
 			return data;
 		} catch (err: any) {
 			setGasError("Failed to enable gas.");
+			console.error("Failed to enable gas:", err);
 		} finally {
 			setGasLoading(false);
 		}
@@ -160,6 +164,7 @@ export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBus
 				setUserGasSuccess("Gas payment activated successfully for user.");
 			} catch (err: any) {
 				setUserGasError("Failed to activate gas payment for user.");
+				console.error("Failed to activate gas payment for user:", err);
 			} finally {
 				setUserGasLoading(false);
 			}
@@ -197,13 +202,21 @@ export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBus
 		} finally {
 			setMintLoading(false);
 		}
-	}, [apiKey]);
+	}, [
+		apiKey,
+		fetchFloat,
+		mintForm.transactionAmount,
+		mintForm.transactionNotes,
+		mintForm.transactionRecipient,
+	]);
 
 	// Fetch paginated pending transactions
 	const fetchPendingTx = useCallback(
 		async (page = 1, pageSize = 10) => {
 			setPendingLoading(true);
 			setPendingError(undefined);
+			if (!user || apiKey) return;
+
 			const cacheKey = `pending_tx`;
 			const cached = getCache(cacheKey);
 			if (cached) {
@@ -215,7 +228,7 @@ export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBus
 				const { data } = await axios.get<iPendingTxResponse>(
 					`${API_BASE}/transactions/pending?page=${page}&pageSize=${pageSize}`,
 					{
-						headers: { Authorization: (user?.unsafeMetadata.apiToken as string) || "" },
+						headers: { Authorization: apiKey },
 					},
 				);
 				setPendingTx(data.transactions);
@@ -223,13 +236,14 @@ export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBus
 				return data;
 			} catch (err: any) {
 				setPendingError("Failed to fetch pending transactions.");
+				console.error("Failed to fetch pending transactions:", err);
 			} finally {
 				setPendingLoading(false);
 			}
 
 			return [];
 		},
-		[apiKey],
+		[apiKey, getCache, setCache, user],
 	);
 
 	useEffect(() => {

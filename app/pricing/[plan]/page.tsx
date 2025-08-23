@@ -26,22 +26,25 @@ import {
 import { useRouter, useParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 
-import { postApi } from "@/lib/helpers";
 import { PLAN_DETAILS } from "@/lib/constants";
 import UnAuthorizedContent from "@/components/UnAuthorizedContent";
 import { useAccount } from "@/context/AccountContext";
 
 export default function SubscriptionPage() {
 	const { user } = useUser();
-	const { subscriptions, refreshSubscriptions } = useAccount();
+	const {
+		subscriptions,
+		fetchSubscriptions,
+		createSubscription,
+		subscriptionError,
+		subscriptionLoading,
+		subscriptionMessage,
+		getUser,
+	} = useAccount();
 	const router = useRouter();
 	const params = useParams();
 	const planKey = String(params.plan || "").toLowerCase();
 	const plan = PLAN_DETAILS[planKey];
-
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-	const [success, setSuccess] = useState<string | null>(null);
 	const [period, setPeriod] = useState<"monthly" | "yearly">("monthly");
 	const [amount, setAmount] = useState<number>(0);
 	const [isCurrent, setIsCurrent] = useState<boolean>(true);
@@ -56,11 +59,12 @@ export default function SubscriptionPage() {
 			});
 			router.replace("/pricing");
 		}
+		fetchSubscriptions(user?.id || "");
 		const newAmount =
 			period === "yearly" ? (plan.price.yearly || 0) * 12 : plan.price.monthly || 0;
 
 		setAmount(newAmount);
-	}, [plan, period, router]);
+	}, [plan, period, router, fetchSubscriptions, user?.id]);
 
 	useEffect(() => {
 		if (user && subscriptions?.length > 0) {
@@ -77,60 +81,26 @@ export default function SubscriptionPage() {
 	}, [user, subscriptions, planKey, plan.name]);
 
 	const handleSubscribe = async () => {
-		if (!user?.id || !user?.unsafeMetadata?.paymentId) {
-			setError("You must be logged in to subscribe.");
+		// get lisk user
+		const liskUser = await getUser({ id: user?.id || "" });
 
-			return;
-		}
-		setLoading(true);
-		setError(null);
-		setSuccess(null);
-		try {
+		if (!liskUser) {
 			addToast({
-				title: "Creating subscription...",
-				description: "Your subscription is being created.",
-				variant: "flat",
-				color: "secondary",
-				shouldShowTimeoutProgress: true,
-			});
-			const result = await postApi("/api/subscription/create", {
-				id: user.id,
-				plan: planKey,
-				period,
-				amount,
-			});
-
-			if (!result.error) {
-				addToast({
-					title: "Subscription created",
-					description: "Your subscription has been created successfully.",
-					variant: "flat",
-					color: "success",
-				});
-				setSuccess("Subscription created successfully!");
-				console.log("Subscription created:", result);
-				refreshSubscriptions(user?.id);
-			} else {
-				addToast({
-					title: "Subscription creation failed",
-					description: result.message || "Failed to create subscription.",
-					variant: "flat",
-					color: "danger",
-				});
-				setError(result.message || "Failed to create subscription.");
-			}
-		} catch (e: any) {
-			addToast({
-				title: "Subscription creation failed",
-				description: e.message || "Failed to create subscription.",
+				title: "User not found!",
+				description: "You do not seem to have a Lisk account.",
 				variant: "flat",
 				color: "danger",
 			});
-			console.error("Subscription error:", e);
-			setError(e.message || "Failed to create subscription.");
-			throw e;
+			return;
 		}
-		setLoading(false);
+
+		await createSubscription({
+			userId: user?.id || "",
+			paymentId: liskUser?.paymentIdentifier || "",
+			plan: plan.name,
+			period,
+			amount,
+		});
 	};
 
 	if (!plan) return null;
@@ -247,7 +217,7 @@ export default function SubscriptionPage() {
 							<Button
 								className="w-full"
 								color="primary"
-								disabled={loading || isCurrent}
+								disabled={subscriptionLoading || isCurrent}
 								endContent={
 									!isCurrent && (
 										<Chip color="success" radius="sm" size="sm" variant="solid">
@@ -255,7 +225,7 @@ export default function SubscriptionPage() {
 										</Chip>
 									)
 								}
-								isLoading={loading}
+								isLoading={subscriptionLoading}
 								size="lg"
 								startContent={
 									!isCurrent ? <Zap size={18} /> : <AlertCircle size={18} />
@@ -271,20 +241,20 @@ export default function SubscriptionPage() {
 									</>
 								)}
 							</Button>
-							{error && (
+							{subscriptionError && (
 								<Chip
 									className="w-full justify-center mt-2"
 									color="danger"
 									variant="flat">
-									{error}
+									{subscriptionError}
 								</Chip>
 							)}
-							{success && (
+							{subscriptionMessage && (
 								<Chip
 									className="w-full justify-center mt-2"
 									color="success"
 									variant="flat">
-									{success}
+									{subscriptionMessage}
 								</Chip>
 							)}
 							<Divider />

@@ -2,13 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useOrganization, useUser } from "@clerk/nextjs";
 import { iStaffMember, iStaffAssignResponse, iStaffRemoveResponse } from "@/types";
-import useCache from "./useCache";
+import { useCache } from "./useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
 export interface iUseStaff {
 	staff: iStaffMember[];
-	loading: boolean;
-	error: string | undefined;
+	staffLoading: boolean;
+	staffError: string | undefined;
 	actionMsg: string | undefined;
 	fetchStaff: (merchantId: string) => Promise<iStaffMember[]>;
 	assignStaff: (merchantId: string, input: string) => Promise<iStaffAssignResponse | undefined>;
@@ -18,8 +18,8 @@ export interface iUseStaff {
 
 export function useStaff(mode: "user" | "organization" = "user") {
 	const [staff, setStaff] = useState<iStaffMember[]>([]);
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | undefined>(undefined);
+	const [staffLoading, setStaffLoading] = useState(false);
+	const [staffError, setStaffError] = useState<string | undefined>(undefined);
 	const [actionMsg, setActionMsg] = useState<string | undefined>(undefined);
 
 	const { user } = useUser();
@@ -32,10 +32,11 @@ export function useStaff(mode: "user" | "organization" = "user") {
 		const fetchApiKey = () => {
 			const key = (
 				mode === "user"
-					? user?.unsafeMetadata.apiToken
+					? process.env.NEXT_PUBLIC_LISK_API_KEY
 					: organization?.publicMetadata.apiToken
 			) as string;
 
+			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
 			setApiKey(`Bearer ${key}`);
 		};
 
@@ -44,14 +45,14 @@ export function useStaff(mode: "user" | "organization" = "user") {
 
 	const fetchStaff = useCallback(
 		async (merchantId: string) => {
-			setLoading(true);
-			setError(undefined);
+			setStaffLoading(true);
+			setStaffError(undefined);
 			const cacheKey = `staff_list_${merchantId}`;
 			try {
 				const cached = getCache(cacheKey);
 				if (cached) {
 					setStaff(cached);
-					setLoading(false);
+					setStaffLoading(false);
 					return cached;
 				}
 
@@ -63,20 +64,20 @@ export function useStaff(mode: "user" | "organization" = "user") {
 				setCache(cacheKey, data);
 				return data;
 			} catch (err: any) {
-				setError(`Failed to fetch staff (${err.message || "Unknown error"}).`);
+				setStaffError(`Failed to fetch staff (${err.message || "Unknown error"}).`);
 			} finally {
-				setLoading(false);
+				setStaffLoading(false);
 			}
 
 			return [];
 		},
-		[apiKey],
+		[apiKey, getCache, setCache],
 	);
 
 	const assignStaff = useCallback(
 		async (merchantId: string, input: string) => {
-			setLoading(true);
-			setError(undefined);
+			setStaffLoading(true);
+			setStaffError(undefined);
 			setActionMsg(undefined);
 			try {
 				const { data } = await axios.post<iStaffAssignResponse>(
@@ -95,18 +96,18 @@ export function useStaff(mode: "user" | "organization" = "user") {
 				await fetchStaff(merchantId);
 				return data;
 			} catch (err: any) {
-				setError(err.response?.data?.message || "Failed to assign staff.");
+				setStaffError(err.response?.data?.message || "Failed to assign staff.");
 			} finally {
-				setLoading(false);
+				setStaffLoading(false);
 			}
 		},
-		[apiKey],
+		[apiKey, fetchStaff],
 	);
 
 	const removeStaff = useCallback(
 		async (merchantId: string, staffId: string) => {
-			setLoading(true);
-			setError(undefined);
+			setStaffLoading(true);
+			setStaffError(undefined);
 			setActionMsg(undefined);
 			try {
 				const { data } = await axios.delete<iStaffRemoveResponse>(
@@ -123,18 +124,19 @@ export function useStaff(mode: "user" | "organization" = "user") {
 				await fetchStaff(merchantId);
 				return data;
 			} catch (err: any) {
-				setError("Failed to remove staff.");
+				setStaffError("Failed to remove staff.");
+				console.error(err);
 			} finally {
-				setLoading(false);
+				setStaffLoading(false);
 			}
 		},
-		[apiKey],
+		[apiKey, fetchStaff],
 	);
 
 	return {
 		staff,
-		loading,
-		error,
+		staffLoading,
+		staffError,
 		actionMsg,
 		fetchStaff,
 		assignStaff,

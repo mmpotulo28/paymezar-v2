@@ -11,9 +11,20 @@ const PLAN_PRICES: Record<string, { monthly: number; yearly: number }> = {
 
 export async function POST(req: NextRequest) {
 	try {
-		const { id, plan, period, amount } = await req.json();
+		const { userId, plan, period, amount, paymentId } = await req.json();
+		// get apiKey from authorization
+		const apiKey = req.headers.get("Authorization")?.replace("Bearer ", "");
 
-		if (!id || !plan || !period) {
+		const isMissingFields = !userId || !plan || !period || !amount || !paymentId || !apiKey;
+		if (isMissingFields) {
+			console.log("Missing required fields:", {
+				userId,
+				plan,
+				period,
+				amount,
+				paymentId,
+				apiKey,
+			});
 			return NextResponse.json(
 				{
 					error: true,
@@ -26,12 +37,14 @@ export async function POST(req: NextRequest) {
 		}
 
 		// 1. Create the subscription in Supabase
+		console.log("Creating subscription:", { userId, plan, period, amount, paymentId });
 		const { data: subscription, error: subError } = await supabase
 			.from("subscriptions")
 			.insert([
 				{
-					charge_id: id,
-					user_id: id,
+					charge_id: userId,
+					user_id: userId,
+					payment_id: paymentId,
 					plan,
 					status: "pending", // <-- changed from "active" to "pending"
 					started_at: new Date().toISOString(),
@@ -44,6 +57,7 @@ export async function POST(req: NextRequest) {
 			.single();
 
 		if (subError) {
+			console.error("Error creating subscription:", subError);
 			return NextResponse.json(
 				{ error: true, message: subError.message, data: null, status: 500 },
 				{ status: 500 },
@@ -52,6 +66,7 @@ export async function POST(req: NextRequest) {
 
 		// 2. Create a charge for the subscription (except for free/starter)
 		let charge = null;
+		console.log("Subscription created, now creating charge if needed:", subscription, apiKey);
 
 		if (plan !== "starter") {
 			const chargeAmount =
@@ -60,11 +75,10 @@ export async function POST(req: NextRequest) {
 					: period === "yearly"
 						? (PLAN_PRICES[plan]?.yearly || 0) * 12
 						: PLAN_PRICES[plan]?.monthly || 0;
-			const paymentId = `sub-${subscription.id}`;
 
 			try {
 				const chargeRes = await axios.post(
-					`https://seal-app-qp9cc.ondigitalocean.app/api/v1/charge/${encodeURIComponent(id)}/create`,
+					`https://seal-app-qp9cc.ondigitalocean.app/api/v1/charge/${encodeURIComponent(userId)}/create`,
 					{
 						paymentId,
 						amount: chargeAmount,
@@ -73,14 +87,21 @@ export async function POST(req: NextRequest) {
 					{
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: process.env.NEXT_PUBLIC_LISK_API_KEY || "",
+							Authorization: `Bearer ${apiKey}`,
 						},
 					},
 				);
 
-				charge = chargeRes.data;
+				if (chargeRes.data.error || !chargeRes.data.charge) {
+					console.error("Error creating charge:", chargeRes.data.message);
+					throw new Error(chargeRes.data.message);
+				}
+
+				charge = chargeRes.data.charge;
+				console.log("Charge created successfully:", charge.charge);
 			} catch (chargeError: any) {
 				// Optionally: rollback subscription if charge fails
+				console.error("Charge creation failed, rolling back:", chargeError);
 				await supabase.from("subscriptions").delete().eq("id", subscription.id);
 
 				return NextResponse.json(
@@ -98,6 +119,10 @@ export async function POST(req: NextRequest) {
 			}
 
 			// 3. Link charge to subscription (add charge_id to subscription)
+			console.log("Linking charge to subscription:", {
+				subscriptionId: subscription.id,
+				chargeId: charge.id,
+			});
 			await supabase
 				.from("subscriptions")
 				.update({ charge_id: charge.id, updated_at: new Date().toISOString() })
@@ -117,14 +142,15 @@ export async function POST(req: NextRequest) {
 			{ status: 201 },
 		);
 	} catch (error: any) {
+		console.log("Error creating subscription:", error);
 		return NextResponse.json(
 			{
 				error: true,
 				message: error?.message || "Internal server error",
 				data: null,
-				status: 500,
+				status: error?.status || 500,
 			},
-			{ status: 500 },
+			{ status: error?.status || 500 },
 		);
 	}
 }

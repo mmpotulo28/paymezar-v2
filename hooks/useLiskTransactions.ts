@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { iTransaction } from "@/types";
 import { useOrganization, useUser } from "@clerk/nextjs";
-import useCache from "./useCache";
+import { useCache } from "./useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
 export interface iUseLiskTransactions {
@@ -39,10 +39,11 @@ export function useLiskTransactions(mode: "user" | "organization" = "user"): iUs
 		const fetchApiKey = () => {
 			const key = (
 				mode === "user"
-					? user?.unsafeMetadata.apiToken
+					? process.env.NEXT_PUBLIC_LISK_API_KEY
 					: organization?.publicMetadata.apiToken
 			) as string;
 
+			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
 			setApiKey(`Bearer ${key}`);
 		};
 
@@ -80,7 +81,7 @@ export function useLiskTransactions(mode: "user" | "organization" = "user"): iUs
 
 			return [];
 		},
-		[apiKey],
+		[apiKey, getCache, setCache],
 	);
 
 	const fetchSingleTransaction = useCallback(
@@ -107,7 +108,7 @@ export function useLiskTransactions(mode: "user" | "organization" = "user"): iUs
 				setTransactionLoading(false);
 			}
 		},
-		[apiKey],
+		[apiKey, setCache],
 	);
 
 	return {

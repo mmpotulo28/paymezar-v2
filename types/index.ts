@@ -29,6 +29,7 @@ export interface iSubscription {
 	id: string;
 	user_id: string;
 	charge_id: string;
+	payment_id: string;
 	plan: string;
 	planDetails?: iPricingPlan;
 	period: "monthly" | "yearly";
@@ -139,7 +140,7 @@ export interface iCouponCreateRequest {
 	availableCoupons: number;
 }
 
-export interface iCouponUpdateRequest extends iCouponCreateRequest {}
+export type iCouponUpdateRequest = iCouponCreateRequest;
 
 export interface iCouponClaimRequest {
 	couponId: string;
@@ -210,7 +211,7 @@ export interface iPendingTx {
 	status: "string";
 	createdAt: "2025-08-22T18:06:25.305Z";
 	updatedAt: "2025-08-22T18:06:25.305Z";
-	details: {};
+	details: Record<string, unknown>;
 	user: {
 		id: "string";
 		firstName: "string";

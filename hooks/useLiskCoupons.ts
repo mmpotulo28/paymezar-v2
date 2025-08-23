@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useOrganization, useUser } from "@clerk/nextjs";
 import { iCoupon, iCouponCreateRequest, iCouponUpdateRequest, iCouponResponse } from "@/types";
-import useCache from "./useCache";
+import { useCache } from "./useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
 export function useCoupons(mode: "user" | "organization" = "user") {
@@ -20,13 +20,14 @@ export function useCoupons(mode: "user" | "organization" = "user") {
 		const fetchApiKey = () => {
 			const key = (
 				mode === "user"
-					? user?.unsafeMetadata.apiToken
+					? process.env.NEXT_PUBLIC_LISK_API_KEY
 					: organization?.publicMetadata.apiToken
 			) as string;
 
 			setApiKey(`Bearer ${key}`);
 		};
 
+		console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
 		fetchApiKey();
 	}, [user, organization, mode]);
 
@@ -50,10 +51,11 @@ export function useCoupons(mode: "user" | "organization" = "user") {
 			setCache(cacheKey, data);
 		} catch (err: any) {
 			setError("Failed to fetch coupons.");
+			console.error(err);
 		} finally {
 			setLoading(false);
 		}
-	}, [apiKey]);
+	}, [apiKey, getCache, mode, setCache]);
 
 	// Create a new coupon for a user
 	const createCoupon = useCallback(
@@ -75,11 +77,12 @@ export function useCoupons(mode: "user" | "organization" = "user") {
 				return data;
 			} catch (err: any) {
 				setError("Failed to create coupon.");
+				console.error(err);
 			} finally {
 				setLoading(false);
 			}
 		},
-		[apiKey],
+		[apiKey, fetchCoupons],
 	);
 
 	// Claim a coupon for a user
@@ -102,11 +105,12 @@ export function useCoupons(mode: "user" | "organization" = "user") {
 				return data;
 			} catch (err: any) {
 				setError("Failed to claim coupon.");
+				console.error(err);
 			} finally {
 				setLoading(false);
 			}
 		},
-		[apiKey],
+		[apiKey, fetchCoupons],
 	);
 
 	// Update a coupon for a user
@@ -129,11 +133,12 @@ export function useCoupons(mode: "user" | "organization" = "user") {
 				return data;
 			} catch (err: any) {
 				setError("Failed to update coupon.");
+				console.error(err);
 			} finally {
 				setLoading(false);
 			}
 		},
-		[apiKey],
+		[apiKey, fetchCoupons],
 	);
 
 	// Delete a coupon for a user
@@ -153,11 +158,12 @@ export function useCoupons(mode: "user" | "organization" = "user") {
 				await fetchCoupons();
 			} catch (err: any) {
 				setError("Failed to delete coupon.");
+				console.error(err);
 			} finally {
 				setLoading(false);
 			}
 		},
-		[apiKey],
+		[apiKey, fetchCoupons],
 	);
 
 	return {

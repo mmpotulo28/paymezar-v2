@@ -15,13 +15,20 @@ import { useCallback, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 
 import { BANKS } from "@/lib/banks";
-import { upsertBankAccount, deleteBankAccount } from "@/lib/helpers";
 import { useAccount } from "@/context/AccountContext";
 import Image from "next/image";
 
 export function BankAccounts() {
 	const { user } = useUser();
-	const { bankAccount, bankLoading, refreshBankAccount, bankError } = useAccount();
+	const {
+		bankAccount,
+		bankLoading,
+		getBankAccount,
+		bankError,
+		upsertBankAccount,
+		deleteBankAccount,
+	} = useAccount();
+
 	const [showAdd, setShowAdd] = useState(false);
 	const [form, setForm] = useState<{
 		accountHolder: string;
@@ -34,16 +41,10 @@ export function BankAccounts() {
 		branchCode: "",
 		bank: "",
 	});
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-	const [success, setSuccess] = useState<string | null>(null);
-	const [refreshing, setRefreshing] = useState(false);
 
 	const handleRefresh = useCallback(async () => {
-		setRefreshing(true);
-		await refreshBankAccount(user?.id || "");
-		setRefreshing(false);
-	}, [refreshBankAccount, user]);
+		await getBankAccount(user?.id || "");
+	}, [getBankAccount, user]);
 
 	const handleChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -55,60 +56,29 @@ export function BankAccounts() {
 	const handleAddAccount = useCallback(
 		async (e: React.FormEvent) => {
 			e.preventDefault();
-			setLoading(true);
-			setError(null);
-			setSuccess(null);
-
-			if (!user?.id) {
-				setError("User not found.");
-				setLoading(false);
-
-				return;
-			}
+			if (!user?.id) return;
 
 			const { accountHolder, accountNumber, branchCode, bank } = form;
 
-			const result = await upsertBankAccount({
-				userId: user.id,
+			await upsertBankAccount({
+				userId: user?.id,
 				accountHolder,
 				accountNumber,
 				branchCode,
 				bankName: bank,
 			});
 
-			if (!result.error && result.data?.bankAccount) {
-				await refreshBankAccount(user?.id || "");
-				setForm({
-					accountHolder: "",
-					accountNumber: "",
-					branchCode: "",
-					bank: "",
-				});
+			if (!bankError) {
 				setShowAdd(false);
-				setSuccess("Bank account saved successfully!");
-			} else {
-				setError(result.message || "Failed to save bank account.");
 			}
-			setLoading(false);
 		},
-		[form, user, refreshBankAccount],
+		[user?.id, form, upsertBankAccount, bankError],
 	);
 
 	const handleDeleteAccount = async () => {
 		if (!user?.id) return;
-		setLoading(true);
-		setError(null);
-		setSuccess(null);
 
-		const result = await deleteBankAccount({ userId: user.id });
-
-		if (!result.error) {
-			await refreshBankAccount(user?.id || "");
-			setSuccess("Bank account deleted successfully!");
-		} else {
-			setError(result.message || "Failed to delete bank account.");
-		}
-		setLoading(false);
+		await deleteBankAccount(user.id);
 	};
 
 	const getBankIcon = (bankName: string) => {
@@ -127,7 +97,7 @@ export function BankAccounts() {
 					<Button
 						className="p-0 min-h-0 min-w-10"
 						color="primary"
-						disabled={loading || !user}
+						disabled={bankLoading || !user}
 						size="sm"
 						startContent={<Plus size={16} />}
 						variant="flat"
@@ -136,8 +106,8 @@ export function BankAccounts() {
 					</Button>
 					<Button
 						color="secondary"
-						disabled={loading}
-						isLoading={refreshing}
+						disabled={bankLoading}
+						isLoading={bankLoading}
 						size="sm"
 						startContent={<RefreshCcw size={16} />}
 						variant="flat"
@@ -189,14 +159,14 @@ export function BankAccounts() {
 						<Button
 							className="w-full"
 							color="primary"
-							disabled={loading || !user}
-							isLoading={loading}
+							disabled={bankLoading || !user}
+							isLoading={bankLoading}
 							radius="md"
 							type="submit">
 							Save Account
 						</Button>
-						{error && <div className="text-red-600 text-xs">{error}</div>}
-						{success && <div className="text-green-600 text-xs">{success}</div>}
+						{bankError && <div className="text-red-600 text-xs">{bankError}</div>}
+						{/* {success && <div className="text-green-600 text-xs">{success}</div>} */}
 					</form>
 				)}
 				{bankLoading && (
@@ -242,7 +212,7 @@ export function BankAccounts() {
 							</Chip>
 							<Button
 								color="danger"
-								disabled={loading || !user}
+								disabled={bankLoading || !user}
 								size="sm"
 								variant="flat"
 								onPress={() => handleDeleteAccount()}>
