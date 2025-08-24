@@ -88,6 +88,16 @@ export function useLiskCharges(mode: "user" | "organization" = "user"): iUseLisk
 		fetchApiKey();
 	}, [user, organization, mode]);
 
+	// reset all messages and errors after 3 seconds
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setChargesError(undefined);
+			setCharge(undefined);
+		}, 3000);
+
+		return () => clearTimeout(timer);
+	}, [chargesError, charge]);
+
 	// Create a new charge
 	const createCharge = async ({
 		userId,

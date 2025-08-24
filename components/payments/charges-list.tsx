@@ -13,6 +13,7 @@ import { RefreshCcw } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useAccount } from "@/context/AccountContext";
 import { iCharge } from "@/types";
+import { useState, useMemo } from "react";
 
 export function ChargesList({ className = "" }: { className?: string }) {
 	const {
@@ -27,6 +28,37 @@ export function ChargesList({ className = "" }: { className?: string }) {
 		activateSubscription,
 	} = useAccount();
 	const { user } = useUser();
+
+	const [filter, setFilter] = useState<"all" | "pending" | "complete">("all");
+	const [page, setPage] = useState(1);
+	const PAGE_SIZE = 5;
+
+	// Filter, sort, and paginate charges
+	const filteredSortedCharges = useMemo(() => {
+		let filtered = charges;
+		if (filter === "pending") {
+			filtered = charges.filter((c) => c.status === "PENDING");
+		} else if (filter === "complete") {
+			filtered = charges.filter((c) => c.status === "COMPLETE");
+		}
+		// Sort by createdAt, newest first
+		const sorted = [...filtered].sort(
+			(a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+		);
+		return sorted;
+	}, [charges, filter]);
+
+	const totalPages = Math.ceil(filteredSortedCharges.length / PAGE_SIZE);
+	const paginatedCharges = filteredSortedCharges.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+	const handleFilterChange = (newFilter: "all" | "pending" | "complete") => {
+		setFilter(newFilter);
+		setPage(1);
+	};
+
+	const handlePageChange = (newPage: number) => {
+		setPage(newPage);
+	};
 
 	// Pay for a charge and activate subscription
 	const handlePayCharge = async (charge: iCharge) => {
@@ -77,16 +109,40 @@ export function ChargesList({ className = "" }: { className?: string }) {
 			</CardHeader>
 
 			<CardBody>
+				{/* Filter controls */}
+				<div className="flex gap-2 mb-4">
+					<Button
+						size="sm"
+						variant={filter === "all" ? "solid" : "flat"}
+						color="default"
+						onPress={() => handleFilterChange("all")}>
+						All
+					</Button>
+					<Button
+						size="sm"
+						variant={filter === "pending" ? "solid" : "flat"}
+						color="warning"
+						onPress={() => handleFilterChange("pending")}>
+						Pending
+					</Button>
+					<Button
+						size="sm"
+						variant={filter === "complete" ? "solid" : "flat"}
+						color="success"
+						onPress={() => handleFilterChange("complete")}>
+						Complete
+					</Button>
+				</div>
 				{chargesLoading && (
 					<div className="text-default-400 text-center py-4">
 						<Spinner label="Fetching charges..." size="sm" />
 					</div>
 				)}
-				{!chargesLoading && charges.length === 0 && (
+				{!chargesLoading && paginatedCharges.length === 0 && (
 					<div className="text-default-400 text-center py-4">No charges found.</div>
 				)}
 				<div className="flex flex-col gap-3">
-					{charges?.map((charge) => (
+					{paginatedCharges.map((charge) => (
 						<div
 							key={charge.id}
 							className="flex lg:items-center items-start gap-2 lg:flex-row flex-col justify-between p-3 rounded-lg border border-default-200 bg-default-50">
@@ -147,6 +203,28 @@ export function ChargesList({ className = "" }: { className?: string }) {
 						</Chip>
 					)}
 				</div>
+				{/* Pagination controls */}
+				{totalPages > 1 && (
+					<div className="flex justify-center items-center gap-2 mt-4">
+						<Button
+							size="sm"
+							variant="flat"
+							disabled={page === 1}
+							onPress={() => handlePageChange(page - 1)}>
+							Prev
+						</Button>
+						<span className="text-xs">
+							Page {page} of {totalPages}
+						</span>
+						<Button
+							size="sm"
+							variant="flat"
+							disabled={page === totalPages}
+							onPress={() => handlePageChange(page + 1)}>
+							Next
+						</Button>
+					</div>
+				)}
 			</CardBody>
 		</Card>
 	);

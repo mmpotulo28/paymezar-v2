@@ -44,6 +44,15 @@ export const useLiskUsers = (mode: "user" | "organization" = "user"): iUseLiskUs
 		fetchApiKey();
 	}, [user, organization, mode]);
 
+	// reset all messages and errors after 3 seconds
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setErrorUsers(undefined);
+		}, 3000);
+
+		return () => clearTimeout(timer);
+	}, [errorUsers]);
+
 	const fetchUsers = useCallback(async () => {
 		setLoadingUsers(true);
 		setErrorUsers(undefined);

@@ -73,6 +73,16 @@ export function useLiskTransfer(mode: "user" | "organization" = "user"): iUseLis
 		fetchApiKey();
 	}, [user, organization, mode]);
 
+	// reset all messages and errors after 3 seconds
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setRecipientError(undefined);
+			setRecipient(undefined);
+		}, 3000);
+
+		return () => clearTimeout(timer);
+	}, [recipientError]);
+
 	// Fetch recipient details by payment identifier or email
 	const fetchRecipient = useCallback(
 		async (id: string) => {

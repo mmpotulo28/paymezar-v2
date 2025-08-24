@@ -14,7 +14,7 @@ export default function AccountTransactionsPage() {
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<string | null>(null);
 	const { user } = useUser();
-	const { transactions, transactionsLoading, transactionsError, refreshTransactions } =
+	const { transactions, transactionsLoading, transactionsError, fetchTransactions } =
 		useAccount();
 	const [modalOpen, setModalOpen] = useState(false);
 	const [selectedTx, setSelectedTx] = useState<iTransaction | null>(null);
@@ -52,7 +52,7 @@ export default function AccountTransactionsPage() {
 						}
 						type="button"
 						variant="flat"
-						onPress={() => refreshTransactions(user?.id || "")}>
+						onPress={() => fetchTransactions(user?.id || "")}>
 						{transactionsLoading ? "Refreshing..." : "Refresh"}
 					</Button>
 				</CardHeader>

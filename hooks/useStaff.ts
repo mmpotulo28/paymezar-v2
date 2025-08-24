@@ -43,6 +43,16 @@ export function useStaff(mode: "user" | "organization" = "user") {
 		fetchApiKey();
 	}, [user, organization, mode]);
 
+	// reset all messages and errors after 3 seconds
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setStaffError(undefined);
+			setActionMsg(undefined);
+		}, 3000);
+
+		return () => clearTimeout(timer);
+	}, [staffError, actionMsg]);
+
 	const fetchStaff = useCallback(
 		async (merchantId: string) => {
 			setStaffLoading(true);

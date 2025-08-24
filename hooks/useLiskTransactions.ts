@@ -50,6 +50,16 @@ export function useLiskTransactions(mode: "user" | "organization" = "user"): iUs
 		fetchApiKey();
 	}, [user, organization, mode]);
 
+	// reset all messages and errors after 3 seconds
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setTransactionsError(undefined);
+			setTransactionError(undefined);
+		}, 3000);
+
+		return () => clearTimeout(timer);
+	}, [transactionsError, transactionError]);
+
 	const fetchTransactions = useCallback(
 		async (userId: string) => {
 			setTransactionsLoading(true);

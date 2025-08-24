@@ -11,11 +11,12 @@ const PLAN_PRICES: Record<string, { monthly: number; yearly: number }> = {
 
 export async function POST(req: NextRequest) {
 	try {
-		const { userId, plan, period, amount, paymentId } = await req.json();
+		const { userId, plan, period, amount, paymentId, expires_at } = await req.json();
 		// get apiKey from authorization
 		const apiKey = req.headers.get("Authorization")?.replace("Bearer ", "");
 
-		const isMissingFields = !userId || !plan || !period || !amount || !paymentId || !apiKey;
+		const isMissingFields =
+			!userId || !plan || !period || !amount || !paymentId || !expires_at || !apiKey;
 		if (isMissingFields) {
 			console.log("Missing required fields:", {
 				userId,
@@ -23,6 +24,7 @@ export async function POST(req: NextRequest) {
 				period,
 				amount,
 				paymentId,
+				expires_at,
 				apiKey,
 			});
 			return NextResponse.json(
@@ -51,6 +53,7 @@ export async function POST(req: NextRequest) {
 					created_at: new Date().toISOString(),
 					updated_at: new Date().toISOString(),
 					period,
+					expires_at,
 				},
 			])
 			.select()

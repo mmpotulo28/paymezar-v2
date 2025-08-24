@@ -30,6 +30,16 @@ export interface iUseSubscriptions {
 		period: "monthly" | "yearly";
 		amount: number;
 	}) => Promise<void>;
+	cancelSubscription: (subscriptionId: string) => Promise<void>;
+	changeSubscriptionPlan: ({
+		subscriptionId,
+		newPlan,
+		newPeriod,
+	}: {
+		subscriptionId: string;
+		newPlan: string;
+		newPeriod: "monthly" | "yearly";
+	}) => Promise<void>;
 }
 
 /**
@@ -63,6 +73,16 @@ const useSubscriptions = (mode: "user" | "organization" = "user"): iUseSubscript
 				: (organization?.publicMetadata.apiToken as string)
 		}`,
 	);
+
+	// reset all messages and errors after 3 seconds
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setSubscriptionError(undefined);
+			setSubscriptionMessage(undefined);
+		}, 3000);
+
+		return () => clearTimeout(timer);
+	}, [subscriptionError, subscriptionMessage]);
 
 	useEffect(() => {
 		// Fetch API key
@@ -222,6 +242,19 @@ const useSubscriptions = (mode: "user" | "organization" = "user"): iUseSubscript
 					throw new Error("Missing required fields");
 				}
 
+				// Calculate expires_at based on period
+				const now = new Date();
+				let expires_at: string;
+				if (period === "monthly") {
+					const nextMonth = new Date(now);
+					nextMonth.setMonth(now.getMonth() + 1);
+					expires_at = nextMonth.toISOString();
+				} else {
+					const nextYear = new Date(now);
+					nextYear.setFullYear(now.getFullYear() + 1);
+					expires_at = nextYear.toISOString();
+				}
+
 				const result = await axios.post(
 					"/api/subscription/create",
 					{
@@ -230,6 +263,7 @@ const useSubscriptions = (mode: "user" | "organization" = "user"): iUseSubscript
 						period,
 						amount,
 						paymentId,
+						expires_at,
 					},
 					{
 						headers: {
@@ -260,6 +294,100 @@ const useSubscriptions = (mode: "user" | "organization" = "user"): iUseSubscript
 		[apiKey, fetchSubscriptions],
 	);
 
+	// cancel subscription
+	const cancelSubscription = useCallback(
+		async (subscriptionId: string) => {
+			setSubscriptionLoading(true);
+			setSubscriptionError(undefined);
+			try {
+				if (!subscriptionId) throw new Error("Missing subscriptionId");
+				const result = await axios.put(
+					"/api/subscription/cancel",
+					{ subscriptionId },
+					{
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: apiKey,
+						},
+					},
+				);
+				if (result.status !== 200 && result.status !== 201) {
+					throw new Error(result.data?.message || "Failed to cancel subscription.");
+				}
+				setSubscriptionMessage("Subscription canceled successfully.");
+				// Refresh subscriptions
+				if (user?.id) fetchSubscriptions(user.id);
+			} catch (error) {
+				console.error("Error canceling subscription:", error);
+				setSubscriptionError(
+					typeof error === "object" && error !== null && "message" in error
+						? (error as { message?: string }).message ||
+								"Failed to cancel subscription."
+						: String(error) || "Failed to cancel subscription.",
+				);
+			} finally {
+				setSubscriptionLoading(false);
+			}
+		},
+		[apiKey, fetchSubscriptions, user?.id],
+	);
+
+	// change subscription plan
+	const changeSubscriptionPlan = useCallback(
+		async ({
+			subscriptionId,
+			newPlan,
+			newPeriod,
+		}: {
+			subscriptionId: string;
+			newPlan: string;
+			newPeriod: "monthly" | "yearly";
+		}) => {
+			setSubscriptionLoading(true);
+			setSubscriptionError(undefined);
+			try {
+				const currentSub = subscriptions.find((sub) => sub.id === subscriptionId);
+				if (
+					currentSub &&
+					currentSub.plan.toLowerCase() === newPlan.toLowerCase() &&
+					currentSub.period.toLowerCase() === newPeriod.toLowerCase()
+				) {
+					setSubscriptionMessage("No changes detected. Subscription plan not updated.");
+					setSubscriptionLoading(false);
+					return;
+				}
+				if (!subscriptionId || !newPlan || !newPeriod) throw new Error("Missing fields");
+				const result = await axios.put(
+					"/api/subscription/change-plan",
+					{ subscriptionId, newPlan, newPeriod },
+					{
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: apiKey,
+						},
+					},
+				);
+				if (result.status !== 200 && result.status !== 201) {
+					throw new Error(result.data?.message || "Failed to change plan.");
+				}
+				setSubscriptionMessage("Subscription plan changed successfully.");
+				// Refresh subscriptions
+				if (user?.id) fetchSubscriptions(user.id);
+			} catch (error) {
+				console.error("Error changing subscription plan:", error);
+				setSubscriptionError(
+					typeof error === "object" && error !== null && "message" in error
+						? (error as { message?: string }).message ||
+								"Failed to change subscription plan."
+						: String(error) || "Failed to change subscription plan.",
+				);
+			} finally {
+				setSubscriptionLoading(false);
+			}
+		},
+		[apiKey, fetchSubscriptions, user?.id, subscriptions],
+	);
+
 	return {
 		subscriptions,
 		subscriptionLoading,
@@ -268,6 +396,8 @@ const useSubscriptions = (mode: "user" | "organization" = "user"): iUseSubscript
 		fetchSubscriptions,
 		activateSubscription,
 		createSubscription,
+		cancelSubscription,
+		changeSubscriptionPlan,
 	};
 };
 
