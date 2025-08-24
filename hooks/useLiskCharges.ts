@@ -163,13 +163,15 @@ export function useLiskCharges(mode: "user" | "organization" = "user"): iUseLisk
 			setChargesError(undefined);
 			setCharge(undefined);
 			try {
-				const { data } = await axios.get<iCharge>(
+				const { data } = await axios.get<{ charge: iCharge }>(
 					`${API_BASE}/retrieve-charge/${chargeId}`,
 					{
 						headers: { Authorization: apiKey },
 					},
 				);
-				setCharge(data);
+
+				console.log("Charge data:", data.charge);
+				setCharge(data.charge);
 			} catch (err: any) {
 				if (err?.response?.status === 400) setChargesError("Invalid parameters.");
 				else if (err?.response?.status === 401) setChargesError("Unauthorized.");
@@ -270,14 +272,14 @@ export function useLiskCharges(mode: "user" | "organization" = "user"): iUseLisk
 				console.log("Transferring charge", charge, userId);
 				await makeTransfer({
 					userId,
-					transactionAmount: charge.amount,
+					transactionAmount: charge.amount || 0,
 					transactionNotes: charge.note || "",
-					transactionRecipient: charge.paymentId,
+					transactionRecipient: charge.paymentId || "",
 				});
 
 				console.log("Transfer response:", transferError);
 
-				if (!transferError) {
+				if (transferError) {
 					throw new Error(transferError || "Transfer failed");
 				}
 
