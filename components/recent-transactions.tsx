@@ -1,7 +1,8 @@
 "use client";
-import { Card, CardHeader, CardBody, Chip } from "@heroui/react";
+import { Card, CardHeader, CardBody, Chip, Button } from "@heroui/react";
 import { Link } from "@heroui/react";
 import { useAccount } from "@/context/AccountContext";
+import { useState } from "react";
 
 export interface RecentTransactionsProps {
 	className?: string;
@@ -9,6 +10,11 @@ export interface RecentTransactionsProps {
 
 export function RecentTransactions({ className = "" }: RecentTransactionsProps) {
 	const { transactions } = useAccount();
+	const PAGE_SIZE = 3;
+	const [page, setPage] = useState(1);
+
+	const totalPages = Math.ceil(transactions.length / PAGE_SIZE);
+	const paginatedTxs = transactions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
 	return (
 		<Card className={`w-full max-w-2xl ${className}`}>
@@ -25,7 +31,7 @@ export function RecentTransactions({ className = "" }: RecentTransactionsProps) 
 							No transactions found.
 						</div>
 					)}
-					{transactions?.slice(0, 3).map((tx) => (
+					{paginatedTxs.map((tx) => (
 						<div
 							key={tx.id}
 							className="w-full text-left rounded-xl border border-default-200 bg-default-50 hover:bg-default-100 transition flex flex-col sm:flex-row items-start justify-center gap-2 p-4 cursor-pointer">
@@ -71,6 +77,28 @@ export function RecentTransactions({ className = "" }: RecentTransactionsProps) 
 						</div>
 					))}
 				</div>
+				{/* Pagination controls */}
+				{totalPages > 1 && (
+					<div className="flex justify-center items-center gap-2 mt-4">
+						<Button
+							size="sm"
+							variant="flat"
+							disabled={page === 1}
+							onPress={() => setPage(page - 1)}>
+							Prev
+						</Button>
+						<span className="text-xs">
+							Page {page} of {totalPages}
+						</span>
+						<Button
+							size="sm"
+							variant="flat"
+							disabled={page === totalPages}
+							onPress={() => setPage(page + 1)}>
+							Next
+						</Button>
+					</div>
+				)}
 			</CardBody>
 		</Card>
 	);

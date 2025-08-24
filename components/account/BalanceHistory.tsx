@@ -1,86 +1,102 @@
 import { Card, CardHeader, CardBody } from "@heroui/react";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  BarChart,
-  Bar,
-  Legend,
+	LineChart,
+	Line,
+	XAxis,
+	YAxis,
+	Tooltip as RechartsTooltip,
+	ResponsiveContainer,
+	CartesianGrid,
+	Legend,
 } from "recharts";
+import { useAccount } from "@/context/AccountContext";
+import { useMemo } from "react";
 
 export function BalanceHistory() {
-  const balanceHistory = [
-    { date: "2025-07-24", balance: 1000 },
-    { date: "2025-07-25", balance: 1800 },
-    { date: "2025-07-26", balance: 1500 },
-    { date: "2025-07-27", balance: 2000 },
-    { date: "2025-07-28", balance: 4000 },
-    { date: "2025-07-29", balance: 2800 },
-    { date: "2025-07-30", balance: 3500 },
-  ];
-  const activityHistory = [
-    { date: "2025-07-24", count: 1 },
-    { date: "2025-07-25", count: 2 },
-    { date: "2025-07-26", count: 1 },
-    { date: "2025-07-27", count: 3 },
-    { date: "2025-07-28", count: 2 },
-    { date: "2025-07-29", count: 1 },
-    { date: "2025-07-30", count: 2 },
-  ];
+	const { transactions, charges } = useAccount();
 
-  return (
-    <Card className="w-full max-w-2xl shadow-lg border border-default-200">
-      <CardHeader className="text-lg font-semibold flex flex-col gap-2">
-        <span>Balance History</span>
-        <span className="text-xs text-default-500 font-normal">
-          View your ZAR balance over time
-        </span>
-      </CardHeader>
-      <CardBody>
-        <div className="w-full h-64">
-          <ResponsiveContainer height="100%" width="100%">
-            <LineChart data={balanceHistory}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <RechartsTooltip />
-              <Legend />
-              <Line
-                dataKey="balance"
-                dot={{ r: 4 }}
-                name="Balance (ZAR)"
-                stroke="#6366f1"
-                strokeWidth={2}
-                type="monotone"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="mt-8">
-          <div className="text-lg font-semibold mb-2">Activity History</div>
-          <div className="w-full h-64">
-            <ResponsiveContainer height="100%" width="100%">
-              <BarChart data={activityHistory}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <RechartsTooltip />
-                <Legend />
-                <Bar
-                  barSize={32}
-                  dataKey="count"
-                  fill="#10b981"
-                  name="Transactions"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </CardBody>
-    </Card>
-  );
+	// Transactions history trend: count per day
+	const transactionsHistory = useMemo(() => {
+		const daily: Record<string, number> = {};
+		transactions.forEach((tx) => {
+			const date = tx.createdAt.split("T")[0];
+			daily[date] = (daily[date] || 0) + 1;
+		});
+		const dates = Object.keys(daily).sort();
+		return dates.map((date) => ({
+			date,
+			count: daily[date],
+		}));
+	}, [transactions]);
+
+	// Charges history trend: count per day
+	const chargesHistory = useMemo(() => {
+		const daily: Record<string, number> = {};
+		charges?.forEach((charge) => {
+			const date = charge.createdAt.split("T")[0];
+			daily[date] = (daily[date] || 0) + 1;
+		});
+		const dates = Object.keys(daily).sort();
+		return dates.map((date) => ({
+			date,
+			count: daily[date],
+		}));
+	}, [charges]);
+
+	return (
+		<Card className="w-full max-w-2xl shadow-lg border border-default-200">
+			<CardHeader className="text-lg font-semibold flex flex-col gap-2">
+				<span>Transactions & Charges History</span>
+				<span className="text-xs text-default-500 font-normal">
+					View your transaction and charge trends over time
+				</span>
+			</CardHeader>
+			<CardBody>
+				<div className="mb-8">
+					<div className="text-lg font-semibold mb-2">Transactions History</div>
+					<div className="w-full h-64">
+						<ResponsiveContainer height="100%" width="100%">
+							<LineChart data={transactionsHistory}>
+								<CartesianGrid strokeDasharray="3 3" />
+								<XAxis dataKey="date" />
+								<YAxis allowDecimals={false} />
+								<RechartsTooltip />
+								<Legend />
+								<Line
+									dataKey="count"
+									dot={{ r: 4 }}
+									name="Transactions"
+									stroke="#6366f1"
+									strokeWidth={2}
+									type="monotone"
+								/>
+							</LineChart>
+						</ResponsiveContainer>
+					</div>
+				</div>
+				<div>
+					<div className="text-lg font-semibold mb-2">Charges History</div>
+					<div className="w-full h-64">
+						<ResponsiveContainer height="100%" width="100%">
+							<LineChart data={chargesHistory}>
+								<CartesianGrid strokeDasharray="3 3" />
+								<XAxis dataKey="date" />
+								<YAxis allowDecimals={false} />
+								<RechartsTooltip />
+								<Legend />
+								<Line
+									dataKey="count"
+									dot={{ r: 4 }}
+									name="Charges"
+									stroke="#10b981"
+									strokeWidth={2}
+									type="monotone"
+								/>
+							</LineChart>
+						</ResponsiveContainer>
+					</div>
+				</div>
+			</CardBody>
+		</Card>
+	);
 }
