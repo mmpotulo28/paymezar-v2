@@ -79,6 +79,12 @@ export const siteConfig = {
 			"PayMe-Zar is a ZAR stable coin crypto payment gateway that allows you to accept payments in South African Rand (ZAR) using cryptocurrencies.",
 		icons: {
 			icon: "/favicon.ico",
+			apple: "/apple-icon.png",
+			other: [
+				{ url: "/icon0.svg", type: "image/svg+xml" },
+				{ url: "/web-app-manifest-192x192.png", sizes: "192x192", type: "image/png" },
+				{ url: "/web-app-manifest-512x512.png", sizes: "512x512", type: "image/png" },
+			],
 		},
 	},
 };

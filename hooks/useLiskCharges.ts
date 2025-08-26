@@ -149,6 +149,7 @@ export function useLiskCharges(mode: "user" | "organization" = "user"): iUseLisk
 					return cached;
 				}
 
+				console.log("fetching charges", apiKey);
 				const { data } = await axios.get<{ charges: iCharge[] }>(
 					`${API_BASE}/charge/${userId}`,
 					{ headers: { Authorization: apiKey } },

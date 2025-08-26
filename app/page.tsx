@@ -5,6 +5,8 @@ import { HeroSection } from "@/components/home/hero-section";
 import { HowItWorksSection } from "@/components/home/how-it-works-section";
 import { PricingSection } from "@/components/home/pricing-section";
 import { HeartFilledIcon } from "@/components/icons";
+import { PushNotificationManager } from "@/components/pwa/PushNotificationManager";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 export default function Home() {
 	return (
@@ -17,6 +19,8 @@ export default function Home() {
 			<div className="mt-8 text-xs text-default-500 flex items-center gap-1">
 				<HeartFilledIcon className="text-danger" size={16} /> Powered by Lisk Blockchain
 			</div>
+			<PushNotificationManager />
+			<InstallPrompt />
 		</section>
 	);
 }

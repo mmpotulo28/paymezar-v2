@@ -1,0 +1,26 @@
+{
+	"name": "PayMe-Zar",
+	"short_name": "PayMe-Zar",
+	"description": "PayMe-Zar is a ZAR stablecoin payment platform for fast, secure, and borderless payments using the Lisk blockchain.",
+	"start_url": "/",
+	"display": "standalone",
+	"theme_color": "#6366f1",
+	"icons": [
+		{
+			"src": "/web-app-manifest-192x192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "maskable"
+		},
+		{
+			"src": "/web-app-manifest-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		}
+	],
+	"background_color": "#000000",
+	"scope": "/",
+	"orientation": "portrait",
+	"lang": "en-ZA"
+}

@@ -19,6 +19,19 @@ export const metadata: Metadata = {
 	description: siteConfig.description,
 	icons: {
 		icon: "/favicon.ico",
+		apple: "/apple-icon.png",
+		other: [
+			{
+				url: "/web-app-manifest-192x192.png",
+				sizes: "192x192",
+				type: "image/png",
+			},
+			{
+				url: "/web-app-manifest-512x512.png",
+				sizes: "512x512",
+				type: "image/png",
+			},
+		],
 	},
 };
 
@@ -34,6 +47,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 		<html suppressHydrationWarning lang="en">
 			<head>
 				<Scripts />
+				<meta name="apple-mobile-web-app-title" content="PayMeZar" />
+				<link rel="icon" type="image/svg+xml" href="/icon0.svg" />
+				<link rel="icon" type="image/png" sizes="96x96" href="/icon1.png" />
+				<link
+					rel="icon"
+					type="image/png"
+					sizes="192x192"
+					href="/web-app-manifest-192x192.png"
+				/>
+				<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+				<link rel="apple-touch-icon" href="/apple-icon.png" />
+				<link rel="manifest" href="/manifest.json" />
 			</head>
 			<body
 				className={clsx(
