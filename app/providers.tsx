@@ -14,6 +14,7 @@ import { statsigConfig } from "@/lib/config/statsig";
 import { useClientAsyncInit } from "@statsig/react-bindings/src/useClientAsyncInit";
 import { StatsigProvider } from "@statsig/react-bindings";
 import { clerkConfig } from "@/lib/config/clerk";
+import Loading from "./loading";
 
 let BrowserAgent: typeof import("@newrelic/browser-agent/loaders/browser-agent").BrowserAgent;
 
@@ -136,7 +137,7 @@ export function Providers({ children, themeProps }: ProvidersProps) {
 			signInFallbackRedirectUrl={"/account"}
 			signInUrl="/auth/sign-in"
 			signUpUrl="/auth/sign-up">
-			<StatsigProvider client={client} loadingComponent={<div>Loading...</div>}>
+			<StatsigProvider client={client} loadingComponent={<Loading />}>
 				<HeroUIProvider navigate={router.push}>
 					<NextThemesProvider {...themeProps}>
 						<ToastProvider
