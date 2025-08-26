@@ -1,6 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Chip, Button, Modal, ModalBody, ModalHeader, ModalFooter } from "@heroui/react";
+import {
+	Chip,
+	Button,
+	Modal,
+	ModalBody,
+	ModalHeader,
+	ModalFooter,
+	ModalContent,
+} from "@heroui/react";
 
 export function InstallPrompt() {
 	const [isIOS, setIsIOS] = useState(false);
@@ -49,41 +57,43 @@ export function InstallPrompt() {
 
 	return (
 		<Modal isOpen={open} onClose={handleClose} size="sm" backdrop="blur">
-			<ModalHeader>
-				<Chip color="warning" variant="flat">
-					Install App
-				</Chip>
-			</ModalHeader>
-			<ModalBody>
-				<p className="mb-2">
-					Install this app to your home screen for a faster, fullscreen experience.
-				</p>
-				{showButton && !isIOS && (
-					<Button color="primary" onClick={handleInstallClick} className="mb-2">
-						Add to Home Screen
+			<ModalContent>
+				<ModalHeader>
+					<Chip color="warning" variant="flat">
+						Install App
+					</Chip>
+				</ModalHeader>
+				<ModalBody>
+					<p className="mb-2">
+						Install this app to your home screen for a faster, fullscreen experience.
+					</p>
+					{showButton && !isIOS && (
+						<Button color="primary" onClick={handleInstallClick} className="mb-2">
+							Add to Home Screen
+						</Button>
+					)}
+					{isIOS && (
+						<div className="mt-2 text-default-700">
+							<p>
+								On iOS, tap the <b>Share</b>{" "}
+								<span role="img" aria-label="share icon">
+									⎋
+								</span>{" "}
+								button and then <b>Add to Home Screen</b>{" "}
+								<span role="img" aria-label="plus icon">
+									➕
+								</span>
+								.
+							</p>
+						</div>
+					)}
+				</ModalBody>
+				<ModalFooter>
+					<Button color="default" variant="light" onClick={handleClose}>
+						Maybe later
 					</Button>
-				)}
-				{isIOS && (
-					<div className="mt-2 text-default-700">
-						<p>
-							On iOS, tap the <b>Share</b>{" "}
-							<span role="img" aria-label="share icon">
-								⎋
-							</span>{" "}
-							button and then <b>Add to Home Screen</b>{" "}
-							<span role="img" aria-label="plus icon">
-								➕
-							</span>
-							.
-						</p>
-					</div>
-				)}
-			</ModalBody>
-			<ModalFooter>
-				<Button color="default" variant="light" onClick={handleClose}>
-					Maybe later
-				</Button>
-			</ModalFooter>
+				</ModalFooter>
+			</ModalContent>
 		</Modal>
 	);
 }

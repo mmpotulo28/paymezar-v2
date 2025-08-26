@@ -17,8 +17,6 @@ import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import jsonPackage from "@/package.json";
-import { InstallPrompt } from "@/components/pwa/InstallPrompt";
-import { PushNotificationManager } from "@/components/pwa/PushNotificationManager";
 import {
 	Bell,
 	Database,
@@ -30,6 +28,7 @@ import {
 	Settings,
 	Trash,
 } from "lucide-react";
+import { PushNotificationManager } from "@/components/pwa/PushNotificationManager";
 
 export default function SettingsPage() {
 	const { theme, setTheme } = useTheme();
@@ -101,9 +100,6 @@ export default function SettingsPage() {
 
 	return (
 		<div className="flex-1 overflow-auto lg:px-6 py-6 space-y-8">
-			{/* PWA Install Prompt Modal and Push Notification Manager */}
-			<InstallPrompt />
-			<PushNotificationManager />
 			<h1 className="text-2xl font-semibold mb-6 flex items-center gap-2">
 				<Settings />
 				Settings
@@ -186,6 +182,8 @@ export default function SettingsPage() {
 				</CardBody>
 			</Card>
 
+			<PushNotificationManager />
+
 			<Card className="max-w-2xl mx-auto mb-8">
 				<CardHeader>
 					<div className="flex items-center gap-2">
@@ -203,6 +201,7 @@ export default function SettingsPage() {
 					</div>
 				</CardBody>
 			</Card>
+
 			<Card className="max-w-2xl mx-auto mb-8">
 				<CardHeader>
 					<div className="flex items-center gap-2">
