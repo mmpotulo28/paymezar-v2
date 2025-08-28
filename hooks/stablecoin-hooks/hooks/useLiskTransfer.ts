@@ -8,6 +8,7 @@ export interface iUseLiskTransfer {
 	recipientLoading: boolean;
 	recipientError: string | undefined;
 	fetchRecipient: (id: string) => Promise<any>;
+	recipientMessage: string | undefined;
 
 	transferLoading: boolean;
 	transferMessage: string | undefined;
@@ -44,6 +45,7 @@ export function useLiskTransfer({ apiKey }: { apiKey?: string }): iUseLiskTransf
 	const [recipient, setRecipient] = useState<any>(undefined);
 	const [recipientLoading, setRecipientLoading] = useState(false);
 	const [recipientError, setRecipientError] = useState<string | undefined>(undefined);
+	const [recipientMessage, setRecipientMessage] = useState<string | undefined>(undefined);
 
 	const [transferLoading, setTransferLoading] = useState(false);
 	const [transferMessage, setTransferMessage] = useState<string | undefined>(undefined);
@@ -68,7 +70,9 @@ export function useLiskTransfer({ apiKey }: { apiKey?: string }): iUseLiskTransf
 		async (id: string) => {
 			setRecipientLoading(true);
 			setRecipientError(undefined);
+			setRecipientMessage(undefined);
 			setRecipient(undefined);
+
 			const cacheKey = `recipient_${id}`;
 			try {
 				const cached = getCache(cacheKey);
@@ -83,6 +87,7 @@ export function useLiskTransfer({ apiKey }: { apiKey?: string }): iUseLiskTransf
 				});
 				setRecipient(data);
 				setCache(cacheKey, data);
+				setRecipientMessage("Fetched recipient successfully.");
 				return data;
 			} catch (err: any) {
 				if (err?.response?.status === 404) {
@@ -200,6 +205,7 @@ export function useLiskTransfer({ apiKey }: { apiKey?: string }): iUseLiskTransf
 		recipientLoading,
 		recipientError,
 		fetchRecipient,
+		recipientMessage,
 
 		// single transfer
 		transferLoading,

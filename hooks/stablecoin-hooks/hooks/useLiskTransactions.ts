@@ -8,11 +8,13 @@ export interface iUseLiskTransactions {
 	transactions: iTransaction[];
 	transactionsLoading: boolean;
 	transactionsError: string | undefined;
+	transactionsMessage: string | undefined;
 	fetchTransactions: (userId: string) => Promise<iTransaction[]>;
 
 	transaction: iTransaction | undefined;
 	transactionLoading: boolean;
 	transactionError: string | undefined;
+	transactionMessage: string | undefined;
 	fetchSingleTransaction: (
 		userId: string,
 		transactionId: string,
@@ -25,10 +27,12 @@ export function useLiskTransactions({ apiKey }: { apiKey?: string }): iUseLiskTr
 	const [transactions, setTransactions] = useState<iTransaction[]>([]);
 	const [transactionsLoading, setTransactionsLoading] = useState(false);
 	const [transactionsError, setTransactionsError] = useState<string | undefined>(undefined);
+	const [transactionsMessage, setTransactionsMessage] = useState<string | undefined>(undefined);
 
 	const [transaction, setTransaction] = useState<iTransaction | undefined>(undefined);
 	const [transactionLoading, setTransactionLoading] = useState(false);
 	const [transactionError, setTransactionError] = useState<string | undefined>(undefined);
+	const [transactionMessage, setTransactionMessage] = useState<string | undefined>(undefined);
 
 	// reset all messages and errors after 3 seconds
 	useEffect(() => {
@@ -44,6 +48,8 @@ export function useLiskTransactions({ apiKey }: { apiKey?: string }): iUseLiskTr
 		async (userId: string) => {
 			setTransactionsLoading(true);
 			setTransactionsError(undefined);
+			setTransactionsMessage(undefined);
+
 			const cacheKey = `user_transactions_${userId}`;
 			try {
 				const cached = getCache<iTransaction[]>(cacheKey);
@@ -59,6 +65,7 @@ export function useLiskTransactions({ apiKey }: { apiKey?: string }): iUseLiskTr
 				);
 				setTransactions(data.transactions || []);
 				if (data.transactions) setCache(cacheKey, data.transactions);
+				setTransactionsMessage("Fetched transactions successfully.");
 				return data.transactions || [];
 			} catch (err: any) {
 				if (err?.response?.status === 400) setTransactionsError("Invalid user ID.");
@@ -78,6 +85,8 @@ export function useLiskTransactions({ apiKey }: { apiKey?: string }): iUseLiskTr
 		async (userId: string, transactionId: string) => {
 			setTransactionLoading(true);
 			setTransactionError(undefined);
+			setTransactionMessage(undefined);
+
 			const cacheKey = `transaction_${userId}_${transactionId}`;
 			try {
 				const { data } = await axios.get<iTransaction | undefined>(
@@ -85,6 +94,7 @@ export function useLiskTransactions({ apiKey }: { apiKey?: string }): iUseLiskTr
 					{ headers: { Authorization: apiKey } },
 				);
 				setTransaction(data);
+				setTransactionMessage("Fetched transaction successfully.");
 				if (data) setCache(cacheKey, data);
 				return data;
 			} catch (err: any) {
@@ -106,10 +116,12 @@ export function useLiskTransactions({ apiKey }: { apiKey?: string }): iUseLiskTr
 		transactionsLoading,
 		transactionsError,
 		fetchTransactions,
+		transactionsMessage,
 
 		transaction,
 		transactionLoading,
 		transactionError,
 		fetchSingleTransaction,
+		transactionMessage,
 	};
 }

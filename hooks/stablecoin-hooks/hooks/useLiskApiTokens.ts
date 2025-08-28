@@ -9,18 +9,24 @@ export interface iUseLiskApiTokens {
 	tokens: iApiToken[];
 	apiTokenLoading: boolean;
 	apiTokenError: string | undefined;
+	apiTokenMessage: string | undefined;
 	fetchTokens: () => Promise<void>;
+
 	createToken: (description: string) => Promise<void>;
 	createTokenLoading: boolean;
 	createTokenError: string | undefined;
+	createTokenMessage: string | undefined;
 	createdToken: iApiTokenCreateResponse | undefined;
+
 	updateToken: (id: string, description: string) => Promise<void>;
 	updateTokenLoading: boolean;
 	updateTokenError: string | undefined;
+	updateTokenMessage: string | undefined;
+
 	revokeToken: (id: string) => Promise<void>;
 	revokeTokenLoading: boolean;
 	revokeTokenError: string | undefined;
-	revokeTokenSuccess: string | undefined;
+	revokeTokenMessage: string | undefined;
 }
 
 /**
@@ -53,19 +59,22 @@ export function useLiskApiTokens({ apiKey }: { apiKey?: string }): iUseLiskApiTo
 	const [tokens, setTokens] = useState<iApiToken[]>([]);
 	const [apiTokenLoading, setApiTokenLoading] = useState(false);
 	const [apiTokenError, setApiTokenError] = useState<string | undefined>(undefined);
+	const [apiTokenMessage, setApiTokenMessage] = useState<string | undefined>(undefined);
 
 	const [createTokenLoading, setCreateTokenLoading] = useState(false);
 	const [createTokenError, setCreateTokenError] = useState<string | undefined>(undefined);
+	const [createTokenMessage, setCreateTokenMessage] = useState<string | undefined>(undefined);
 	const [createdToken, setCreatedToken] = useState<iApiTokenCreateResponse | undefined>(
 		undefined,
 	);
 
 	const [updateTokenLoading, setUpdateTokenLoading] = useState(false);
 	const [updateTokenError, setUpdateTokenError] = useState<string | undefined>(undefined);
+	const [updateTokenMessage, setUpdateTokenMessage] = useState<string | undefined>(undefined);
 
 	const [revokeTokenLoading, setRevokeTokenLoading] = useState(false);
 	const [revokeTokenError, setRevokeTokenError] = useState<string | undefined>(undefined);
-	const [revokeTokenSuccess, setRevokeTokenSuccess] = useState<string | undefined>(undefined);
+	const [revokeTokenMessage, setRevokeTokenMessage] = useState<string | undefined>(undefined);
 
 	const fetchTokens = useCallback(async () => {
 		const cacheKey = "api_tokens";
@@ -86,6 +95,7 @@ export function useLiskApiTokens({ apiKey }: { apiKey?: string }): iUseLiskApiTo
 			});
 			setTokens(data);
 			setCache(cacheKey, data);
+			setApiTokenMessage("Tokens fetched successfully.");
 		} catch (err: any) {
 			setApiTokenError("Failed to fetch tokens.");
 			console.error("Error fetching tokens:", err);
@@ -111,7 +121,8 @@ export function useLiskApiTokens({ apiKey }: { apiKey?: string }): iUseLiskApiTo
 					},
 				);
 				setCreatedToken(data);
-				await fetchTokens();
+				setCreateTokenMessage("Token created successfully.");
+				fetchTokens();
 			} catch (err: any) {
 				setCreateTokenError("Failed to create token.");
 				console.error("Error creating token:", err);
@@ -137,7 +148,8 @@ export function useLiskApiTokens({ apiKey }: { apiKey?: string }): iUseLiskApiTo
 						},
 					},
 				);
-				await fetchTokens();
+				fetchTokens();
+				setUpdateTokenMessage("Token updated successfully.");
 			} catch (err: any) {
 				setUpdateTokenError("Failed to update token.");
 				console.error("Error updating token:", err);
@@ -152,7 +164,7 @@ export function useLiskApiTokens({ apiKey }: { apiKey?: string }): iUseLiskApiTo
 		async (id: string) => {
 			setRevokeTokenLoading(true);
 			setRevokeTokenError(undefined);
-			setRevokeTokenSuccess(undefined);
+			setRevokeTokenMessage(undefined);
 			try {
 				const { data } = await axios.post<iApiTokenRevokeResponse>(
 					`${API_BASE}/tokens/revoke`,
@@ -164,8 +176,8 @@ export function useLiskApiTokens({ apiKey }: { apiKey?: string }): iUseLiskApiTo
 						},
 					},
 				);
-				setRevokeTokenSuccess(data.message);
-				await fetchTokens();
+				setRevokeTokenMessage(data.message);
+				fetchTokens();
 			} catch (err: any) {
 				setRevokeTokenError("Failed to revoke token.");
 				console.error("Error revoking token:", err);
@@ -181,19 +193,22 @@ export function useLiskApiTokens({ apiKey }: { apiKey?: string }): iUseLiskApiTo
 		apiTokenLoading,
 		apiTokenError,
 		fetchTokens,
+		apiTokenMessage,
 
 		createToken,
 		createTokenLoading,
 		createTokenError,
 		createdToken,
+		createTokenMessage,
 
 		updateToken,
 		updateTokenLoading,
 		updateTokenError,
+		updateTokenMessage,
 
 		revokeToken,
 		revokeTokenLoading,
 		revokeTokenError,
-		revokeTokenSuccess,
+		revokeTokenMessage,
 	};
 }

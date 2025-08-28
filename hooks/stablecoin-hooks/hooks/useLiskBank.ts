@@ -24,6 +24,7 @@ export interface iUseLiskBank {
 	}) => Promise<iBankAccountResponse | undefined>;
 	getBankAccount: (userId: string) => Promise<iBankAccount | undefined>;
 	deleteBankAccount: (userId: string) => Promise<{ message: string } | undefined>;
+
 	createTransaction: (
 		data: iCreateTransactionParams,
 	) => Promise<iCreateTransactionResponse | undefined>;

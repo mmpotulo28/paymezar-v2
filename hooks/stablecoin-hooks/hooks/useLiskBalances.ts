@@ -9,6 +9,7 @@ export interface iUseLiskBalances {
 	balancesLoading: boolean;
 	balancesError: string | undefined;
 	fetchBalances: (userId: string) => Promise<iUserTokenBalance[]>;
+	balancesMessage: string | undefined;
 }
 
 /**
@@ -31,6 +32,7 @@ export function useLiskBalances({ apiKey }: { apiKey?: string }): iUseLiskBalanc
 	const [balances, setBalances] = useState<iUserTokenBalance[]>([]);
 	const [balancesLoading, setBalancesLoading] = useState(false);
 	const [balancesError, setBalancesError] = useState<string | undefined>(undefined);
+	const [balancesMessage, setBalancesMessage] = useState<string | undefined>(undefined);
 
 	const fetchBalances = useCallback(
 		async (userId: string) => {
@@ -54,6 +56,7 @@ export function useLiskBalances({ apiKey }: { apiKey?: string }): iUseLiskBalanc
 					},
 				);
 				setBalances(data.tokens || []);
+				setBalancesMessage("Fetched balances successfully.");
 				if (data.tokens) setCache(cacheKey, data.tokens);
 				return data.tokens || [];
 			} catch (err: any) {
@@ -75,5 +78,6 @@ export function useLiskBalances({ apiKey }: { apiKey?: string }): iUseLiskBalanc
 		balancesLoading,
 		balancesError,
 		fetchBalances,
+		balancesMessage,
 	};
 }
