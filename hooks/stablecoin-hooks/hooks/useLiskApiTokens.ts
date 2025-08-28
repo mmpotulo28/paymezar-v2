@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import axios from "axios";
-import { iApiToken, iApiTokenCreateResponse, iApiTokenRevokeResponse } from "@/types";
-import { useCache } from "./useCache";
+import { iApiToken, iApiTokenCreateResponse, iApiTokenRevokeResponse } from "../types";
+import { useCache } from "../hooks/useCache";
 
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 

@@ -6,8 +6,8 @@ import {
 	iCreateTransactionParams,
 	iCreateTransactionResponse,
 	iUpsertBankAccountParams,
-} from "@/types";
-import { useCache } from "./useCache";
+} from "../types"; // changed from "@/types"
+import { useCache } from "../hooks/useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
 export interface iUseLiskBank {

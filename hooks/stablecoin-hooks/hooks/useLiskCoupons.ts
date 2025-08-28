@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import axios from "axios";
-import { iCoupon, iCouponCreateRequest, iCouponUpdateRequest, iCouponResponse } from "@/types";
-import { useCache } from "./useCache";
+import { iCoupon, iCouponCreateRequest, iCouponUpdateRequest, iCouponResponse } from "../types";
+import { useCache } from "../hooks/useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
 export function useCoupons({ apiKey }: { apiKey?: string }) {

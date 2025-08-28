@@ -1,8 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import { iUser } from "@/types";
-import { useCache } from "./useCache";
+import { iUser } from "../types"; // changed from "@/types"
+import { useCache } from "../hooks/useCache";
 
 // Use environment variables
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;

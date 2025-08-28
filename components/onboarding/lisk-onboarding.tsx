@@ -5,7 +5,7 @@ import { Button } from "@heroui/button";
 import { AlertCircleIcon, CheckCircle2, Rocket } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useLiskUsers } from "@/hooks/useLiskUsers";
+import { useLiskUsers } from "@/stablecoin-hooks/hooks/useLiskUsers";
 import { iUser } from "@/types";
 
 export function LiskOnboarding() {

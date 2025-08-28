@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import axios, { AxiosResponse } from "axios";
-import { useCache } from "./useCache";
-import { iCharge } from "@/types";
+import { useCache } from "../hooks/useCache";
 import { useLiskTransfer } from "./useLiskTransfer";
+import { iCharge } from "../types";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
 export interface iUseLiskCharges {
