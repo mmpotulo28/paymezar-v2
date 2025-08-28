@@ -54,9 +54,11 @@ export function useLiskTransactions(_a) {
     var _c = useState([]), transactions = _c[0], setTransactions = _c[1];
     var _d = useState(false), transactionsLoading = _d[0], setTransactionsLoading = _d[1];
     var _e = useState(undefined), transactionsError = _e[0], setTransactionsError = _e[1];
-    var _f = useState(undefined), transaction = _f[0], setTransaction = _f[1];
-    var _g = useState(false), transactionLoading = _g[0], setTransactionLoading = _g[1];
-    var _h = useState(undefined), transactionError = _h[0], setTransactionError = _h[1];
+    var _f = useState(undefined), transactionsMessage = _f[0], setTransactionsMessage = _f[1];
+    var _g = useState(undefined), transaction = _g[0], setTransaction = _g[1];
+    var _h = useState(false), transactionLoading = _h[0], setTransactionLoading = _h[1];
+    var _j = useState(undefined), transactionError = _j[0], setTransactionError = _j[1];
+    var _k = useState(undefined), transactionMessage = _k[0], setTransactionMessage = _k[1];
     // reset all messages and errors after 3 seconds
     useEffect(function () {
         var timer = setTimeout(function () {
@@ -73,6 +75,7 @@ export function useLiskTransactions(_a) {
                 case 0:
                     setTransactionsLoading(true);
                     setTransactionsError(undefined);
+                    setTransactionsMessage(undefined);
                     cacheKey = "user_transactions_".concat(userId);
                     _c.label = 1;
                 case 1:
@@ -89,6 +92,7 @@ export function useLiskTransactions(_a) {
                     setTransactions(data.transactions || []);
                     if (data.transactions)
                         setCache(cacheKey, data.transactions);
+                    setTransactionsMessage("Fetched transactions successfully.");
                     return [2 /*return*/, data.transactions || []];
                 case 3:
                     err_1 = _c.sent();
@@ -115,6 +119,7 @@ export function useLiskTransactions(_a) {
                 case 0:
                     setTransactionLoading(true);
                     setTransactionError(undefined);
+                    setTransactionMessage(undefined);
                     cacheKey = "transaction_".concat(userId, "_").concat(transactionId);
                     _d.label = 1;
                 case 1:
@@ -123,6 +128,7 @@ export function useLiskTransactions(_a) {
                 case 2:
                     data = (_d.sent()).data;
                     setTransaction(data);
+                    setTransactionMessage("Fetched transaction successfully.");
                     if (data)
                         setCache(cacheKey, data);
                     return [2 /*return*/, data];
@@ -150,9 +156,11 @@ export function useLiskTransactions(_a) {
         transactionsLoading: transactionsLoading,
         transactionsError: transactionsError,
         fetchTransactions: fetchTransactions,
+        transactionsMessage: transactionsMessage,
         transaction: transaction,
         transactionLoading: transactionLoading,
         transactionError: transactionError,
         fetchSingleTransaction: fetchSingleTransaction,
+        transactionMessage: transactionMessage,
     };
 }

@@ -39,6 +39,29 @@ import axios from "axios";
 import { useCache } from "../hooks/useCache";
 import { useLiskTransfer } from "./useLiskTransfer";
 var API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE;
+/**
+ * Custom React hook for managing Lisk charges for a user.
+ *
+ * Provides functions to create, fetch, update, delete, and complete charges,
+ * as well as state for loading, errors, and charge data.
+ *
+ * @param apiKey - Optional API key for authorization.
+ * @param user - The user object for whom charges are managed.
+ * @returns An object containing:
+ * - `charges`: Array of charges for the user.
+ * - `chargesLoading`: Loading state for charge operations.
+ * - `chargesError`: Error message for charge operations.
+ * - `fetchCharges`: Function to fetch all charges for a user.
+ * - `charge`: The currently selected charge.
+ * - `getCharge`: Function to fetch a specific charge by ID.
+ * - `createCharge`: Function to create a new charge.
+ * - `updateCharge`: Function to update an existing charge.
+ * - `deleteCharge`: Function to delete a charge.
+ * - `completeCharge`: Function to complete a charge (transfer and update status).
+ * - `completeChargeError`: Error message for completing a charge.
+ * - `completeChargeMessage`: Success message for completing a charge.
+ * - `completeChargeLoading`: Loading state for completing a charge.
+ */
 export function useLiskCharges(_a) {
     var _this = this;
     var apiKey = _a.apiKey, user = _a.user;
@@ -47,11 +70,28 @@ export function useLiskCharges(_a) {
     var _d = useState([]), charges = _d[0], setCharges = _d[1];
     var _e = useState(false), chargesLoading = _e[0], setChargesLoading = _e[1];
     var _f = useState(undefined), chargesError = _f[0], setChargesError = _f[1];
-    var _g = useState(undefined), charge = _g[0], setCharge = _g[1];
+    var _g = useState(undefined), chargesMessage = _g[0], setChargesMessage = _g[1];
+    // get charge
+    var _h = useState(undefined), charge = _h[0], setCharge = _h[1];
+    var _j = useState(false), getChargeLoading = _j[0], setGetChargeLoading = _j[1];
+    var _k = useState(undefined), getChargeError = _k[0], setGetChargeError = _k[1];
+    var _l = useState(undefined), getChargeMessage = _l[0], setGetChargeMessage = _l[1];
+    // create charge
+    var _m = useState(false), createChargeLoading = _m[0], setCreateChargeLoading = _m[1];
+    var _o = useState(undefined), createChargeError = _o[0], setCreateChargeError = _o[1];
+    var _p = useState(undefined), createChargeMessage = _p[0], setCreateChargeMessage = _p[1];
+    // update charge
+    var _q = useState(false), updateChargeLoading = _q[0], setUpdateChargeLoading = _q[1];
+    var _r = useState(undefined), updateChargeError = _r[0], setUpdateChargeError = _r[1];
+    var _s = useState(undefined), updateChargeMessage = _s[0], setUpdateChargeMessage = _s[1];
+    // delete charge
+    var _t = useState(false), deleteChargeLoading = _t[0], setDeleteChargeLoading = _t[1];
+    var _u = useState(undefined), deleteChargeError = _u[0], setDeleteChargeError = _u[1];
+    var _v = useState(undefined), deleteChargeMessage = _v[0], setDeleteChargeMessage = _v[1];
     // complete charge
-    var _h = useState(false), completeChargeLoading = _h[0], setCompleteChargeLoading = _h[1];
-    var _j = useState(undefined), completeChargeError = _j[0], setCompleteChargeError = _j[1];
-    var _k = useState(undefined), completeChargeMessage = _k[0], setCompleteChargeMessage = _k[1];
+    var _w = useState(false), completeChargeLoading = _w[0], setCompleteChargeLoading = _w[1];
+    var _x = useState(undefined), completeChargeError = _x[0], setCompleteChargeError = _x[1];
+    var _y = useState(undefined), completeChargeMessage = _y[0], setCompleteChargeMessage = _y[1];
     // reset all messages and errors after 3 seconds
     useEffect(function () {
         var timer = setTimeout(function () {
@@ -68,7 +108,9 @@ export function useLiskCharges(_a) {
         return __generator(this, function (_e) {
             switch (_e.label) {
                 case 0:
-                    setChargesLoading(true);
+                    setCreateChargeLoading(true);
+                    setCreateChargeError(undefined);
+                    setCreateChargeMessage(undefined);
                     _e.label = 1;
                 case 1:
                     _e.trys.push([1, 3, 4, 5]);
@@ -81,18 +123,19 @@ export function useLiskCharges(_a) {
                 case 2:
                     data = (_e.sent()).data;
                     setCharge(data);
+                    setCreateChargeMessage("Created charge successfully.");
                     return [2 /*return*/, data];
                 case 3:
                     err_1 = _e.sent();
                     if (((_c = err_1 === null || err_1 === void 0 ? void 0 : err_1.response) === null || _c === void 0 ? void 0 : _c.status) === 400)
-                        setChargesError("Validation error.");
+                        setCreateChargeError("Validation error.");
                     else if (((_d = err_1 === null || err_1 === void 0 ? void 0 : err_1.response) === null || _d === void 0 ? void 0 : _d.status) === 401)
-                        setChargesError("Unauthorized.");
+                        setCreateChargeError("Unauthorized.");
                     else
-                        setChargesError("Failed to create charge.");
+                        setCreateChargeError("Failed to create charge.");
                     return [3 /*break*/, 5];
                 case 4:
-                    setChargesLoading(false);
+                    setCreateChargeLoading(false);
                     return [7 /*endfinally*/];
                 case 5: return [2 /*return*/, undefined];
             }
@@ -123,7 +166,8 @@ export function useLiskCharges(_a) {
                     data = (_c.sent()).data;
                     setCharges(data.charges || []);
                     setCache(cacheKey, data.charges || []);
-                    return [3 /*break*/, 5];
+                    setChargesMessage("Fetched charges successfully.");
+                    return [2 /*return*/, data.charges || []];
                 case 3:
                     err_2 = _c.sent();
                     if (((_a = err_2 === null || err_2 === void 0 ? void 0 : err_2.response) === null || _a === void 0 ? void 0 : _a.status) === 400)
@@ -147,8 +191,8 @@ export function useLiskCharges(_a) {
         return __generator(this, function (_d) {
             switch (_d.label) {
                 case 0:
-                    setChargesLoading(true);
-                    setChargesError(undefined);
+                    setGetChargeLoading(true);
+                    setGetChargeError(undefined);
                     setCharge(undefined);
                     _d.label = 1;
                 case 1:
@@ -160,17 +204,18 @@ export function useLiskCharges(_a) {
                     data = (_d.sent()).data;
                     console.log("Charge data:", data.charge);
                     setCharge(data.charge);
-                    return [3 /*break*/, 5];
+                    setGetChargeMessage("Fetched charge successfully.");
+                    return [2 /*return*/, data.charge];
                 case 3:
                     err_3 = _d.sent();
                     if (((_a = err_3 === null || err_3 === void 0 ? void 0 : err_3.response) === null || _a === void 0 ? void 0 : _a.status) === 400)
-                        setChargesError("Invalid parameters.");
+                        setGetChargeError("Invalid parameters.");
                     else if (((_b = err_3 === null || err_3 === void 0 ? void 0 : err_3.response) === null || _b === void 0 ? void 0 : _b.status) === 401)
-                        setChargesError("Unauthorized.");
+                        setGetChargeError("Unauthorized.");
                     else if (((_c = err_3 === null || err_3 === void 0 ? void 0 : err_3.response) === null || _c === void 0 ? void 0 : _c.status) === 404)
-                        setChargesError("Charge not found.");
+                        setGetChargeError("Charge not found.");
                     else
-                        setChargesError("Failed to fetch charge.");
+                        setGetChargeError("Failed to fetch charge.");
                     return [3 /*break*/, 5];
                 case 4:
                     setChargesLoading(false);
@@ -187,8 +232,8 @@ export function useLiskCharges(_a) {
         return __generator(this, function (_f) {
             switch (_f.label) {
                 case 0:
-                    setChargesLoading(true);
-                    setChargesError(undefined);
+                    setUpdateChargeLoading(true);
+                    setUpdateChargeError(undefined);
                     _f.label = 1;
                 case 1:
                     _f.trys.push([1, 3, 4, 5]);
@@ -201,20 +246,21 @@ export function useLiskCharges(_a) {
                 case 2:
                     data = (_f.sent()).data;
                     setCharge(data);
+                    setUpdateChargeMessage("Updated charge successfully.");
                     return [2 /*return*/, data];
                 case 3:
                     err_4 = _f.sent();
                     if (((_c = err_4 === null || err_4 === void 0 ? void 0 : err_4.response) === null || _c === void 0 ? void 0 : _c.status) === 400)
-                        setChargesError("Validation error.");
+                        setUpdateChargeError("Validation error.");
                     else if (((_d = err_4 === null || err_4 === void 0 ? void 0 : err_4.response) === null || _d === void 0 ? void 0 : _d.status) === 401)
-                        setChargesError("Unauthorized.");
+                        setUpdateChargeError("Unauthorized.");
                     else if (((_e = err_4 === null || err_4 === void 0 ? void 0 : err_4.response) === null || _e === void 0 ? void 0 : _e.status) === 404)
-                        setChargesError("Charge not found.");
+                        setUpdateChargeError("Charge not found.");
                     else
-                        setChargesError("Failed to update charge.");
+                        setUpdateChargeError("Failed to update charge.");
                     return [3 /*break*/, 5];
                 case 4:
-                    setChargesLoading(false);
+                    setUpdateChargeLoading(false);
                     return [7 /*endfinally*/];
                 case 5: return [2 /*return*/, undefined];
             }
@@ -228,14 +274,15 @@ export function useLiskCharges(_a) {
         return __generator(this, function (_e) {
             switch (_e.label) {
                 case 0:
-                    setChargesLoading(true);
-                    setChargesError(undefined);
+                    setDeleteChargeLoading(true);
+                    setDeleteChargeError(undefined);
                     _e.label = 1;
                 case 1:
                     _e.trys.push([1, 3, 4, 5]);
                     return [4 /*yield*/, axios.delete("".concat(API_BASE, "/charge/").concat(userId, "/").concat(chargeId, "/delete"), { headers: { Authorization: apiKey } })];
                 case 2:
                     data = (_e.sent()).data;
+                    setDeleteChargeMessage("Deleted charge successfully.");
                     return [2 /*return*/, data];
                 case 3:
                     err_5 = _e.sent();
@@ -244,10 +291,10 @@ export function useLiskCharges(_a) {
                     else if (((_d = err_5 === null || err_5 === void 0 ? void 0 : err_5.response) === null || _d === void 0 ? void 0 : _d.status) === 401)
                         setChargesError("Unauthorized.");
                     else
-                        setChargesError("Failed to delete charge.");
+                        setDeleteChargeError("Failed to delete charge.");
                     return [3 /*break*/, 5];
                 case 4:
-                    setChargesLoading(false);
+                    setDeleteChargeLoading(false);
                     return [7 /*endfinally*/];
                 case 5: return [2 /*return*/];
             }
@@ -327,11 +374,28 @@ export function useLiskCharges(_a) {
         chargesLoading: chargesLoading,
         chargesError: chargesError,
         fetchCharges: fetchCharges,
+        chargesMessage: chargesMessage,
+        // get charge
         charge: charge,
         getCharge: getCharge,
+        getChargeLoading: getChargeLoading,
+        getChargeError: getChargeError,
+        getChargeMessage: getChargeMessage,
+        // create charge
         createCharge: createCharge,
+        createChargeLoading: createChargeLoading,
+        createChargeError: createChargeError,
+        createChargeMessage: createChargeMessage,
+        // update charge
         updateCharge: updateCharge,
+        updateChargeLoading: updateChargeLoading,
+        updateChargeError: updateChargeError,
+        updateChargeMessage: updateChargeMessage,
+        // delete charge
         deleteCharge: deleteCharge,
+        deleteChargeLoading: deleteChargeLoading,
+        deleteChargeError: deleteChargeError,
+        deleteChargeMessage: deleteChargeMessage,
         // complete charge
         completeCharge: completeCharge,
         completeChargeError: completeChargeError,

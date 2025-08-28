@@ -38,6 +38,30 @@ import { useCallback, useState } from "react";
 import axios from "axios";
 import { useCache } from "../hooks/useCache";
 var API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE;
+/**
+ * Custom React hook for managing API tokens via the Lisk API.
+ *
+ * Provides functionality to fetch, create, update, and revoke API tokens,
+ * with built-in caching and loading/error state management.
+ *
+ * @param apiKey - Optional API key used for authorization in requests.
+ * @returns An object containing:
+ * - `tokens`: Array of fetched API tokens.
+ * - `apiTokenLoading`: Loading state for fetching tokens.
+ * - `apiTokenError`: Error message for fetching tokens.
+ * - `fetchTokens`: Function to fetch tokens from the API.
+ * - `createToken`: Function to create a new API token.
+ * - `createTokenLoading`: Loading state for creating a token.
+ * - `createTokenError`: Error message for creating a token.
+ * - `createdToken`: Response data for the created token.
+ * - `updateToken`: Function to update an existing token's description.
+ * - `updateTokenLoading`: Loading state for updating a token.
+ * - `updateTokenError`: Error message for updating a token.
+ * - `revokeToken`: Function to revoke an API token.
+ * - `revokeTokenLoading`: Loading state for revoking a token.
+ * - `revokeTokenError`: Error message for revoking a token.
+ * - `revokeTokenSuccess`: Success message for revoking a token.
+ */
 export function useLiskApiTokens(_a) {
     var _this = this;
     var apiKey = _a.apiKey;
@@ -45,14 +69,17 @@ export function useLiskApiTokens(_a) {
     var _c = useState([]), tokens = _c[0], setTokens = _c[1];
     var _d = useState(false), apiTokenLoading = _d[0], setApiTokenLoading = _d[1];
     var _e = useState(undefined), apiTokenError = _e[0], setApiTokenError = _e[1];
-    var _f = useState(false), createTokenLoading = _f[0], setCreateTokenLoading = _f[1];
-    var _g = useState(undefined), createTokenError = _g[0], setCreateTokenError = _g[1];
-    var _h = useState(undefined), createdToken = _h[0], setCreatedToken = _h[1];
-    var _j = useState(false), updateTokenLoading = _j[0], setUpdateTokenLoading = _j[1];
-    var _k = useState(undefined), updateTokenError = _k[0], setUpdateTokenError = _k[1];
-    var _l = useState(false), revokeTokenLoading = _l[0], setRevokeTokenLoading = _l[1];
-    var _m = useState(undefined), revokeTokenError = _m[0], setRevokeTokenError = _m[1];
-    var _o = useState(undefined), revokeTokenSuccess = _o[0], setRevokeTokenSuccess = _o[1];
+    var _f = useState(undefined), apiTokenMessage = _f[0], setApiTokenMessage = _f[1];
+    var _g = useState(false), createTokenLoading = _g[0], setCreateTokenLoading = _g[1];
+    var _h = useState(undefined), createTokenError = _h[0], setCreateTokenError = _h[1];
+    var _j = useState(undefined), createTokenMessage = _j[0], setCreateTokenMessage = _j[1];
+    var _k = useState(undefined), createdToken = _k[0], setCreatedToken = _k[1];
+    var _l = useState(false), updateTokenLoading = _l[0], setUpdateTokenLoading = _l[1];
+    var _m = useState(undefined), updateTokenError = _m[0], setUpdateTokenError = _m[1];
+    var _o = useState(undefined), updateTokenMessage = _o[0], setUpdateTokenMessage = _o[1];
+    var _p = useState(false), revokeTokenLoading = _p[0], setRevokeTokenLoading = _p[1];
+    var _q = useState(undefined), revokeTokenError = _q[0], setRevokeTokenError = _q[1];
+    var _r = useState(undefined), revokeTokenMessage = _r[0], setRevokeTokenMessage = _r[1];
     var fetchTokens = useCallback(function () { return __awaiter(_this, void 0, void 0, function () {
         var cacheKey, cached, data, err_1;
         return __generator(this, function (_a) {
@@ -79,6 +106,7 @@ export function useLiskApiTokens(_a) {
                     data = (_a.sent()).data;
                     setTokens(data);
                     setCache(cacheKey, data);
+                    setApiTokenMessage("Tokens fetched successfully.");
                     return [3 /*break*/, 5];
                 case 3:
                     err_1 = _a.sent();
@@ -102,7 +130,7 @@ export function useLiskApiTokens(_a) {
                     setCreatedToken(undefined);
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 4, 5, 6]);
+                    _a.trys.push([1, 3, 4, 5]);
                     return [4 /*yield*/, axios.post("".concat(API_BASE, "/tokens"), { description: description }, {
                             headers: {
                                 "Content-Type": "application/json",
@@ -112,19 +140,18 @@ export function useLiskApiTokens(_a) {
                 case 2:
                     data = (_a.sent()).data;
                     setCreatedToken(data);
-                    return [4 /*yield*/, fetchTokens()];
+                    setCreateTokenMessage("Token created successfully.");
+                    fetchTokens();
+                    return [3 /*break*/, 5];
                 case 3:
-                    _a.sent();
-                    return [3 /*break*/, 6];
-                case 4:
                     err_2 = _a.sent();
                     setCreateTokenError("Failed to create token.");
                     console.error("Error creating token:", err_2);
-                    return [3 /*break*/, 6];
-                case 5:
+                    return [3 /*break*/, 5];
+                case 4:
                     setCreateTokenLoading(false);
                     return [7 /*endfinally*/];
-                case 6: return [2 /*return*/];
+                case 5: return [2 /*return*/];
             }
         });
     }); }, [apiKey, fetchTokens]);
@@ -137,7 +164,7 @@ export function useLiskApiTokens(_a) {
                     setUpdateTokenError(undefined);
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 4, 5, 6]);
+                    _a.trys.push([1, 3, 4, 5]);
                     return [4 /*yield*/, axios.patch("".concat(API_BASE, "/tokens/").concat(id), { description: description }, {
                             headers: {
                                 "Content-Type": "application/json",
@@ -146,19 +173,18 @@ export function useLiskApiTokens(_a) {
                         })];
                 case 2:
                     _a.sent();
-                    return [4 /*yield*/, fetchTokens()];
+                    fetchTokens();
+                    setUpdateTokenMessage("Token updated successfully.");
+                    return [3 /*break*/, 5];
                 case 3:
-                    _a.sent();
-                    return [3 /*break*/, 6];
-                case 4:
                     err_3 = _a.sent();
                     setUpdateTokenError("Failed to update token.");
                     console.error("Error updating token:", err_3);
-                    return [3 /*break*/, 6];
-                case 5:
+                    return [3 /*break*/, 5];
+                case 4:
                     setUpdateTokenLoading(false);
                     return [7 /*endfinally*/];
-                case 6: return [2 /*return*/];
+                case 5: return [2 /*return*/];
             }
         });
     }); }, [apiKey, fetchTokens]);
@@ -169,10 +195,10 @@ export function useLiskApiTokens(_a) {
                 case 0:
                     setRevokeTokenLoading(true);
                     setRevokeTokenError(undefined);
-                    setRevokeTokenSuccess(undefined);
+                    setRevokeTokenMessage(undefined);
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 4, 5, 6]);
+                    _a.trys.push([1, 3, 4, 5]);
                     return [4 /*yield*/, axios.post("".concat(API_BASE, "/tokens/revoke"), { id: id }, {
                             headers: {
                                 "Content-Type": "application/json",
@@ -181,20 +207,18 @@ export function useLiskApiTokens(_a) {
                         })];
                 case 2:
                     data = (_a.sent()).data;
-                    setRevokeTokenSuccess(data.message);
-                    return [4 /*yield*/, fetchTokens()];
+                    setRevokeTokenMessage(data.message);
+                    fetchTokens();
+                    return [3 /*break*/, 5];
                 case 3:
-                    _a.sent();
-                    return [3 /*break*/, 6];
-                case 4:
                     err_4 = _a.sent();
                     setRevokeTokenError("Failed to revoke token.");
                     console.error("Error revoking token:", err_4);
-                    return [3 /*break*/, 6];
-                case 5:
+                    return [3 /*break*/, 5];
+                case 4:
                     setRevokeTokenLoading(false);
                     return [7 /*endfinally*/];
-                case 6: return [2 /*return*/];
+                case 5: return [2 /*return*/];
             }
         });
     }); }, [apiKey, fetchTokens]);
@@ -203,16 +227,19 @@ export function useLiskApiTokens(_a) {
         apiTokenLoading: apiTokenLoading,
         apiTokenError: apiTokenError,
         fetchTokens: fetchTokens,
+        apiTokenMessage: apiTokenMessage,
         createToken: createToken,
         createTokenLoading: createTokenLoading,
         createTokenError: createTokenError,
         createdToken: createdToken,
+        createTokenMessage: createTokenMessage,
         updateToken: updateToken,
         updateTokenLoading: updateTokenLoading,
         updateTokenError: updateTokenError,
+        updateTokenMessage: updateTokenMessage,
         revokeToken: revokeToken,
         revokeTokenLoading: revokeTokenLoading,
         revokeTokenError: revokeTokenError,
-        revokeTokenSuccess: revokeTokenSuccess,
+        revokeTokenMessage: revokeTokenMessage,
     };
 }

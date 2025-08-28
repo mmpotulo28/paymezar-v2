@@ -45,12 +45,13 @@ export function useLiskTransfer(_a) {
     var _c = useState(undefined), recipient = _c[0], setRecipient = _c[1];
     var _d = useState(false), recipientLoading = _d[0], setRecipientLoading = _d[1];
     var _e = useState(undefined), recipientError = _e[0], setRecipientError = _e[1];
-    var _f = useState(false), transferLoading = _f[0], setTransferLoading = _f[1];
-    var _g = useState(undefined), transferMessage = _g[0], setTransferMessage = _g[1];
-    var _h = useState(undefined), transferError = _h[0], setTransferError = _h[1];
-    var _j = useState(false), batchTransferLoading = _j[0], setBatchTransferLoading = _j[1];
-    var _k = useState(undefined), batchTransferMessage = _k[0], setBatchTransferMessage = _k[1];
-    var _l = useState(undefined), batchTransferError = _l[0], setBatchTransferError = _l[1];
+    var _f = useState(undefined), recipientMessage = _f[0], setRecipientMessage = _f[1];
+    var _g = useState(false), transferLoading = _g[0], setTransferLoading = _g[1];
+    var _h = useState(undefined), transferMessage = _h[0], setTransferMessage = _h[1];
+    var _j = useState(undefined), transferError = _j[0], setTransferError = _j[1];
+    var _k = useState(false), batchTransferLoading = _k[0], setBatchTransferLoading = _k[1];
+    var _l = useState(undefined), batchTransferMessage = _l[0], setBatchTransferMessage = _l[1];
+    var _m = useState(undefined), batchTransferError = _m[0], setBatchTransferError = _m[1];
     // reset all messages and errors after 3 seconds
     useEffect(function () {
         var timer = setTimeout(function () {
@@ -68,6 +69,7 @@ export function useLiskTransfer(_a) {
                 case 0:
                     setRecipientLoading(true);
                     setRecipientError(undefined);
+                    setRecipientMessage(undefined);
                     setRecipient(undefined);
                     cacheKey = "recipient_".concat(id);
                     _d.label = 1;
@@ -86,6 +88,7 @@ export function useLiskTransfer(_a) {
                     data = (_d.sent()).data;
                     setRecipient(data);
                     setCache(cacheKey, data);
+                    setRecipientMessage("Fetched recipient successfully.");
                     return [2 /*return*/, data];
                 case 3:
                     err_1 = _d.sent();
@@ -208,6 +211,7 @@ export function useLiskTransfer(_a) {
         recipientLoading: recipientLoading,
         recipientError: recipientError,
         fetchRecipient: fetchRecipient,
+        recipientMessage: recipientMessage,
         // single transfer
         transferLoading: transferLoading,
         transferMessage: transferMessage,

@@ -36,24 +36,35 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import { useCache } from "../hooks/useCache";
+import { useCache } from "./useCache";
 var API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE;
 export function useLiskStaff(_a) {
     var _this = this;
     var apiKey = _a.apiKey;
-    var _b = useState([]), staff = _b[0], setStaff = _b[1];
-    var _c = useState(false), staffLoading = _c[0], setStaffLoading = _c[1];
-    var _d = useState(undefined), staffError = _d[0], setStaffError = _d[1];
-    var _e = useState(undefined), actionMsg = _e[0], setActionMsg = _e[1];
-    var _f = useCache(), getCache = _f.getCache, setCache = _f.setCache;
-    // reset all messages and errors after 3 seconds
+    var _b = useCache(), getCache = _b.getCache, setCache = _b.setCache;
+    // fetchStaff states
+    var _c = useState([]), staff = _c[0], setStaff = _c[1];
+    var _d = useState(false), staffLoading = _d[0], setStaffLoading = _d[1];
+    var _e = useState(undefined), staffError = _e[0], setStaffError = _e[1];
+    var _f = useState(undefined), staffMessage = _f[0], setStaffMessage = _f[1];
+    // assignStaff states
+    var _g = useState(false), assignStaffLoading = _g[0], setAssignStaffLoading = _g[1];
+    var _h = useState(undefined), assignStaffError = _h[0], setAssignStaffError = _h[1];
+    var _j = useState(undefined), assignStaffMessage = _j[0], setAssignStaffMessage = _j[1];
+    // removeStaff states
+    var _k = useState(false), removeStaffLoading = _k[0], setRemoveStaffLoading = _k[1];
+    var _l = useState(undefined), removeStaffError = _l[0], setRemoveStaffError = _l[1];
+    var _m = useState(undefined), removeStaffMessage = _m[0], setRemoveStaffMessage = _m[1];
+    // reset assign/remove states after 3 seconds
     useEffect(function () {
         var timer = setTimeout(function () {
-            setStaffError(undefined);
-            setActionMsg(undefined);
+            setAssignStaffError(undefined);
+            setAssignStaffMessage(undefined);
+            setRemoveStaffError(undefined);
+            setRemoveStaffMessage(undefined);
         }, 3000);
         return function () { return clearTimeout(timer); };
-    }, [staffError, actionMsg]);
+    }, [assignStaffError, assignStaffMessage, removeStaffError, removeStaffMessage]);
     var fetchStaff = useCallback(function (merchantId) { return __awaiter(_this, void 0, void 0, function () {
         var cacheKey, cached, data, err_1;
         return __generator(this, function (_a) {
@@ -61,6 +72,7 @@ export function useLiskStaff(_a) {
                 case 0:
                     setStaffLoading(true);
                     setStaffError(undefined);
+                    setStaffMessage(undefined);
                     cacheKey = "staff_list_".concat(merchantId);
                     _a.label = 1;
                 case 1:
@@ -69,6 +81,7 @@ export function useLiskStaff(_a) {
                     if (cached) {
                         setStaff(cached);
                         setStaffLoading(false);
+                        setStaffMessage("Fetched staff from cache.");
                         return [2 /*return*/, cached];
                     }
                     return [4 /*yield*/, axios.get("".concat(API_BASE, "/staff/").concat(encodeURIComponent(merchantId)), { headers: { Authorization: apiKey } })];
@@ -76,6 +89,7 @@ export function useLiskStaff(_a) {
                     data = (_a.sent()).data;
                     setStaff(data);
                     setCache(cacheKey, data);
+                    setStaffMessage("Fetched staff successfully.");
                     return [2 /*return*/, data];
                 case 3:
                     err_1 = _a.sent();
@@ -94,9 +108,9 @@ export function useLiskStaff(_a) {
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
-                    setStaffLoading(true);
-                    setStaffError(undefined);
-                    setActionMsg(undefined);
+                    setAssignStaffLoading(true);
+                    setAssignStaffError(undefined);
+                    setAssignStaffMessage(undefined);
                     _c.label = 1;
                 case 1:
                     _c.trys.push([1, 4, 5, 6]);
@@ -108,17 +122,17 @@ export function useLiskStaff(_a) {
                         })];
                 case 2:
                     data = (_c.sent()).data;
-                    setActionMsg(data.success ? "Staff assigned successfully." : "Failed to assign staff.");
+                    setAssignStaffMessage(data.success ? "Staff assigned successfully." : "Failed to assign staff.");
                     return [4 /*yield*/, fetchStaff(merchantId)];
                 case 3:
                     _c.sent();
                     return [2 /*return*/, data];
                 case 4:
                     err_2 = _c.sent();
-                    setStaffError(((_b = (_a = err_2.response) === null || _a === void 0 ? void 0 : _a.data) === null || _b === void 0 ? void 0 : _b.message) || "Failed to assign staff.");
+                    setAssignStaffError(((_b = (_a = err_2.response) === null || _a === void 0 ? void 0 : _a.data) === null || _b === void 0 ? void 0 : _b.message) || "Failed to assign staff.");
                     return [3 /*break*/, 6];
                 case 5:
-                    setStaffLoading(false);
+                    setAssignStaffLoading(false);
                     return [7 /*endfinally*/];
                 case 6: return [2 /*return*/];
             }
@@ -129,9 +143,9 @@ export function useLiskStaff(_a) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    setStaffLoading(true);
-                    setStaffError(undefined);
-                    setActionMsg(undefined);
+                    setRemoveStaffLoading(true);
+                    setRemoveStaffError(undefined);
+                    setRemoveStaffMessage(undefined);
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 4, 5, 6]);
@@ -142,18 +156,18 @@ export function useLiskStaff(_a) {
                         })];
                 case 2:
                     data = (_a.sent()).data;
-                    setActionMsg(data.success ? "Staff removed successfully." : "Failed to remove staff.");
+                    setRemoveStaffMessage(data.success ? "Staff removed successfully." : "Failed to remove staff.");
                     return [4 /*yield*/, fetchStaff(merchantId)];
                 case 3:
                     _a.sent();
                     return [2 /*return*/, data];
                 case 4:
                     err_3 = _a.sent();
-                    setStaffError("Failed to remove staff.");
+                    setRemoveStaffError("Failed to remove staff.");
                     console.error(err_3);
                     return [3 /*break*/, 6];
                 case 5:
-                    setStaffLoading(false);
+                    setRemoveStaffLoading(false);
                     return [7 /*endfinally*/];
                 case 6: return [2 /*return*/];
             }
@@ -163,10 +177,15 @@ export function useLiskStaff(_a) {
         staff: staff,
         staffLoading: staffLoading,
         staffError: staffError,
-        actionMsg: actionMsg,
+        staffMessage: staffMessage,
         fetchStaff: fetchStaff,
         assignStaff: assignStaff,
+        assignStaffLoading: assignStaffLoading,
+        assignStaffError: assignStaffError,
+        assignStaffMessage: assignStaffMessage,
         removeStaff: removeStaff,
-        setActionMsg: setActionMsg,
+        removeStaffLoading: removeStaffLoading,
+        removeStaffError: removeStaffError,
+        removeStaffMessage: removeStaffMessage,
     };
 }

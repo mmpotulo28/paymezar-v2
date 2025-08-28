@@ -38,21 +38,37 @@ import { useCallback, useState } from "react";
 import axios from "axios";
 import { useCache } from "../hooks/useCache";
 var API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE;
-export function useCoupons(_a) {
+export function useLiskCoupons(_a) {
     var _this = this;
     var apiKey = _a.apiKey;
     var _b = useCache(), getCache = _b.getCache, setCache = _b.setCache;
     var _c = useState([]), coupons = _c[0], setCoupons = _c[1];
-    var _d = useState(false), loading = _d[0], setLoading = _d[1];
-    var _e = useState(undefined), error = _e[0], setError = _e[1];
+    var _d = useState(false), couponsLoading = _d[0], setCouponsLoading = _d[1];
+    var _e = useState(undefined), couponsError = _e[0], setCouponsError = _e[1];
+    // Create coupon states
+    var _f = useState(false), createCouponLoading = _f[0], setCreateCouponLoading = _f[1];
+    var _g = useState(undefined), createCouponError = _g[0], setCreateCouponError = _g[1];
+    var _h = useState(undefined), createCouponMessage = _h[0], setCreateCouponMessage = _h[1];
+    // Claim coupon states
+    var _j = useState(false), claimCouponLoading = _j[0], setClaimCouponLoading = _j[1];
+    var _k = useState(undefined), claimCouponError = _k[0], setClaimCouponError = _k[1];
+    var _l = useState(undefined), claimCouponMessage = _l[0], setClaimCouponMessage = _l[1];
+    // Update coupon states
+    var _m = useState(false), updateCouponLoading = _m[0], setUpdateCouponLoading = _m[1];
+    var _o = useState(undefined), updateCouponError = _o[0], setUpdateCouponError = _o[1];
+    var _p = useState(undefined), updateCouponMessage = _p[0], setUpdateCouponMessage = _p[1];
+    // Delete coupon states
+    var _q = useState(false), deleteCouponLoading = _q[0], setDeleteCouponLoading = _q[1];
+    var _r = useState(undefined), deleteCouponError = _r[0], setDeleteCouponError = _r[1];
+    var _s = useState(undefined), deleteCouponMessage = _s[0], setDeleteCouponMessage = _s[1];
     // Get all coupons
     var fetchCoupons = useCallback(function () { return __awaiter(_this, void 0, void 0, function () {
         var cacheKey, cached, data, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    setLoading(true);
-                    setError(undefined);
+                    setCouponsLoading(true);
+                    setCouponsError(undefined);
                     cacheKey = "coupons";
                     _a.label = 1;
                 case 1:
@@ -60,7 +76,7 @@ export function useCoupons(_a) {
                     cached = getCache(cacheKey);
                     if (cached) {
                         setCoupons(cached);
-                        setLoading(false);
+                        setCouponsLoading(false);
                         return [2 /*return*/];
                     }
                     return [4 /*yield*/, axios.get("".concat(API_BASE, "/coupons"), {
@@ -73,11 +89,11 @@ export function useCoupons(_a) {
                     return [3 /*break*/, 5];
                 case 3:
                     err_1 = _a.sent();
-                    setError("Failed to fetch coupons.");
+                    setCouponsError("Failed to fetch coupons.");
                     console.error(err_1);
                     return [3 /*break*/, 5];
                 case 4:
-                    setLoading(false);
+                    setCouponsLoading(false);
                     return [7 /*endfinally*/];
                 case 5: return [2 /*return*/];
             }
@@ -89,8 +105,9 @@ export function useCoupons(_a) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    setLoading(true);
-                    setError(undefined);
+                    setCreateCouponLoading(true);
+                    setCreateCouponError(undefined);
+                    setCreateCouponMessage(undefined);
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 4, 5, 6]);
@@ -102,17 +119,18 @@ export function useCoupons(_a) {
                         })];
                 case 2:
                     data = (_a.sent()).data;
+                    setCreateCouponMessage("Coupon created successfully.");
                     return [4 /*yield*/, fetchCoupons()];
                 case 3:
                     _a.sent();
                     return [2 /*return*/, data];
                 case 4:
                     err_2 = _a.sent();
-                    setError("Failed to create coupon.");
+                    setCreateCouponError("Failed to create coupon.");
                     console.error(err_2);
                     return [3 /*break*/, 6];
                 case 5:
-                    setLoading(false);
+                    setCreateCouponLoading(false);
                     return [7 /*endfinally*/];
                 case 6: return [2 /*return*/];
             }
@@ -124,8 +142,9 @@ export function useCoupons(_a) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    setLoading(true);
-                    setError(undefined);
+                    setClaimCouponLoading(true);
+                    setClaimCouponError(undefined);
+                    setClaimCouponMessage(undefined);
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 4, 5, 6]);
@@ -137,17 +156,18 @@ export function useCoupons(_a) {
                         })];
                 case 2:
                     data = (_a.sent()).data;
+                    setClaimCouponMessage("Coupon claimed successfully.");
                     return [4 /*yield*/, fetchCoupons()];
                 case 3:
                     _a.sent();
                     return [2 /*return*/, data];
                 case 4:
                     err_3 = _a.sent();
-                    setError("Failed to claim coupon.");
+                    setClaimCouponError("Failed to claim coupon.");
                     console.error(err_3);
                     return [3 /*break*/, 6];
                 case 5:
-                    setLoading(false);
+                    setClaimCouponLoading(false);
                     return [7 /*endfinally*/];
                 case 6: return [2 /*return*/];
             }
@@ -159,8 +179,9 @@ export function useCoupons(_a) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    setLoading(true);
-                    setError(undefined);
+                    setUpdateCouponLoading(true);
+                    setUpdateCouponError(undefined);
+                    setUpdateCouponMessage(undefined);
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 4, 5, 6]);
@@ -172,17 +193,18 @@ export function useCoupons(_a) {
                         })];
                 case 2:
                     data = (_a.sent()).data;
+                    setUpdateCouponMessage("Coupon updated successfully.");
                     return [4 /*yield*/, fetchCoupons()];
                 case 3:
                     _a.sent();
                     return [2 /*return*/, data];
                 case 4:
                     err_4 = _a.sent();
-                    setError("Failed to update coupon.");
+                    setUpdateCouponError("Failed to update coupon.");
                     console.error(err_4);
                     return [3 /*break*/, 6];
                 case 5:
-                    setLoading(false);
+                    setUpdateCouponLoading(false);
                     return [7 /*endfinally*/];
                 case 6: return [2 /*return*/];
             }
@@ -194,8 +216,9 @@ export function useCoupons(_a) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    setLoading(true);
-                    setError(undefined);
+                    setDeleteCouponLoading(true);
+                    setDeleteCouponError(undefined);
+                    setDeleteCouponMessage(undefined);
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 4, 5, 6]);
@@ -206,17 +229,18 @@ export function useCoupons(_a) {
                         })];
                 case 2:
                     _a.sent();
+                    setDeleteCouponMessage("Coupon deleted successfully.");
                     return [4 /*yield*/, fetchCoupons()];
                 case 3:
                     _a.sent();
                     return [3 /*break*/, 6];
                 case 4:
                     err_5 = _a.sent();
-                    setError("Failed to delete coupon.");
+                    setDeleteCouponError("Failed to delete coupon.");
                     console.error(err_5);
                     return [3 /*break*/, 6];
                 case 5:
-                    setLoading(false);
+                    setDeleteCouponLoading(false);
                     return [7 /*endfinally*/];
                 case 6: return [2 /*return*/];
             }
@@ -224,12 +248,24 @@ export function useCoupons(_a) {
     }); }, [apiKey, fetchCoupons]);
     return {
         coupons: coupons,
-        loading: loading,
-        error: error,
+        couponsLoading: couponsLoading,
+        couponsError: couponsError,
         fetchCoupons: fetchCoupons,
         createCoupon: createCoupon,
+        createCouponLoading: createCouponLoading,
+        createCouponError: createCouponError,
+        createCouponMessage: createCouponMessage,
         claimCoupon: claimCoupon,
+        claimCouponLoading: claimCouponLoading,
+        claimCouponError: claimCouponError,
+        claimCouponMessage: claimCouponMessage,
         updateCoupon: updateCoupon,
+        updateCouponLoading: updateCouponLoading,
+        updateCouponError: updateCouponError,
+        updateCouponMessage: updateCouponMessage,
         deleteCoupon: deleteCoupon,
+        deleteCouponLoading: deleteCouponLoading,
+        deleteCouponError: deleteCouponError,
+        deleteCouponMessage: deleteCouponMessage,
     };
 }

@@ -38,6 +38,21 @@ import { useCallback, useState } from "react";
 import axios from "axios";
 import { useCache } from "../hooks/useCache";
 var API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE;
+/**
+ * Custom React hook to fetch and manage Lisk user token balances.
+ *
+ * This hook provides state and logic for retrieving a user's token balances from a remote API,
+ * with caching support to optimize repeated requests. It exposes the balances, loading state,
+ * error state, and a function to fetch balances for a given user ID.
+ *
+ * @param {Object} params - Hook parameters.
+ * @param {string} [params.apiKey] - Optional API key for authorization in requests.
+ * @returns {iUseLiskBalances} An object containing:
+ *   - balances: Array of user token balances.
+ *   - balancesLoading: Boolean indicating if balances are being loaded.
+ *   - balancesError: Error message if fetching fails.
+ *   - fetchBalances: Function to fetch balances for a given user ID.
+ */
 export function useLiskBalances(_a) {
     var _this = this;
     var apiKey = _a.apiKey;
@@ -45,6 +60,7 @@ export function useLiskBalances(_a) {
     var _c = useState([]), balances = _c[0], setBalances = _c[1];
     var _d = useState(false), balancesLoading = _d[0], setBalancesLoading = _d[1];
     var _e = useState(undefined), balancesError = _e[0], setBalancesError = _e[1];
+    var _f = useState(undefined), balancesMessage = _f[0], setBalancesMessage = _f[1];
     var fetchBalances = useCallback(function (userId) { return __awaiter(_this, void 0, void 0, function () {
         var cacheKey, cached, data, err_1;
         var _a, _b, _c;
@@ -71,6 +87,7 @@ export function useLiskBalances(_a) {
                 case 2:
                     data = (_d.sent()).data;
                     setBalances(data.tokens || []);
+                    setBalancesMessage("Fetched balances successfully.");
                     if (data.tokens)
                         setCache(cacheKey, data.tokens);
                     return [2 /*return*/, data.tokens || []];
@@ -97,5 +114,6 @@ export function useLiskBalances(_a) {
         balancesLoading: balancesLoading,
         balancesError: balancesError,
         fetchBalances: fetchBalances,
+        balancesMessage: balancesMessage,
     };
 }
