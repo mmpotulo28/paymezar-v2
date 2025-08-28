@@ -1,48 +1,70 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import { iStaffMember, iStaffAssignResponse, iStaffRemoveResponse } from "../types"; // changed from "@/types"
-import { useCache } from "../hooks/useCache";
+import { iStaffMember, iStaffAssignResponse, iStaffRemoveResponse } from "../types";
+import { useCache } from "./useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
 export interface iUseLiskStaff {
 	staff: iStaffMember[];
 	staffLoading: boolean;
 	staffError: string | undefined;
-	actionMsg: string | undefined;
+	staffMessage: string | undefined;
 	fetchStaff: (merchantId: string) => Promise<iStaffMember[]>;
+
 	assignStaff: (merchantId: string, input: string) => Promise<iStaffAssignResponse | undefined>;
+	assignStaffLoading: boolean;
+	assignStaffError: string | undefined;
+	assignStaffMessage: string | undefined;
+
 	removeStaff: (merchantId: string, staffId: string) => Promise<iStaffRemoveResponse | undefined>;
-	setActionMsg: (msg: string | undefined) => void;
+	removeStaffLoading: boolean;
+	removeStaffError: string | undefined;
+	removeStaffMessage: string | undefined;
 }
 
 export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
+	const { getCache, setCache } = useCache();
+
+	// fetchStaff states
 	const [staff, setStaff] = useState<iStaffMember[]>([]);
 	const [staffLoading, setStaffLoading] = useState(false);
 	const [staffError, setStaffError] = useState<string | undefined>(undefined);
-	const [actionMsg, setActionMsg] = useState<string | undefined>(undefined);
+	const [staffMessage, setStaffMessage] = useState<string | undefined>(undefined);
 
-	const { getCache, setCache } = useCache();
+	// assignStaff states
+	const [assignStaffLoading, setAssignStaffLoading] = useState(false);
+	const [assignStaffError, setAssignStaffError] = useState<string | undefined>(undefined);
+	const [assignStaffMessage, setAssignStaffMessage] = useState<string | undefined>(undefined);
 
-	// reset all messages and errors after 3 seconds
+	// removeStaff states
+	const [removeStaffLoading, setRemoveStaffLoading] = useState(false);
+	const [removeStaffError, setRemoveStaffError] = useState<string | undefined>(undefined);
+	const [removeStaffMessage, setRemoveStaffMessage] = useState<string | undefined>(undefined);
+
+	// reset assign/remove states after 3 seconds
 	useEffect(() => {
 		const timer = setTimeout(() => {
-			setStaffError(undefined);
-			setActionMsg(undefined);
+			setAssignStaffError(undefined);
+			setAssignStaffMessage(undefined);
+			setRemoveStaffError(undefined);
+			setRemoveStaffMessage(undefined);
 		}, 3000);
 
 		return () => clearTimeout(timer);
-	}, [staffError, actionMsg]);
+	}, [assignStaffError, assignStaffMessage, removeStaffError, removeStaffMessage]);
 
 	const fetchStaff = useCallback(
 		async (merchantId: string) => {
 			setStaffLoading(true);
 			setStaffError(undefined);
+			setStaffMessage(undefined);
 			const cacheKey = `staff_list_${merchantId}`;
 			try {
 				const cached = getCache(cacheKey);
 				if (cached) {
 					setStaff(cached);
 					setStaffLoading(false);
+					setStaffMessage("Fetched staff from cache.");
 					return cached;
 				}
 
@@ -52,6 +74,7 @@ export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
 				);
 				setStaff(data);
 				setCache(cacheKey, data);
+				setStaffMessage("Fetched staff successfully.");
 				return data;
 			} catch (err: any) {
 				setStaffError(`Failed to fetch staff (${err.message || "Unknown error"}).`);
@@ -66,9 +89,9 @@ export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
 
 	const assignStaff = useCallback(
 		async (merchantId: string, input: string) => {
-			setStaffLoading(true);
-			setStaffError(undefined);
-			setActionMsg(undefined);
+			setAssignStaffLoading(true);
+			setAssignStaffError(undefined);
+			setAssignStaffMessage(undefined);
 			try {
 				const { data } = await axios.post<iStaffAssignResponse>(
 					`${API_BASE}/staff/${encodeURIComponent(merchantId)}`,
@@ -80,15 +103,15 @@ export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
 						},
 					},
 				);
-				setActionMsg(
+				setAssignStaffMessage(
 					data.success ? "Staff assigned successfully." : "Failed to assign staff.",
 				);
 				await fetchStaff(merchantId);
 				return data;
 			} catch (err: any) {
-				setStaffError(err.response?.data?.message || "Failed to assign staff.");
+				setAssignStaffError(err.response?.data?.message || "Failed to assign staff.");
 			} finally {
-				setStaffLoading(false);
+				setAssignStaffLoading(false);
 			}
 		},
 		[apiKey, fetchStaff],
@@ -96,9 +119,9 @@ export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
 
 	const removeStaff = useCallback(
 		async (merchantId: string, staffId: string) => {
-			setStaffLoading(true);
-			setStaffError(undefined);
-			setActionMsg(undefined);
+			setRemoveStaffLoading(true);
+			setRemoveStaffError(undefined);
+			setRemoveStaffMessage(undefined);
 			try {
 				const { data } = await axios.delete<iStaffRemoveResponse>(
 					`${API_BASE}/staff/${encodeURIComponent(merchantId)}/${encodeURIComponent(staffId)}`,
@@ -108,16 +131,16 @@ export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
 						},
 					},
 				);
-				setActionMsg(
+				setRemoveStaffMessage(
 					data.success ? "Staff removed successfully." : "Failed to remove staff.",
 				);
 				await fetchStaff(merchantId);
 				return data;
 			} catch (err: any) {
-				setStaffError("Failed to remove staff.");
+				setRemoveStaffError("Failed to remove staff.");
 				console.error(err);
 			} finally {
-				setStaffLoading(false);
+				setRemoveStaffLoading(false);
 			}
 		},
 		[apiKey, fetchStaff],
@@ -127,10 +150,17 @@ export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
 		staff,
 		staffLoading,
 		staffError,
-		actionMsg,
+		staffMessage,
 		fetchStaff,
+
 		assignStaff,
+		assignStaffLoading,
+		assignStaffError,
+		assignStaffMessage,
+
 		removeStaff,
-		setActionMsg,
+		removeStaffLoading,
+		removeStaffError,
+		removeStaffMessage,
 	};
 }

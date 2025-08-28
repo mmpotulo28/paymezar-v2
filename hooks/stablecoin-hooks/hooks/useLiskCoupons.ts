@@ -4,23 +4,77 @@ import { iCoupon, iCouponCreateRequest, iCouponUpdateRequest, iCouponResponse } 
 import { useCache } from "../hooks/useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
-export function useCoupons({ apiKey }: { apiKey?: string }) {
+export interface iUseLiskCoupons {
+	coupons: iCoupon[];
+	couponsLoading: boolean;
+	couponsError: string | undefined;
+	fetchCoupons: () => Promise<void>;
+
+	createCoupon: (
+		userId: string,
+		coupon: iCouponCreateRequest,
+	) => Promise<iCouponResponse | undefined>;
+	createCouponLoading: boolean;
+	createCouponError: string | undefined;
+	createCouponMessage: string | undefined;
+
+	claimCoupon: (userId: string, couponId: string) => Promise<iCouponResponse | undefined>;
+	claimCouponLoading: boolean;
+	claimCouponError: string | undefined;
+	claimCouponMessage: string | undefined;
+
+	updateCoupon: (
+		userId: string,
+		couponId: string,
+		coupon: iCouponUpdateRequest,
+	) => Promise<iCouponResponse | undefined>;
+	updateCouponLoading: boolean;
+	updateCouponError: string | undefined;
+	updateCouponMessage: string | undefined;
+
+	deleteCoupon: (userId: string, couponId: string) => Promise<void>;
+	deleteCouponLoading: boolean;
+	deleteCouponError: string | undefined;
+	deleteCouponMessage: string | undefined;
+}
+
+export function useLiskCoupons({ apiKey }: { apiKey?: string }): iUseLiskCoupons {
 	const { getCache, setCache } = useCache();
 
 	const [coupons, setCoupons] = useState<iCoupon[]>([]);
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | undefined>(undefined);
+	const [couponsLoading, setCouponsLoading] = useState(false);
+	const [couponsError, setCouponsError] = useState<string | undefined>(undefined);
+
+	// Create coupon states
+	const [createCouponLoading, setCreateCouponLoading] = useState(false);
+	const [createCouponError, setCreateCouponError] = useState<string | undefined>(undefined);
+	const [createCouponMessage, setCreateCouponMessage] = useState<string | undefined>(undefined);
+
+	// Claim coupon states
+	const [claimCouponLoading, setClaimCouponLoading] = useState(false);
+	const [claimCouponError, setClaimCouponError] = useState<string | undefined>(undefined);
+	const [claimCouponMessage, setClaimCouponMessage] = useState<string | undefined>(undefined);
+
+	// Update coupon states
+	const [updateCouponLoading, setUpdateCouponLoading] = useState(false);
+	const [updateCouponError, setUpdateCouponError] = useState<string | undefined>(undefined);
+	const [updateCouponMessage, setUpdateCouponMessage] = useState<string | undefined>(undefined);
+
+	// Delete coupon states
+	const [deleteCouponLoading, setDeleteCouponLoading] = useState(false);
+	const [deleteCouponError, setDeleteCouponError] = useState<string | undefined>(undefined);
+	const [deleteCouponMessage, setDeleteCouponMessage] = useState<string | undefined>(undefined);
 
 	// Get all coupons
 	const fetchCoupons = useCallback(async () => {
-		setLoading(true);
-		setError(undefined);
+		setCouponsLoading(true);
+		setCouponsError(undefined);
 		const cacheKey = `coupons`;
 		try {
 			const cached = getCache(cacheKey);
 			if (cached) {
 				setCoupons(cached);
-				setLoading(false);
+				setCouponsLoading(false);
 				return;
 			}
 
@@ -30,18 +84,19 @@ export function useCoupons({ apiKey }: { apiKey?: string }) {
 			setCoupons(data);
 			setCache(cacheKey, data);
 		} catch (err: any) {
-			setError("Failed to fetch coupons.");
+			setCouponsError("Failed to fetch coupons.");
 			console.error(err);
 		} finally {
-			setLoading(false);
+			setCouponsLoading(false);
 		}
 	}, [apiKey, getCache, setCache]);
 
 	// Create a new coupon for a user
 	const createCoupon = useCallback(
 		async (userId: string, coupon: iCouponCreateRequest) => {
-			setLoading(true);
-			setError(undefined);
+			setCreateCouponLoading(true);
+			setCreateCouponError(undefined);
+			setCreateCouponMessage(undefined);
 			try {
 				const { data } = await axios.post<iCouponResponse>(
 					`${API_BASE}/coupons/${encodeURIComponent(userId)}`,
@@ -53,13 +108,14 @@ export function useCoupons({ apiKey }: { apiKey?: string }) {
 						},
 					},
 				);
+				setCreateCouponMessage("Coupon created successfully.");
 				await fetchCoupons();
 				return data;
 			} catch (err: any) {
-				setError("Failed to create coupon.");
+				setCreateCouponError("Failed to create coupon.");
 				console.error(err);
 			} finally {
-				setLoading(false);
+				setCreateCouponLoading(false);
 			}
 		},
 		[apiKey, fetchCoupons],
@@ -68,8 +124,9 @@ export function useCoupons({ apiKey }: { apiKey?: string }) {
 	// Claim a coupon for a user
 	const claimCoupon = useCallback(
 		async (userId: string, couponId: string) => {
-			setLoading(true);
-			setError(undefined);
+			setClaimCouponLoading(true);
+			setClaimCouponError(undefined);
+			setClaimCouponMessage(undefined);
 			try {
 				const { data } = await axios.patch<iCouponResponse>(
 					`${API_BASE}/coupons/claim/${encodeURIComponent(userId)}`,
@@ -81,13 +138,14 @@ export function useCoupons({ apiKey }: { apiKey?: string }) {
 						},
 					},
 				);
+				setClaimCouponMessage("Coupon claimed successfully.");
 				await fetchCoupons();
 				return data;
 			} catch (err: any) {
-				setError("Failed to claim coupon.");
+				setClaimCouponError("Failed to claim coupon.");
 				console.error(err);
 			} finally {
-				setLoading(false);
+				setClaimCouponLoading(false);
 			}
 		},
 		[apiKey, fetchCoupons],
@@ -96,8 +154,9 @@ export function useCoupons({ apiKey }: { apiKey?: string }) {
 	// Update a coupon for a user
 	const updateCoupon = useCallback(
 		async (userId: string, couponId: string, coupon: iCouponUpdateRequest) => {
-			setLoading(true);
-			setError(undefined);
+			setUpdateCouponLoading(true);
+			setUpdateCouponError(undefined);
+			setUpdateCouponMessage(undefined);
 			try {
 				const { data } = await axios.put<iCouponResponse>(
 					`${API_BASE}/coupons/${encodeURIComponent(userId)}/${encodeURIComponent(couponId)}`,
@@ -109,13 +168,14 @@ export function useCoupons({ apiKey }: { apiKey?: string }) {
 						},
 					},
 				);
+				setUpdateCouponMessage("Coupon updated successfully.");
 				await fetchCoupons();
 				return data;
 			} catch (err: any) {
-				setError("Failed to update coupon.");
+				setUpdateCouponError("Failed to update coupon.");
 				console.error(err);
 			} finally {
-				setLoading(false);
+				setUpdateCouponLoading(false);
 			}
 		},
 		[apiKey, fetchCoupons],
@@ -124,8 +184,9 @@ export function useCoupons({ apiKey }: { apiKey?: string }) {
 	// Delete a coupon for a user
 	const deleteCoupon = useCallback(
 		async (userId: string, couponId: string) => {
-			setLoading(true);
-			setError(undefined);
+			setDeleteCouponLoading(true);
+			setDeleteCouponError(undefined);
+			setDeleteCouponMessage(undefined);
 			try {
 				await axios.delete(
 					`${API_BASE}/coupons/${encodeURIComponent(userId)}/${encodeURIComponent(couponId)}`,
@@ -135,12 +196,13 @@ export function useCoupons({ apiKey }: { apiKey?: string }) {
 						},
 					},
 				);
+				setDeleteCouponMessage("Coupon deleted successfully.");
 				await fetchCoupons();
 			} catch (err: any) {
-				setError("Failed to delete coupon.");
+				setDeleteCouponError("Failed to delete coupon.");
 				console.error(err);
 			} finally {
-				setLoading(false);
+				setDeleteCouponLoading(false);
 			}
 		},
 		[apiKey, fetchCoupons],
@@ -148,12 +210,28 @@ export function useCoupons({ apiKey }: { apiKey?: string }) {
 
 	return {
 		coupons,
-		loading,
-		error,
+		couponsLoading,
+		couponsError,
 		fetchCoupons,
+
 		createCoupon,
+		createCouponLoading,
+		createCouponError,
+		createCouponMessage,
+
 		claimCoupon,
+		claimCouponLoading,
+		claimCouponError,
+		claimCouponMessage,
+
 		updateCoupon,
+		updateCouponLoading,
+		updateCouponError,
+		updateCouponMessage,
+
 		deleteCoupon,
+		deleteCouponLoading,
+		deleteCouponError,
+		deleteCouponMessage,
 	};
 }

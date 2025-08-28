@@ -9,11 +9,31 @@ const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
 export interface iUseLiskUsers {
 	users: iUser[];
-	loadingUsers: boolean;
-	errorUsers: string | undefined;
+	fetchUsersLoading: boolean;
+	fetchUsersError: string | undefined;
+	fetchUsersMessage: string | undefined;
 	fetchUsers: () => Promise<iUser[]>;
+
 	getUser: ({ id }: { id: string }) => Promise<iUser | null>;
-	createUser: (data: any) => Promise<iUser | null>;
+	getUserLoading: boolean;
+	getUserError: string | undefined;
+	getUserMessage: string | undefined;
+
+	createUser: (data: iUser) => Promise<iUser | null>;
+	createUserLoading: boolean;
+	createUserError: string | undefined;
+	createUserMessage: string | undefined;
+
+	updateUser: (id: string, data: Partial<iUser>) => Promise<iUser | null>;
+	updateUserLoading: boolean;
+	updateUserError: string | undefined;
+	updateUserMessage: string | undefined;
+
+	deleteUser: (id: string) => Promise<{ message: string } | null>;
+	deleteUserLoading: boolean;
+	deleteUserError: string | undefined;
+	deleteUserMessage: string | undefined;
+
 	singleUser: iUser | null;
 }
 
@@ -21,29 +41,74 @@ export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => 
 	const { getCache, setCache } = useCache();
 
 	const [users, setUsers] = useState<iUser[]>([]);
-	const [loadingUsers, setLoadingUsers] = useState(false);
-	const [errorUsers, setErrorUsers] = useState<string | undefined>(undefined);
+	// fetchUsers states
+	const [fetchUsersLoading, setFetchUsersLoading] = useState(false);
+	const [fetchUsersError, setFetchUsersError] = useState<string | undefined>(undefined);
+	const [fetchUsersMessage, setFetchUsersMessage] = useState<string | undefined>(undefined);
+
+	// getUser states
+	const [getUserLoading, setGetUserLoading] = useState(false);
+	const [getUserError, setGetUserError] = useState<string | undefined>(undefined);
+	const [getUserMessage, setGetUserMessage] = useState<string | undefined>(undefined);
+
+	// createUser states
+	const [createUserLoading, setCreateUserLoading] = useState(false);
+	const [createUserError, setCreateUserError] = useState<string | undefined>(undefined);
+	const [createUserMessage, setCreateUserMessage] = useState<string | undefined>(undefined);
+
+	// updateUser states
+	const [updateUserLoading, setUpdateUserLoading] = useState(false);
+	const [updateUserError, setUpdateUserError] = useState<string | undefined>(undefined);
+	const [updateUserMessage, setUpdateUserMessage] = useState<string | undefined>(undefined);
+
+	// deleteUser states
+	const [deleteUserLoading, setDeleteUserLoading] = useState(false);
+	const [deleteUserError, setDeleteUserError] = useState<string | undefined>(undefined);
+	const [deleteUserMessage, setDeleteUserMessage] = useState<string | undefined>(undefined);
+
 	const [singleUser, setSingleUser] = useState<iUser | null>(null);
 
 	// reset all messages and errors after 3 seconds
 	useEffect(() => {
 		const timer = setTimeout(() => {
-			setErrorUsers(undefined);
+			setFetchUsersError(undefined);
+			setFetchUsersMessage(undefined);
+			setGetUserError(undefined);
+			setGetUserMessage(undefined);
+			setCreateUserError(undefined);
+			setCreateUserMessage(undefined);
+			setUpdateUserError(undefined);
+			setUpdateUserMessage(undefined);
+			setDeleteUserError(undefined);
+			setDeleteUserMessage(undefined);
 		}, 3000);
 
 		return () => clearTimeout(timer);
-	}, [errorUsers]);
+	}, [
+		fetchUsersError,
+		fetchUsersMessage,
+		getUserError,
+		getUserMessage,
+		createUserError,
+		createUserMessage,
+		updateUserError,
+		updateUserMessage,
+		deleteUserError,
+		deleteUserMessage,
+	]);
 
 	const fetchUsers = useCallback(async () => {
-		setLoadingUsers(true);
-		setErrorUsers(undefined);
+		setFetchUsersLoading(true);
+		setFetchUsersError(undefined);
+		setFetchUsersMessage(undefined);
 		const cacheKey = "users_list";
 
 		try {
 			const cached = getCache(cacheKey);
 			if (cached) {
 				setUsers(cached);
-				setLoadingUsers(false);
+				setFetchUsersLoading(false);
+				setFetchUsersMessage("Fetched users from cache.");
 				return cached;
 			}
 
@@ -52,11 +117,12 @@ export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => 
 			});
 			setUsers(data.users || []);
 			setCache(cacheKey, data.users || []);
+			setFetchUsersMessage("Fetched users successfully.");
 			return data.users || [];
 		} catch (err: any) {
-			setErrorUsers(err?.response?.data?.message || "Failed to fetch users");
+			setFetchUsersError(err?.response?.data?.message || "Failed to fetch users");
 		} finally {
-			setLoadingUsers(false);
+			setFetchUsersLoading(false);
 		}
 
 		return [];
@@ -64,32 +130,35 @@ export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => 
 
 	const getUser = useCallback(
 		async ({ id }: { id: string }) => {
-			setLoadingUsers(true);
-			setErrorUsers(undefined);
+			setGetUserLoading(true);
+			setGetUserError(undefined);
+			setGetUserMessage(undefined);
 
 			try {
-				// try getting user on existing users first
 				const existing = users.find((u) => u.id === id);
 				if (existing) {
 					setSingleUser(existing);
+					setGetUserMessage("User found in list.");
 					return existing;
 				}
 
-				// try getting user in cache
 				const cached = getCache(`single_user`);
 				if (cached) {
 					setSingleUser(cached);
+					setGetUserMessage("User found in cache.");
 					return cached;
 				}
 
 				const { data } = await axios.get<{ user: iUser }>(`${API_BASE}/users/${id}`, {
 					headers: { Authorization: apiKey },
 				});
+				setSingleUser(data.user);
+				setGetUserMessage("Fetched user successfully.");
 				return data.user;
 			} catch (err: any) {
-				setErrorUsers(err?.response?.data?.message || "Failed to fetch user");
+				setGetUserError(err?.response?.data?.message || "Failed to fetch user");
 			} finally {
-				setLoadingUsers(false);
+				setGetUserLoading(false);
 			}
 
 			return null;
@@ -99,20 +168,22 @@ export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => 
 
 	const createUser = useCallback(
 		async (data: iUser) => {
-			setLoadingUsers(true);
-			setErrorUsers(undefined);
+			setCreateUserLoading(true);
+			setCreateUserError(undefined);
+			setCreateUserMessage(undefined);
 
 			try {
 				const { data: response } = await axios.post(`${API_BASE}/users`, data, {
 					headers: { Authorization: apiKey },
 				});
 				setSingleUser(response);
+				setCreateUserMessage("User created successfully.");
 				await fetchUsers();
 				return response;
 			} catch (err: any) {
-				setErrorUsers(err?.response?.data?.message || "Failed to create user");
+				setCreateUserError(err?.response?.data?.message || "Failed to create user");
 			} finally {
-				setLoadingUsers(false);
+				setCreateUserLoading(false);
 			}
 
 			return null;
@@ -120,13 +191,96 @@ export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => 
 		[apiKey, fetchUsers],
 	);
 
+	const updateUser = useCallback(
+		async (id: string, data: Partial<iUser>) => {
+			setUpdateUserLoading(true);
+			setUpdateUserError(undefined);
+			setUpdateUserMessage(undefined);
+			try {
+				const { data: updatedUser } = await axios.put<iUser>(
+					`${API_BASE}/users/${encodeURIComponent(id)}`,
+					data,
+					{
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: apiKey,
+						},
+					},
+				);
+				setSingleUser(updatedUser);
+				setUpdateUserMessage("User updated successfully.");
+				await fetchUsers();
+				return updatedUser;
+			} catch (err: any) {
+				if (err?.response?.status === 400) setUpdateUserError("Validation error.");
+				else if (err?.response?.status === 401) setUpdateUserError("Unauthorized.");
+				else if (err?.response?.status === 404) setUpdateUserError("User not found.");
+				else setUpdateUserError("Failed to update user.");
+			} finally {
+				setUpdateUserLoading(false);
+			}
+			return null;
+		},
+		[apiKey, fetchUsers],
+	);
+
+	const deleteUser = useCallback(
+		async (id: string) => {
+			setDeleteUserLoading(true);
+			setDeleteUserError(undefined);
+			setDeleteUserMessage(undefined);
+			try {
+				const { data } = await axios.delete<{ message: string }>(
+					`${API_BASE}/users/${encodeURIComponent(id)}`,
+					{
+						headers: {
+							Authorization: apiKey,
+						},
+					},
+				);
+				setDeleteUserMessage(data.message || "User deleted.");
+				await fetchUsers();
+				return data;
+			} catch (err: any) {
+				if (err?.response?.status === 400) setDeleteUserError("Invalid ID parameter.");
+				else if (err?.response?.status === 401) setDeleteUserError("Unauthorized.");
+				else if (err?.response?.status === 404) setDeleteUserError("User not found.");
+				else setDeleteUserError("Failed to delete user.");
+			} finally {
+				setDeleteUserLoading(false);
+			}
+			return null;
+		},
+		[apiKey, fetchUsers],
+	);
+
 	return {
 		users,
-		loadingUsers,
-		errorUsers,
+		fetchUsersLoading,
+		fetchUsersError,
+		fetchUsersMessage,
 		fetchUsers,
-		createUser,
+
 		getUser,
+		getUserLoading,
+		getUserError,
+		getUserMessage,
+
+		createUser,
+		createUserLoading,
+		createUserError,
+		createUserMessage,
+
+		updateUser,
+		updateUserLoading,
+		updateUserError,
+		updateUserMessage,
+
+		deleteUser,
+		deleteUserLoading,
+		deleteUserError,
+		deleteUserMessage,
+
 		singleUser,
 	};
 };
