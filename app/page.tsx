@@ -1,4 +1,4 @@
-// "use client";
+"use client";
 import { CarouselSection } from "@/components/home/carousel-section";
 import { FaqsSection } from "@/components/home/faqs-section";
 import { HeroSection } from "@/components/home/hero-section";

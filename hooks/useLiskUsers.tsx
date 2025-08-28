@@ -2,8 +2,8 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { iUser } from "@/types";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import { useCache } from "./useCache";
+
 // Use environment variables
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
@@ -17,32 +17,13 @@ export interface iUseLiskUsers {
 	singleUser: iUser | null;
 }
 
-export const useLiskUsers = (mode: "user" | "organization" = "user"): iUseLiskUsers => {
+export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => {
+	const { getCache, setCache } = useCache();
+
 	const [users, setUsers] = useState<iUser[]>([]);
 	const [loadingUsers, setLoadingUsers] = useState(false);
 	const [errorUsers, setErrorUsers] = useState<string | undefined>(undefined);
 	const [singleUser, setSingleUser] = useState<iUser | null>(null);
-
-	const { user } = useUser();
-	const { organization } = useOrganization();
-	const { getCache, setCache } = useCache();
-	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
-
-	useEffect(() => {
-		// Fetch API key
-		const fetchApiKey = () => {
-			const key = (
-				mode === "user"
-					? process.env.NEXT_PUBLIC_LISK_API_KEY
-					: organization?.publicMetadata.apiToken
-			) as string;
-
-			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
-			setApiKey(`Bearer ${key}`);
-		};
-
-		fetchApiKey();
-	}, [user, organization, mode]);
 
 	// reset all messages and errors after 3 seconds
 	useEffect(() => {

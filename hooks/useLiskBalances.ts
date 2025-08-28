@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import axios from "axios";
 import { iUserTokenBalance } from "@/types";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import { useCache } from "./useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
@@ -12,31 +11,11 @@ export interface iUseLiskBalances {
 	fetchBalances: (userId: string) => Promise<iUserTokenBalance[]>;
 }
 
-export function useLiskBalances(mode: "user" | "organization" = "user"): iUseLiskBalances {
+export function useLiskBalances({ apiKey }: { apiKey?: string }): iUseLiskBalances {
+	const { getCache, setCache } = useCache();
 	const [balances, setBalances] = useState<iUserTokenBalance[]>([]);
 	const [balancesLoading, setBalancesLoading] = useState(false);
 	const [balancesError, setBalancesError] = useState<string | undefined>(undefined);
-
-	const { user } = useUser();
-	const { organization } = useOrganization();
-	const { getCache, setCache } = useCache();
-	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
-
-	useEffect(() => {
-		// Fetch API key from cookies
-		const fetchApiKey = () => {
-			const key = (
-				mode === "user"
-					? process.env.NEXT_PUBLIC_LISK_API_KEY
-					: organization?.publicMetadata.apiToken
-			) as string;
-
-			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
-			setApiKey(`Bearer ${key}`);
-		};
-
-		fetchApiKey();
-	}, [user, organization, mode]);
 
 	const fetchBalances = useCallback(
 		async (userId: string) => {

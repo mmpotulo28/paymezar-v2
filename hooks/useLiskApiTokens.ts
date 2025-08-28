@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import axios from "axios";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import { iApiToken, iApiTokenCreateResponse, iApiTokenRevokeResponse } from "@/types";
 import { useCache } from "./useCache";
 
@@ -24,7 +23,9 @@ export interface iUseLiskApiTokens {
 	revokeTokenSuccess: string | undefined;
 }
 
-export function useLiskApiTokens(mode: "user" | "organization" = "user"): iUseLiskApiTokens {
+export function useLiskApiTokens({ apiKey }: { apiKey?: string }): iUseLiskApiTokens {
+	const { getCache, setCache } = useCache();
+
 	const [tokens, setTokens] = useState<iApiToken[]>([]);
 	const [apiTokenLoading, setApiTokenLoading] = useState(false);
 	const [apiTokenError, setApiTokenError] = useState<string | undefined>(undefined);
@@ -41,27 +42,6 @@ export function useLiskApiTokens(mode: "user" | "organization" = "user"): iUseLi
 	const [revokeTokenLoading, setRevokeTokenLoading] = useState(false);
 	const [revokeTokenError, setRevokeTokenError] = useState<string | undefined>(undefined);
 	const [revokeTokenSuccess, setRevokeTokenSuccess] = useState<string | undefined>(undefined);
-
-	const { user } = useUser();
-	const { organization } = useOrganization();
-	const { getCache, setCache } = useCache();
-	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
-
-	useEffect(() => {
-		// Fetch API key from cookies
-		const fetchApiKey = () => {
-			const key = (
-				mode === "user"
-					? process.env.NEXT_PUBLIC_LISK_API_KEY
-					: organization?.publicMetadata.apiToken
-			) as string;
-
-			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
-			setApiKey(`Bearer ${key}`);
-		};
-
-		fetchApiKey();
-	}, [user, organization, mode]);
 
 	const fetchTokens = useCallback(async () => {
 		const cacheKey = "api_tokens";

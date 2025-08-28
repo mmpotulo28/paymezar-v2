@@ -1,41 +1,21 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import axios from "axios";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import { iCoupon, iCouponCreateRequest, iCouponUpdateRequest, iCouponResponse } from "@/types";
 import { useCache } from "./useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
-export function useCoupons(mode: "user" | "organization" = "user") {
+export function useCoupons({ apiKey }: { apiKey?: string }) {
+	const { getCache, setCache } = useCache();
+
 	const [coupons, setCoupons] = useState<iCoupon[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | undefined>(undefined);
-
-	const { user } = useUser();
-	const { organization } = useOrganization();
-	const { getCache, setCache } = useCache();
-	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
-
-	useEffect(() => {
-		// Fetch API key from cookies
-		const fetchApiKey = () => {
-			const key = (
-				mode === "user"
-					? process.env.NEXT_PUBLIC_LISK_API_KEY
-					: organization?.publicMetadata.apiToken
-			) as string;
-
-			setApiKey(`Bearer ${key}`);
-		};
-
-		console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
-		fetchApiKey();
-	}, [user, organization, mode]);
 
 	// Get all coupons
 	const fetchCoupons = useCallback(async () => {
 		setLoading(true);
 		setError(undefined);
-		const cacheKey = `coupons_${mode}`;
+		const cacheKey = `coupons`;
 		try {
 			const cached = getCache(cacheKey);
 			if (cached) {
@@ -55,7 +35,7 @@ export function useCoupons(mode: "user" | "organization" = "user") {
 		} finally {
 			setLoading(false);
 		}
-	}, [apiKey, getCache, mode, setCache]);
+	}, [apiKey, getCache, setCache]);
 
 	// Create a new coupon for a user
 	const createCoupon = useCallback(

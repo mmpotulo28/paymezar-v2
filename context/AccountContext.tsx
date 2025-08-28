@@ -1,13 +1,13 @@
 "use client";
-import React, { createContext, useContext, useEffect, ReactNode } from "react";
-import { useUser } from "@clerk/nextjs";
+import React, { createContext, useContext, useEffect, ReactNode, useState } from "react";
+import { useOrganization, useUser } from "@clerk/nextjs";
 import { iUseLiskTransactions, useLiskTransactions } from "@/hooks/useLiskTransactions";
 import { iUseLiskBank, useLiskBank } from "@/hooks/useLiskBank";
 import { iUseLiskCharges, useLiskCharges } from "@/hooks/useLiskCharges";
 import useSubscriptions, { iUseSubscriptions } from "@/hooks/useSubscriptions";
 import { iUseLiskBalances, useLiskBalances } from "@/hooks/useLiskBalances";
 import { iUseBusiness, useLiskBusiness } from "@/hooks/useLiskBusiness";
-import { iUseStaff, useStaff } from "@/hooks/useStaff";
+import { iUseLiskStaff, useLiskStaff } from "@/hooks/useLiskStaff";
 import { iUseLiskTransfer, useLiskTransfer } from "@/hooks/useLiskTransfer";
 import { iUseLiskUsers, useLiskUsers } from "@/hooks/useLiskUsers";
 
@@ -15,7 +15,7 @@ interface AccountContextProps
 	extends iUseLiskBalances,
 		iUseBusiness,
 		iUseLiskTransactions,
-		iUseStaff,
+		iUseLiskStaff,
 		iUseSubscriptions,
 		iUseLiskBank,
 		iUseLiskCharges,
@@ -32,14 +32,39 @@ export function useAccount(): AccountContextProps {
 	return context;
 }
 
-export function AccountProvider({ children }: { children: ReactNode }) {
+export function AccountProvider({
+	children,
+	mode = "user",
+}: {
+	children: ReactNode;
+	mode?: "user" | "organization";
+}) {
 	const { user } = useUser();
-	const { fetchTransactions } = useLiskTransactions();
-	const { fetchBalances } = useLiskBalances();
-	const { getBankAccount } = useLiskBank();
-	const { fetchCharges } = useLiskCharges();
-	const { fetchSubscriptions } = useSubscriptions();
-	const fetchUsers = useLiskUsers().fetchUsers;
+	const { organization } = useOrganization();
+	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
+
+	useEffect(() => {
+		// Fetch API key
+		const fetchApiKey = () => {
+			const key = (
+				mode === "user"
+					? process.env.NEXT_PUBLIC_LISK_API_KEY
+					: organization?.publicMetadata.apiToken
+			) as string;
+
+			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
+			setApiKey(`Bearer ${key}`);
+		};
+
+		fetchApiKey();
+	}, [user, organization, mode]);
+
+	const { fetchTransactions } = useLiskTransactions({ apiKey });
+	const { fetchBalances } = useLiskBalances({ apiKey });
+	const { getBankAccount } = useLiskBank({ apiKey, user });
+	const { fetchCharges } = useLiskCharges({ apiKey, user });
+	const { fetchSubscriptions } = useSubscriptions({ apiKey, user });
+	const fetchUsers = useLiskUsers({ apiKey }).fetchUsers;
 
 	useEffect(() => {
 		if (!user) return;
@@ -62,15 +87,15 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 	return (
 		<AccountContext.Provider
 			value={{
-				...useLiskBalances(),
-				...useLiskTransactions(),
-				...useLiskBank(),
-				...useLiskCharges(),
-				...useSubscriptions(),
-				...useLiskBusiness(),
-				...useStaff(),
-				...useLiskTransfer(),
-				...useLiskUsers(),
+				...useLiskBalances({ apiKey }),
+				...useLiskTransactions({ apiKey }),
+				...useLiskBank({ apiKey, user }),
+				...useLiskCharges({ apiKey, user }),
+				...useSubscriptions({ apiKey, user }),
+				...useLiskBusiness({ apiKey }),
+				...useLiskStaff({ apiKey }),
+				...useLiskTransfer({ apiKey }),
+				...useLiskUsers({ apiKey }),
 			}}>
 			{children}
 		</AccountContext.Provider>

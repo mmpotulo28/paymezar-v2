@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import axios, { AxiosResponse } from "axios";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import { useCache } from "./useCache";
 import { iCharge } from "@/types";
 import { useLiskTransfer } from "./useLiskTransfer";
@@ -52,7 +51,10 @@ export interface iUseLiskCharges {
 	completeChargeMessage: string | undefined;
 }
 
-export function useLiskCharges(mode: "user" | "organization" = "user"): iUseLiskCharges {
+export function useLiskCharges({ apiKey, user }: { apiKey?: string; user: any }): iUseLiskCharges {
+	const { getCache, setCache } = useCache();
+	const { makeTransfer, transferError } = useLiskTransfer({ apiKey });
+
 	const [charges, setCharges] = useState<iCharge[]>([]);
 	const [chargesLoading, setChargesLoading] = useState(false);
 	const [chargesError, setChargesError] = useState<string | undefined>(undefined);
@@ -65,28 +67,6 @@ export function useLiskCharges(mode: "user" | "organization" = "user"): iUseLisk
 	const [completeChargeMessage, setCompleteChargeMessage] = useState<string | undefined>(
 		undefined,
 	);
-
-	const { user } = useUser();
-	const { organization } = useOrganization();
-	const { getCache, setCache } = useCache();
-	const { makeTransfer, transferError } = useLiskTransfer();
-	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
-
-	useEffect(() => {
-		// Fetch API key from cookies
-		const fetchApiKey = () => {
-			const key = (
-				mode === "user"
-					? process.env.NEXT_PUBLIC_LISK_API_KEY
-					: organization?.publicMetadata.apiToken
-			) as string;
-
-			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
-			setApiKey(`Bearer ${key}`);
-		};
-
-		fetchApiKey();
-	}, [user, organization, mode]);
 
 	// reset all messages and errors after 3 seconds
 	useEffect(() => {

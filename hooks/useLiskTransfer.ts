@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import { useCache } from "./useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
@@ -39,7 +38,9 @@ export interface iUseLiskTransfer {
 	}) => Promise<void>;
 }
 
-export function useLiskTransfer(mode: "user" | "organization" = "user"): iUseLiskTransfer {
+export function useLiskTransfer({ apiKey }: { apiKey?: string }): iUseLiskTransfer {
+	const { getCache, setCache } = useCache();
+
 	const [recipient, setRecipient] = useState<any>(undefined);
 	const [recipientLoading, setRecipientLoading] = useState(false);
 	const [recipientError, setRecipientError] = useState<string | undefined>(undefined);
@@ -51,27 +52,6 @@ export function useLiskTransfer(mode: "user" | "organization" = "user"): iUseLis
 	const [batchTransferLoading, setBatchTransferLoading] = useState(false);
 	const [batchTransferMessage, setBatchTransferMessage] = useState<string | undefined>(undefined);
 	const [batchTransferError, setBatchTransferError] = useState<string | undefined>(undefined);
-
-	const { user } = useUser();
-	const { organization } = useOrganization();
-	const { getCache, setCache } = useCache();
-	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
-
-	useEffect(() => {
-		// Fetch API key
-		const fetchApiKey = () => {
-			const key = (
-				mode === "user"
-					? process.env.NEXT_PUBLIC_LISK_API_KEY
-					: organization?.publicMetadata.apiToken
-			) as string;
-
-			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
-			setApiKey(`Bearer ${key}`);
-		};
-
-		fetchApiKey();
-	}, [user, organization, mode]);
 
 	// reset all messages and errors after 3 seconds
 	useEffect(() => {

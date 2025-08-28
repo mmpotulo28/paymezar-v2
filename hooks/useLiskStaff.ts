@@ -4,7 +4,7 @@ import { iStaffMember, iStaffAssignResponse, iStaffRemoveResponse } from "@/type
 import { useCache } from "./useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
-export interface iUseStaff {
+export interface iUseLiskStaff {
 	staff: iStaffMember[];
 	staffLoading: boolean;
 	staffError: string | undefined;
@@ -15,13 +15,13 @@ export interface iUseStaff {
 	setActionMsg: (msg: string | undefined) => void;
 }
 
-export function useStaff({ apiKey }: { apiKey?: string }) {
-	const { getCache, setCache } = useCache();
-
+export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
 	const [staff, setStaff] = useState<iStaffMember[]>([]);
 	const [staffLoading, setStaffLoading] = useState(false);
 	const [staffError, setStaffError] = useState<string | undefined>(undefined);
 	const [actionMsg, setActionMsg] = useState<string | undefined>(undefined);
+
+	const { getCache, setCache } = useCache();
 
 	// reset all messages and errors after 3 seconds
 	useEffect(() => {

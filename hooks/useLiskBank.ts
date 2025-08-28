@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import axios from "axios";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import {
 	iBankAccount,
 	iBankAccountResponse,
@@ -42,7 +41,9 @@ export interface iUseLiskBank {
 	deposit: (amount: string) => Promise<iCreateTransactionResponse | void>;
 }
 
-export function useLiskBank(mode: "user" | "organization" = "user"): iUseLiskBank {
+export function useLiskBank({ apiKey, user }: { apiKey?: string; user: any }): iUseLiskBank {
+	const { getCache, setCache } = useCache();
+
 	// bank account state
 	const [bankAccount, setBankAccount] = useState<iBankAccount | undefined>(undefined);
 	const [bankLoading, setBankLoading] = useState(false);
@@ -58,27 +59,6 @@ export function useLiskBank(mode: "user" | "organization" = "user"): iUseLiskBan
 	const [depositLoading, setDepositLoading] = useState(false);
 	const [depositMessage, setDepositMessage] = useState<string | null>(null);
 	const [depositError, setDepositError] = useState<string | null>(null);
-
-	const { user } = useUser();
-	const { organization } = useOrganization();
-	const { getCache, setCache } = useCache();
-	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
-
-	useEffect(() => {
-		// Fetch API key from cookies
-		const fetchApiKey = () => {
-			const key = (
-				mode === "user"
-					? process.env.NEXT_PUBLIC_LISK_API_KEY
-					: organization?.publicMetadata.apiToken
-			) as string;
-
-			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
-			setApiKey(`Bearer ${key}`);
-		};
-
-		fetchApiKey();
-	}, [user, organization, mode]);
 
 	const upsertBankAccount = useCallback(
 		async ({

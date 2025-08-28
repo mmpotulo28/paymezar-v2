@@ -1,6 +1,5 @@
 import { PLAN_DETAILS } from "@/lib/constants";
 import { iSubscription } from "@/types";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import { useState, useCallback, useEffect } from "react";
 import { useCache } from "./useCache";
@@ -57,22 +56,13 @@ export interface iUseSubscriptions {
  * - Handles API authentication using a bearer token from user or organization metadata.
  * - Automatically updates when user, organization, or mode changes.
  */
-const useSubscriptions = (mode: "user" | "organization" = "user"): iUseSubscriptions => {
+const useSubscriptions = ({ apiKey, user }: { user: any; apiKey?: string }): iUseSubscriptions => {
+	const { getCache, setCache } = useCache();
+
 	const [subscriptions, setSubscriptions] = useState<iSubscription[]>([]);
 	const [subscriptionLoading, setSubscriptionLoading] = useState<boolean>(false);
 	const [subscriptionError, setSubscriptionError] = useState<string | undefined>(undefined);
 	const [subscriptionMessage, setSubscriptionMessage] = useState<string | undefined>(undefined);
-
-	const { user } = useUser();
-	const { organization } = useOrganization();
-	const { getCache, setCache } = useCache();
-	const [apiKey, setApiKey] = useState<string | undefined>(
-		`Bearer ${
-			mode === "user"
-				? (process.env.NEXT_PUBLIC_LISK_API_KEY as string)
-				: (organization?.publicMetadata.apiToken as string)
-		}`,
-	);
 
 	// reset all messages and errors after 3 seconds
 	useEffect(() => {
@@ -83,22 +73,6 @@ const useSubscriptions = (mode: "user" | "organization" = "user"): iUseSubscript
 
 		return () => clearTimeout(timer);
 	}, [subscriptionError, subscriptionMessage]);
-
-	useEffect(() => {
-		// Fetch API key
-		const fetchApiKey = () => {
-			const key = (
-				mode === "user"
-					? process.env.NEXT_PUBLIC_LISK_API_KEY
-					: organization?.publicMetadata.apiToken
-			) as string;
-
-			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
-			setApiKey(`Bearer ${key}`);
-		};
-
-		fetchApiKey();
-	}, [user, organization, mode]);
 
 	const fetchSubscriptions = useCallback(
 		async (userId: string) => {

@@ -7,7 +7,6 @@ import {
 	iPendingTxResponse,
 	iUserTokenBalance,
 } from "@/types/";
-import { useOrganization, useUser } from "@clerk/nextjs";
 import { useCache } from "./useCache";
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
@@ -50,10 +49,11 @@ export interface iUseBusiness {
 	userGasError: string | undefined;
 }
 
-export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBusiness {
+export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 	const [float, setFloat] = useState<iUserTokenBalance[]>([]);
 	const [loadingFloat, setLoadingFloat] = useState(false);
 	const [floatError, setFloatError] = useState<string | undefined>(undefined);
+	const { getCache, setCache } = useCache();
 
 	const [gasLoading, setGasLoading] = useState(false);
 	const [gasSuccess, setGasSuccess] = useState<string | undefined>(undefined);
@@ -76,32 +76,11 @@ export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBus
 	const [userGasSuccess, setUserGasSuccess] = useState<string | undefined>(undefined);
 	const [userGasError, setUserGasError] = useState<string | undefined>(undefined);
 
-	const { user } = useUser();
-	const { organization } = useOrganization();
-	const { getCache, setCache } = useCache();
-	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
-
-	useEffect(() => {
-		// Fetch API key from cookies
-		const fetchApiKey = () => {
-			const key = (
-				mode === "user"
-					? process.env.NEXT_PUBLIC_LISK_API_KEY
-					: organization?.publicMetadata.apiToken
-			) as string;
-
-			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
-			setApiKey(`Bearer ${key}`);
-		};
-
-		fetchApiKey();
-	}, [user, organization, mode]);
-
 	// Fetch float balances
 	const fetchFloat = useCallback(async () => {
 		setLoadingFloat(true);
 		setFloatError(undefined);
-		if (!user || apiKey) return;
+		if (apiKey) return;
 
 		const cacheKey = "float_balances";
 		const cached = getCache(cacheKey);
@@ -126,7 +105,7 @@ export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBus
 		}
 
 		return [];
-	}, [apiKey, getCache, setCache, user]);
+	}, [apiKey, getCache, setCache]);
 
 	// Enable gas
 	const enableBusinessGas = useCallback(async () => {
@@ -215,7 +194,7 @@ export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBus
 		async (page = 1, pageSize = 10) => {
 			setPendingLoading(true);
 			setPendingError(undefined);
-			if (!user || apiKey) return;
+			if (apiKey) return;
 
 			const cacheKey = `pending_tx`;
 			const cached = getCache(cacheKey);
@@ -243,7 +222,7 @@ export function useLiskBusiness(mode: "user" | "organization" = "user"): iUseBus
 
 			return [];
 		},
-		[apiKey, getCache, setCache, user],
+		[apiKey, getCache, setCache],
 	);
 
 	useEffect(() => {
