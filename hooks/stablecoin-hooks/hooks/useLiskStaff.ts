@@ -44,14 +44,25 @@ export function useLiskStaff({ apiKey }: { apiKey?: string }): iUseLiskStaff {
 	// reset assign/remove states after 3 seconds
 	useEffect(() => {
 		const timer = setTimeout(() => {
+			setStaffError(undefined);
+			setStaffMessage(undefined);
+
 			setAssignStaffError(undefined);
 			setAssignStaffMessage(undefined);
+
 			setRemoveStaffError(undefined);
 			setRemoveStaffMessage(undefined);
 		}, 3000);
 
 		return () => clearTimeout(timer);
-	}, [assignStaffError, assignStaffMessage, removeStaffError, removeStaffMessage]);
+	}, [
+		assignStaffError,
+		assignStaffMessage,
+		removeStaffError,
+		removeStaffMessage,
+		staffError,
+		staffMessage,
+	]);
 
 	const fetchStaff = useCallback(
 		async (merchantId: string) => {

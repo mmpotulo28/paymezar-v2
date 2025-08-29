@@ -38,11 +38,14 @@ export function useLiskTransactions({ apiKey }: { apiKey?: string }): iUseLiskTr
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			setTransactionsError(undefined);
+			setTransactionsMessage(undefined);
+
 			setTransactionError(undefined);
+			setTransactionMessage(undefined);
 		}, 3000);
 
 		return () => clearTimeout(timer);
-	}, [transactionsError, transactionError]);
+	}, [transactionsError, transactionError, transactionsMessage, transactionMessage]);
 
 	const fetchTransactions = useCallback(
 		async (userId: string) => {

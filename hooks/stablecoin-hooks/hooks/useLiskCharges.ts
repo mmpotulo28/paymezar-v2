@@ -136,11 +136,44 @@ export function useLiskCharges({ apiKey, user }: { apiKey?: string; user: any })
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			setChargesError(undefined);
-			setCharge(undefined);
+			setChargesMessage(undefined);
+
+			setGetChargeError(undefined);
+			setGetChargeMessage(undefined);
+
+			setCreateChargeError(undefined);
+			setCreateChargeMessage(undefined);
+
+			setUpdateChargeError(undefined);
+			setUpdateChargeMessage(undefined);
+
+			setDeleteChargeError(undefined);
+			setDeleteChargeMessage(undefined);
+
+			setCompleteChargeError(undefined);
+			setCompleteChargeMessage(undefined);
 		}, 3000);
 
 		return () => clearTimeout(timer);
-	}, [chargesError, charge]);
+	}, [
+		chargesError,
+		chargesMessage,
+
+		getChargeError,
+		getChargeMessage,
+
+		createChargeError,
+		createChargeMessage,
+
+		updateChargeError,
+		updateChargeMessage,
+
+		deleteChargeError,
+		deleteChargeMessage,
+
+		completeChargeError,
+		completeChargeMessage,
+	]);
 
 	// Create a new charge
 	const createCharge = async ({

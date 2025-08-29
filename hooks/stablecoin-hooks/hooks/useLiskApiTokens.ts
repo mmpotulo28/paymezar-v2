@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { iApiToken, iApiTokenCreateResponse, iApiTokenRevokeResponse } from "../types";
 import { useCache } from "../hooks/useCache";
@@ -75,6 +75,40 @@ export function useLiskApiTokens({ apiKey }: { apiKey?: string }): iUseLiskApiTo
 	const [revokeTokenLoading, setRevokeTokenLoading] = useState(false);
 	const [revokeTokenError, setRevokeTokenError] = useState<string | undefined>(undefined);
 	const [revokeTokenMessage, setRevokeTokenMessage] = useState<string | undefined>(undefined);
+
+	// clear all errors and message after 3 seconds
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setApiTokenError(undefined);
+			setApiTokenMessage(undefined);
+
+			setCreateTokenError(undefined);
+			setCreateTokenMessage(undefined);
+
+			setCreatedToken(undefined);
+			setUpdateTokenError(undefined);
+
+			setUpdateTokenMessage(undefined);
+			setUpdateTokenMessage(undefined);
+
+			setRevokeTokenError(undefined);
+			setRevokeTokenMessage(undefined);
+		}, 3000);
+
+		return () => clearTimeout(timer);
+	}, [
+		apiTokenError,
+		apiTokenMessage,
+
+		createTokenError,
+		createTokenMessage,
+
+		updateTokenError,
+		updateTokenMessage,
+
+		revokeTokenError,
+		revokeTokenMessage,
+	]);
 
 	const fetchTokens = useCallback(async () => {
 		const cacheKey = "api_tokens";

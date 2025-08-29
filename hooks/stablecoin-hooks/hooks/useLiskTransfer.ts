@@ -52,18 +52,31 @@ export function useLiskTransfer({ apiKey }: { apiKey?: string }): iUseLiskTransf
 	const [transferError, setTransferError] = useState<string | undefined>(undefined);
 
 	const [batchTransferLoading, setBatchTransferLoading] = useState(false);
-	const [batchTransferMessage, setBatchTransferMessage] = useState<string | undefined>(undefined);
 	const [batchTransferError, setBatchTransferError] = useState<string | undefined>(undefined);
+	const [batchTransferMessage, setBatchTransferMessage] = useState<string | undefined>(undefined);
 
 	// reset all messages and errors after 3 seconds
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			setRecipientError(undefined);
-			setRecipient(undefined);
+			setRecipientMessage(undefined);
+
+			setTransferError(undefined);
+			setTransferMessage(undefined);
+
+			setBatchTransferError(undefined);
+			setBatchTransferMessage(undefined);
 		}, 3000);
 
 		return () => clearTimeout(timer);
-	}, [recipientError]);
+	}, [
+		recipientError,
+		recipientMessage,
+		transferError,
+		transferMessage,
+		batchTransferError,
+		batchTransferMessage,
+	]);
 
 	// Fetch recipient details by payment identifier or email
 	const fetchRecipient = useCallback(

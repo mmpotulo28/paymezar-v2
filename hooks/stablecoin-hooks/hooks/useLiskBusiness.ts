@@ -14,10 +14,11 @@ export interface iUseBusiness {
 	float: iUserTokenBalance[];
 	loadingFloat: boolean;
 	floatError: string | undefined;
+	floatMessage: string | undefined;
 	fetchFloat: () => Promise<iUserTokenBalance[]>;
 
 	gasLoading: boolean;
-	gasSuccess: string | undefined;
+	gasMessage: string | undefined;
 	gasError: string | undefined;
 	enableBusinessGas: () => Promise<void>;
 	enableUserGas: (userId: string) => Promise<void>;
@@ -28,7 +29,7 @@ export interface iUseBusiness {
 		transactionNotes: string;
 	};
 	mintLoading: boolean;
-	mintSuccess: string | undefined;
+	mintMessage: string | undefined;
 	mintError: string | undefined;
 	setMintForm: React.Dispatch<
 		React.SetStateAction<{
@@ -42,10 +43,11 @@ export interface iUseBusiness {
 	pendingTx: iPendingTx[];
 	pendingLoading: boolean;
 	pendingError: string | undefined;
+	pendingMessage: string | undefined;
 	fetchPendingTx: () => Promise<iPendingTxResponse>;
 
 	userGasLoading: boolean;
-	userGasSuccess: string | undefined;
+	userGasMessage: string | undefined;
 	userGasError: string | undefined;
 }
 
@@ -64,13 +66,13 @@ export interface iUseBusiness {
  *   - loadingFloat: Loading state for float balances
  *   - floatError: Error message for float balance fetch
  *   - fetchFloat: Function to fetch float balances
- *   - gasLoading, gasSuccess, gasError: States for enabling business gas
+ *   - gasLoading, gasMessage, gasError: States for enabling business gas
  *   - enableBusinessGas: Function to enable business gas
- *   - userGasLoading, userGasSuccess, userGasError: States for enabling user gas
+ *   - userGasLoading, userGasMessage, userGasError: States for enabling user gas
  *   - enableUserGas: Function to enable gas for a specific user
  *   - mintForm: Form state for minting stablecoins
  *   - setMintForm: Setter for mintForm
- *   - mintLoading, mintSuccess, mintError: States for minting stablecoins
+ *   - mintLoading, mintMessage, mintError: States for minting stablecoins
  *   - mintStableCoins: Function to mint stablecoins
  *   - pendingTx: Array of pending transactions
  *   - pendingLoading, pendingError: States for fetching pending transactions
@@ -81,13 +83,15 @@ export interface iUseBusiness {
  * It handles API communication, caching, and state management for common business operations.
  */
 export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
+	const { getCache, setCache } = useCache();
+
 	const [float, setFloat] = useState<iUserTokenBalance[]>([]);
 	const [loadingFloat, setLoadingFloat] = useState(false);
 	const [floatError, setFloatError] = useState<string | undefined>(undefined);
-	const { getCache, setCache } = useCache();
+	const [floatMessage, setFloatMessage] = useState<string | undefined>(undefined);
 
 	const [gasLoading, setGasLoading] = useState(false);
-	const [gasSuccess, setGasSuccess] = useState<string | undefined>(undefined);
+	const [gasMessage, setGasMessage] = useState<string | undefined>(undefined);
 	const [gasError, setGasError] = useState<string | undefined>(undefined);
 
 	const [mintForm, setMintForm] = useState({
@@ -96,16 +100,47 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 		transactionNotes: "",
 	});
 	const [mintLoading, setMintLoading] = useState(false);
-	const [mintSuccess, setMintSuccess] = useState<string | undefined>(undefined);
+	const [mintMessage, setMintMessage] = useState<string | undefined>(undefined);
 	const [mintError, setMintError] = useState<string | undefined>(undefined);
 
 	const [pendingTx, setPendingTx] = useState<iPendingTx[]>([]);
 	const [pendingLoading, setPendingLoading] = useState(false);
 	const [pendingError, setPendingError] = useState<string | undefined>(undefined);
+	const [pendingMessage, setPendingMessage] = useState<string | undefined>(undefined);
 
 	const [userGasLoading, setUserGasLoading] = useState(false);
-	const [userGasSuccess, setUserGasSuccess] = useState<string | undefined>(undefined);
+	const [userGasMessage, setUserGasMessage] = useState<string | undefined>(undefined);
 	const [userGasError, setUserGasError] = useState<string | undefined>(undefined);
+
+	// clear all errors and message after 3 seconds
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setUserGasError(undefined);
+			setUserGasMessage(undefined);
+
+			setFloatError(undefined);
+			setFloatMessage(undefined);
+
+			setGasError(undefined);
+			setGasMessage(undefined);
+
+			setMintError(undefined);
+			setMintMessage(undefined);
+
+			setPendingError(undefined);
+			setPendingMessage(undefined);
+		}, 3000);
+
+		return () => clearTimeout(timer);
+	}, [
+		userGasError,
+		userGasMessage,
+		gasError,
+		mintError,
+		mintMessage,
+		pendingError,
+		pendingMessage,
+	]);
 
 	// Fetch float balances
 	const fetchFloat = useCallback(async () => {
@@ -127,6 +162,7 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 			});
 			setFloat(data.tokens || []);
 			setCache(cacheKey, data.tokens || []);
+			setFloatMessage("Fetched token balances successfully.");
 			return data.tokens || [];
 		} catch (err: any) {
 			setFloatError("Failed to fetch token balances.");
@@ -141,7 +177,7 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 	// Enable gas
 	const enableBusinessGas = useCallback(async () => {
 		setGasLoading(true);
-		setGasSuccess(undefined);
+		setGasMessage(undefined);
 		setGasError(undefined);
 		try {
 			const { data } = await axios.post(
@@ -149,7 +185,7 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 				{},
 				{ headers: { Authorization: apiKey } },
 			);
-			setGasSuccess("Gas allocation successful.");
+			setGasMessage("Gas allocation successful.");
 			return data;
 		} catch (err: any) {
 			setGasError("Failed to enable gas.");
@@ -163,7 +199,7 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 	const enableUserGas = useCallback(
 		async (userId: string) => {
 			setUserGasLoading(true);
-			setUserGasSuccess(undefined);
+			setUserGasMessage(undefined);
 			setUserGasError(undefined);
 			try {
 				await axios.post(
@@ -171,7 +207,7 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 					{},
 					{ headers: { Authorization: apiKey } },
 				);
-				setUserGasSuccess("Gas payment activated successfully for user.");
+				setUserGasMessage("Gas payment activated successfully for user.");
 			} catch (err: any) {
 				setUserGasError("Failed to activate gas payment for user.");
 				console.error("Failed to activate gas payment for user:", err);
@@ -185,7 +221,7 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 	// Mint stableCoins
 	const mintStableCoins = useCallback(async () => {
 		setMintLoading(true);
-		setMintSuccess(undefined);
+		setMintMessage(undefined);
 		setMintError(undefined);
 		try {
 			const { data } = await axios.post<iMintStableCoinsResponse>(
@@ -202,7 +238,7 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 					},
 				},
 			);
-			setMintSuccess(data.message || "Mint operation successful.");
+			setMintMessage(data.message || "Mint operation successful.");
 			setMintForm({ transactionAmount: "", transactionRecipient: "", transactionNotes: "" });
 			fetchFloat();
 			return data;
@@ -243,6 +279,7 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 				);
 				setPendingTx(data.transactions);
 				setCache(cacheKey, data);
+				setPendingMessage("Fetched pending transactions successfully.");
 				return data;
 			} catch (err: any) {
 				setPendingError("Failed to fetch pending transactions.");
@@ -266,20 +303,21 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 		loadingFloat,
 		floatError,
 		fetchFloat,
+		floatMessage,
 
 		gasLoading,
-		gasSuccess,
+		gasMessage,
 		gasError,
 		enableBusinessGas,
 		userGasLoading,
-		userGasSuccess,
+		userGasMessage,
 		userGasError,
 		enableUserGas,
 
 		mintForm,
 		setMintForm,
 		mintLoading,
-		mintSuccess,
+		mintMessage,
 		mintError,
 		mintStableCoins,
 
@@ -287,5 +325,6 @@ export function useLiskBusiness({ apiKey }: { apiKey?: string }): iUseBusiness {
 		pendingLoading,
 		pendingError,
 		fetchPendingTx,
+		pendingMessage,
 	};
 }

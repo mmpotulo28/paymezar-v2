@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { iCoupon, iCouponCreateRequest, iCouponUpdateRequest, iCouponResponse } from "../types";
 import { useCache } from "../hooks/useCache";
@@ -64,6 +64,36 @@ export function useLiskCoupons({ apiKey }: { apiKey?: string }): iUseLiskCoupons
 	const [deleteCouponLoading, setDeleteCouponLoading] = useState(false);
 	const [deleteCouponError, setDeleteCouponError] = useState<string | undefined>(undefined);
 	const [deleteCouponMessage, setDeleteCouponMessage] = useState<string | undefined>(undefined);
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setCouponsError(undefined);
+
+			setCreateCouponError(undefined);
+			setCreateCouponMessage(undefined);
+
+			setClaimCouponError(undefined);
+			setClaimCouponMessage(undefined);
+
+			setUpdateCouponError(undefined);
+			setUpdateCouponMessage(undefined);
+
+			setDeleteCouponError(undefined);
+			setDeleteCouponMessage(undefined);
+		}, 3000);
+
+		return () => clearTimeout(timer);
+	}, [
+		couponsError,
+		createCouponError,
+		createCouponMessage,
+		claimCouponError,
+		claimCouponMessage,
+		updateCouponError,
+		updateCouponMessage,
+		deleteCouponError,
+		deleteCouponMessage,
+	]);
 
 	// Get all coupons
 	const fetchCoupons = useCallback(async () => {

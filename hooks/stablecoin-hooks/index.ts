@@ -9,5 +9,4 @@ export * from "./hooks/useLiskTransfer";
 export * from "./hooks/useLiskUsers";
 export * from "./hooks/useCache";
 export * from "./hooks/useLiskApiTokens";
-export * from "./hooks/useLiskStaff";
 export * from "./types";

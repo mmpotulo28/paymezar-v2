@@ -2,16 +2,16 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { iUser } from "../types"; // changed from "@/types"
-import { useCache } from "../hooks/useCache";
+import { useCache } from "./useCache";
 
 // Use environment variables
 const API_BASE = process.env.NEXT_PUBLIC_LISK_API_BASE as string;
 
 export interface iUseLiskUsers {
 	users: iUser[];
-	fetchUsersLoading: boolean;
-	fetchUsersError: string | undefined;
-	fetchUsersMessage: string | undefined;
+	usersLoading: boolean;
+	usersError: string | undefined;
+	usersMessage: string | undefined;
 	fetchUsers: () => Promise<iUser[]>;
 
 	getUser: ({ id }: { id: string }) => Promise<iUser | null>;
@@ -40,11 +40,11 @@ export interface iUseLiskUsers {
 export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => {
 	const { getCache, setCache } = useCache();
 
+	// users states
 	const [users, setUsers] = useState<iUser[]>([]);
-	// fetchUsers states
-	const [fetchUsersLoading, setFetchUsersLoading] = useState(false);
-	const [fetchUsersError, setFetchUsersError] = useState<string | undefined>(undefined);
-	const [fetchUsersMessage, setFetchUsersMessage] = useState<string | undefined>(undefined);
+	const [usersLoading, setUsersLoading] = useState(false);
+	const [usersError, setUsersError] = useState<string | undefined>(undefined);
+	const [usersMessage, setUsersMessage] = useState<string | undefined>(undefined);
 
 	// getUser states
 	const [getUserLoading, setGetUserLoading] = useState(false);
@@ -71,44 +71,52 @@ export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => 
 	// reset all messages and errors after 3 seconds
 	useEffect(() => {
 		const timer = setTimeout(() => {
-			setFetchUsersError(undefined);
-			setFetchUsersMessage(undefined);
+			setUsersError(undefined);
+			setUsersMessage(undefined);
+
 			setGetUserError(undefined);
 			setGetUserMessage(undefined);
+
 			setCreateUserError(undefined);
 			setCreateUserMessage(undefined);
+
 			setUpdateUserError(undefined);
 			setUpdateUserMessage(undefined);
+
 			setDeleteUserError(undefined);
 			setDeleteUserMessage(undefined);
 		}, 3000);
 
 		return () => clearTimeout(timer);
 	}, [
-		fetchUsersError,
-		fetchUsersMessage,
+		usersError,
+		usersMessage,
+
 		getUserError,
 		getUserMessage,
+
 		createUserError,
 		createUserMessage,
+
 		updateUserError,
 		updateUserMessage,
+
 		deleteUserError,
 		deleteUserMessage,
 	]);
 
 	const fetchUsers = useCallback(async () => {
-		setFetchUsersLoading(true);
-		setFetchUsersError(undefined);
-		setFetchUsersMessage(undefined);
+		setUsersLoading(true);
+		setUsersError(undefined);
+		setUsersMessage(undefined);
 		const cacheKey = "users_list";
 
 		try {
 			const cached = getCache(cacheKey);
 			if (cached) {
 				setUsers(cached);
-				setFetchUsersLoading(false);
-				setFetchUsersMessage("Fetched users from cache.");
+				setUsersLoading(false);
+				setUsersMessage("Fetched users from cache.");
 				return cached;
 			}
 
@@ -117,12 +125,12 @@ export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => 
 			});
 			setUsers(data.users || []);
 			setCache(cacheKey, data.users || []);
-			setFetchUsersMessage("Fetched users successfully.");
+			setUsersMessage("Fetched users successfully.");
 			return data.users || [];
 		} catch (err: any) {
-			setFetchUsersError(err?.response?.data?.message || "Failed to fetch users");
+			setUsersError(err?.response?.data?.message || "Failed to fetch users");
 		} finally {
-			setFetchUsersLoading(false);
+			setUsersLoading(false);
 		}
 
 		return [];
@@ -256,9 +264,9 @@ export const useLiskUsers = ({ apiKey }: { apiKey?: string }): iUseLiskUsers => 
 
 	return {
 		users,
-		fetchUsersLoading,
-		fetchUsersError,
-		fetchUsersMessage,
+		usersLoading,
+		usersError,
+		usersMessage,
 		fetchUsers,
 
 		getUser,

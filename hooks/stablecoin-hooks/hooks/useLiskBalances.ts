@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { iUserTokenBalance } from "../types"; // changed from "@/types"
 import { useCache } from "../hooks/useCache";
@@ -33,6 +33,16 @@ export function useLiskBalances({ apiKey }: { apiKey?: string }): iUseLiskBalanc
 	const [balancesLoading, setBalancesLoading] = useState(false);
 	const [balancesError, setBalancesError] = useState<string | undefined>(undefined);
 	const [balancesMessage, setBalancesMessage] = useState<string | undefined>(undefined);
+
+	// clear all messages after 3 seconds
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setBalancesError(undefined);
+			setBalancesMessage(undefined);
+		}, 3000);
+
+		return () => clearTimeout(timer);
+	}, [balancesError, balancesMessage]);
 
 	const fetchBalances = useCallback(
 		async (userId: string) => {

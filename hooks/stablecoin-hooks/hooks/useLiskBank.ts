@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import {
 	iBankAccount,
@@ -94,6 +94,22 @@ export function useLiskBank({ apiKey, user }: { apiKey?: string; user: any }): i
 	const [depositLoading, setDepositLoading] = useState(false);
 	const [depositMessage, setDepositMessage] = useState<string | null>(null);
 	const [depositError, setDepositError] = useState<string | null>(null);
+
+	// clear all messages after 3 seconds
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setBankError(undefined);
+			setBankMessage(undefined);
+
+			setWithdrawError(null);
+			setWithdrawMessage(null);
+
+			setDepositError(null);
+			setDepositMessage(null);
+		}, 3000);
+
+		return () => clearTimeout(timer);
+	}, [bankError, bankMessage, withdrawError, withdrawMessage, depositError, depositMessage]);
 
 	const upsertBankAccount = useCallback(
 		async ({
