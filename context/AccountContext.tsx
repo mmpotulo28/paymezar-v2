@@ -4,15 +4,15 @@ import { useOrganization, useUser } from "@clerk/nextjs";
 import {
 	iUseLiskTransactions,
 	useLiskTransactions,
-} from "@/hooks/stablecoin-hooks/hooks/useLiskTransactions";
-import { iUseLiskBank, useLiskBank } from "@/hooks/stablecoin-hooks/hooks/useLiskBank";
-import { iUseLiskCharges, useLiskCharges } from "@/hooks/stablecoin-hooks/hooks/useLiskCharges";
+} from "hooks/stablecoin-hooks/hooks/useLiskTransactions";
+import { iUseLiskBank, useLiskBank } from "hooks/stablecoin-hooks/hooks/useLiskBank";
+import { iUseLiskCharges, useLiskCharges } from "hooks/stablecoin-hooks/hooks/useLiskCharges";
 import useSubscriptions, { iUseSubscriptions } from "@/hooks/useSubscriptions";
-import { iUseLiskBalances, useLiskBalances } from "@/hooks/stablecoin-hooks/hooks/useLiskBalances";
-import { iUseBusiness, useLiskBusiness } from "@/hooks/stablecoin-hooks/hooks/useLiskBusiness";
-import { iUseLiskStaff, useLiskStaff } from "@/hooks/stablecoin-hooks/hooks/useLiskStaff";
-import { iUseLiskTransfer, useLiskTransfer } from "@/hooks/stablecoin-hooks/hooks/useLiskTransfer";
-import { iUseLiskUsers, useLiskUsers } from "@/hooks/stablecoin-hooks/hooks/useLiskUsers";
+import { iUseLiskBalances, useLiskBalances } from "hooks/stablecoin-hooks/hooks/useLiskBalances";
+import { iUseBusiness, useLiskBusiness } from "hooks/stablecoin-hooks/hooks/useLiskBusiness";
+import { iUseLiskStaff, useLiskStaff } from "hooks/stablecoin-hooks/hooks/useLiskStaff";
+import { iUseLiskTransfer, useLiskTransfer } from "hooks/stablecoin-hooks/hooks/useLiskTransfer";
+import { iUseLiskUsers, useLiskUsers } from "hooks/stablecoin-hooks/hooks/useLiskUsers";
 
 interface AccountContextProps
 	extends iUseLiskBalances,
