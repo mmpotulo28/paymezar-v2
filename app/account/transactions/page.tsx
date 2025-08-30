@@ -76,8 +76,8 @@ export default function AccountTransactionsPage() {
 						{transactionsLoading ? "Refreshing..." : "Refresh"}
 					</Button>
 				</CardHeader>
-				<CardBody className="flex flex-col gap-4">
-					<div className="flex flex-col sm:flex-row gap-4">
+				<CardBody className="flex flex-col gap-4 ">
+					<div className="flex flex-col sm:flex-row gap-4 flex-wrap">
 						<Input
 							className="flex-1 max-w-xs"
 							placeholder="Search by ID, user, or external ref..."
@@ -97,7 +97,7 @@ export default function AccountTransactionsPage() {
 							<Tab key="Pending" title="Pending" />
 						</Tabs>
 
-						<div className="flex gap-2 justify-end">
+						<div className="flex gap-2 justify-start">
 							<Button
 								color="primary"
 								size="sm"
