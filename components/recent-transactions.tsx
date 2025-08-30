@@ -2,16 +2,22 @@
 import { Card, CardHeader, CardBody, Chip, Button } from "@heroui/react";
 import { Link } from "@heroui/react";
 import { useAccount } from "@/context/AccountContext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 
 export interface RecentTransactionsProps {
 	className?: string;
 }
 
 export function RecentTransactions({ className = "" }: RecentTransactionsProps) {
-	const { transactions } = useAccount();
+	const { transactions, fetchTransactions } = useAccount();
+	const { user } = useUser();
 	const PAGE_SIZE = 3;
 	const [page, setPage] = useState(1);
+
+	useEffect(() => {
+		fetchTransactions(user?.id || "");
+	}, [fetchTransactions, user?.id]);
 
 	const totalPages = Math.ceil(transactions.length / PAGE_SIZE);
 	const paginatedTxs = transactions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);

@@ -13,7 +13,7 @@ import { RefreshCcw } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useAccount } from "@/context/AccountContext";
 import { iCharge } from "@/types";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 export function ChargesList({ className = "" }: { className?: string }) {
 	const {
@@ -32,6 +32,10 @@ export function ChargesList({ className = "" }: { className?: string }) {
 	const [filter, setFilter] = useState<"all" | "pending" | "complete">("all");
 	const [page, setPage] = useState(1);
 	const PAGE_SIZE = 5;
+
+	useEffect(() => {
+		fetchCharges(user?.id || "");
+	}, [fetchCharges, user?.id]);
 
 	// Filter, sort, and paginate charges
 	const filteredSortedCharges = useMemo(() => {
@@ -103,7 +107,7 @@ export function ChargesList({ className = "" }: { className?: string }) {
 					size="sm"
 					startContent={<RefreshCcw size={16} />}
 					variant="flat"
-					onPress={() => fetchCharges(user?.id || "")}>
+					onPress={() => fetchCharges(user?.id || "", true)}>
 					Refresh
 				</Button>
 			</CardHeader>

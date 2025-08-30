@@ -3,7 +3,7 @@ import { Card, CardHeader, CardBody, Button, Chip } from "@heroui/react";
 import { Tabs, Tab } from "@heroui/tabs";
 import { Input } from "@heroui/input";
 import { useState } from "react";
-import { RefreshCcw } from "lucide-react";
+import { Download, FileText, RefreshCcw } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { useAccount } from "@/context/AccountContext";
@@ -46,9 +46,19 @@ export default function AccountTransactionsPage() {
 		setPage(newPage);
 	};
 
+	const handleExportTransactions = () => {
+		// Simulate export
+		alert("Transactions exported!");
+	};
+
+	const handleDownloadStatement = () => {
+		// Simulate download
+		alert("Statement downloaded!");
+	};
+
 	return (
 		<section className="flex flex-col items-center min-h-[70vh] py-8 gap-8 w-full">
-			<Card className="w-full max-w-2xl">
+			<Card className="w-full max-w-4xl">
 				<CardHeader className="text-xl font-bold flex items-center justify-between">
 					<span>Manage Transactions</span>
 					<Button
@@ -62,14 +72,14 @@ export default function AccountTransactionsPage() {
 						}
 						type="button"
 						variant="flat"
-						onPress={() => fetchTransactions(user?.id || "")}>
+						onPress={() => fetchTransactions(user?.id || "", true)}>
 						{transactionsLoading ? "Refreshing..." : "Refresh"}
 					</Button>
 				</CardHeader>
 				<CardBody className="flex flex-col gap-4">
 					<div className="flex flex-col sm:flex-row gap-4">
 						<Input
-							className="flex-1"
+							className="flex-1 max-w-xs"
 							placeholder="Search by ID, user, or external ref..."
 							size="sm"
 							value={search}
@@ -86,7 +96,28 @@ export default function AccountTransactionsPage() {
 							<Tab key="Completed" title="Completed" />
 							<Tab key="Pending" title="Pending" />
 						</Tabs>
+
+						<div className="flex gap-2 justify-end">
+							<Button
+								color="primary"
+								size="sm"
+								startContent={<FileText size={16} />}
+								variant="flat"
+								onPress={handleExportTransactions}>
+								Export
+							</Button>
+							<Button
+								color="secondary"
+								size="sm"
+								startContent={<Download size={16} />}
+								variant="flat"
+								onPress={handleDownloadStatement}>
+								Download
+							</Button>
+						</div>
 					</div>
+
+					<div className="flex flex-col gap-4 w-full"></div>
 					{transactionsLoading && (
 						<div className="text-default-400 text-center py-4">Loading...</div>
 					)}
@@ -99,6 +130,7 @@ export default function AccountTransactionsPage() {
 								No transactions found.
 							</div>
 						)}
+
 						<AnimatePresence mode="wait">
 							<motion.div
 								key={page}

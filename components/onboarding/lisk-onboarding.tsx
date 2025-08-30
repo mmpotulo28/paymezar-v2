@@ -5,8 +5,10 @@ import { Button } from "@heroui/button";
 import { AlertCircleIcon, CheckCircle2, Rocket } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useLiskUsers } from "@/stablecoin-hooks/hooks/useLiskUsers";
 import { iUser } from "@/types";
+import { useLiskUsers } from "@mmpotulo/stablecoin-hooks";
+
+const apiKey = process.env.NEXT_PUBLIC_LISK_API_KEY;
 
 export function LiskOnboarding() {
 	const { user } = useUser();
@@ -15,7 +17,7 @@ export function LiskOnboarding() {
 	const [error, setError] = useState<string | null>(null);
 	const [success, setSuccess] = useState(false);
 	const [autoCreateCountdown, setAutoCreateCountdown] = useState(10);
-	const { createUser, getUser, singleUser, errorUsers } = useLiskUsers();
+	const { createUser, getUser, singleUser, usersError } = useLiskUsers({ apiKey });
 
 	const handleCreateLiskAccount = useCallback(async () => {
 		const isMissingUserInfo =
@@ -60,12 +62,20 @@ export function LiskOnboarding() {
 			console.log("Creating new Lisk user...");
 			await createUser({
 				id: user.id,
-				email: user.primaryEmailAddress?.emailAddress,
+				email: user.primaryEmailAddress?.emailAddress || "",
 				firstName: user.firstName,
 				lastName: user.lastName,
+				imageUrl: user.imageUrl || "",
+				enabledPay: false,
+				role: "user",
+				publicKey: "",
+				paymentIdentifier: "",
+				businessId: "", // Add a default or actual businessId value here
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
 			});
 
-			if (!errorUsers && singleUser) {
+			if (!usersError && singleUser) {
 				// Update Clerk user metadata with Lisk account info
 				await user.update({
 					unsafeMetadata: {
@@ -80,7 +90,7 @@ export function LiskOnboarding() {
 					router.refresh(); // Refresh to update user metadata
 				}, 2000);
 			} else {
-				setError(errorUsers || "Failed to create Lisk account");
+				setError(usersError || "Failed to create Lisk account");
 			}
 		} catch (err: any) {
 			console.error("Lisk account creation error:", err);
@@ -88,7 +98,7 @@ export function LiskOnboarding() {
 		} finally {
 			setLoading(false);
 		}
-	}, [createUser, errorUsers, getUser, router, singleUser, user]);
+	}, [createUser, usersError, getUser, router, singleUser, user]);
 
 	// Auto-create Lisk account after 10 seconds if not clicked
 	useEffect(() => {

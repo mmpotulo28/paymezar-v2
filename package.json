@@ -23,6 +23,7 @@
     "@heroui/switch": "2.2.22",
     "@heroui/system": "2.4.20",
     "@heroui/theme": "2.4.20",
+    "@mmpotulo/stablecoin-hooks": "^1.1.5",
     "@newrelic/browser-agent": "^1.295.0",
     "@react-aria/ssr": "3.9.10",
     "@react-aria/visually-hidden": "3.8.26",

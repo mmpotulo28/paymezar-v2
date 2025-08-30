@@ -11,7 +11,7 @@ import {
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Plus, Banknote, DeleteIcon, RefreshCcw } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 
 import { BANKS } from "@/lib/banks";
@@ -42,8 +42,13 @@ export function BankAccounts() {
 		bank: "",
 	});
 
+	// fetch on mount
+	useEffect(() => {
+		getBankAccount(user?.id || "");
+	}, [getBankAccount, user?.id]);
+
 	const handleRefresh = useCallback(async () => {
-		await getBankAccount(user?.id || "");
+		await getBankAccount(user?.id || "", true);
 	}, [getBankAccount, user]);
 
 	const handleChange = useCallback(

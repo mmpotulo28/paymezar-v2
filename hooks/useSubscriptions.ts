@@ -1,8 +1,8 @@
 import { PLAN_DETAILS } from "@/lib/constants";
 import { iSubscription } from "@/types";
+import { useCache } from "@mmpotulo/stablecoin-hooks";
 import axios from "axios";
 import { useState, useCallback, useEffect } from "react";
-import { useCache } from "./stablecoin-hooks/hooks/useCache";
 export interface iUseSubscriptions {
 	subscriptions: iSubscription[];
 	subscriptionLoading: boolean;

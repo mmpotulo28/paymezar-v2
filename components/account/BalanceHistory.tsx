@@ -10,10 +10,18 @@ import {
 	Legend,
 } from "recharts";
 import { useAccount } from "@/context/AccountContext";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useUser } from "@clerk/nextjs";
 
 export function BalanceHistory() {
-	const { transactions, charges } = useAccount();
+	const { transactions, charges, fetchTransactions, fetchCharges } = useAccount();
+	const { user } = useUser();
+
+	// fetch on mount
+	useEffect(() => {
+		fetchTransactions(user?.id || "");
+		fetchCharges(user?.id || "");
+	}, [fetchTransactions, fetchCharges, user?.id]);
 
 	// Transactions history trend: count per day
 	const transactionsHistory = useMemo(() => {

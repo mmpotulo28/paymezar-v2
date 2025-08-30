@@ -8,8 +8,10 @@ import Head from "next/head";
 import UnAuthorizedContent from "@/components/UnAuthorizedContent";
 import { siteConfig } from "@/config/site";
 import axios from "axios";
+import { useAccount } from "@/context/AccountContext";
 
 export default function ProfilePage() {
+	const { updateUser, updateUserError, updateUserLoading, updateUserMessage } = useAccount();
 	const { user } = useUser();
 	const [form, setForm] = useState({
 		firstName: user?.firstName || "",
@@ -18,9 +20,8 @@ export default function ProfilePage() {
 		phone: user?.primaryPhoneNumber?.phoneNumber || "",
 		imageUrl: user?.imageUrl || "",
 	});
-	const [loading, setLoading] = useState(false);
-	const [success, setSuccess] = useState<string | null>(null);
-	const [error, setError] = useState<string | null>(null);
+	const [imageSuccess, setImageSuccess] = useState<string | null>(null);
+	const [imageError, setImageError] = useState<string | null>(null);
 	const [imageUploading, setImageUploading] = useState(false);
 
 	useEffect(() => {
@@ -44,8 +45,8 @@ export default function ProfilePage() {
 
 		if (!file || !user?.id) return;
 		setImageUploading(true);
-		setError(null);
-		setSuccess(null);
+		setImageError(null);
+		setImageSuccess(null);
 		try {
 			const formData = new FormData();
 
@@ -57,9 +58,9 @@ export default function ProfilePage() {
 			if (result.status !== 200 && result.status !== 201)
 				throw new Error(result.data?.message || "Failed to upload image");
 			setForm((f) => ({ ...f, imageUrl: result.data.url }));
-			setSuccess("Profile image uploaded!");
+			setImageSuccess("Profile image uploaded!");
 		} catch (err: any) {
-			setError("Failed to upload image.");
+			setImageError("Failed to upload image.");
 			console.error(err);
 		}
 		setImageUploading(false);
@@ -67,38 +68,18 @@ export default function ProfilePage() {
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setLoading(true);
-		setError(null);
-		setSuccess(null);
+		setImageError(null);
+		setImageSuccess(null);
 
-		try {
-			if (!user?.id) throw new Error("User not found.");
+		if (!user) return;
 
-			const result = await axios.put(
-				"/api/account/update-profile",
-				{
-					id: user.id,
-					liskId: user.id,
-					email: form.email,
-					firstName: form.firstName,
-					lastName: form.lastName,
-					imageUrl: form.imageUrl,
-					phone: form.phone,
-				},
-				{ headers: { "Content-Type": "application/json" } },
-			);
-
-			if (result.status !== 200 && result.status !== 201) {
-				throw new Error(result.data?.message || "Failed to update profile.");
-			}
-
-			setSuccess("Profile updated successfully!");
-			console.log("Profile update result:", result.data);
-			// await refreshUser();
-		} catch (err: any) {
-			setError(err.message || "Failed to update profile.");
-		}
-		setLoading(false);
+		await updateUser(user.id, {
+			id: user.id,
+			email: form.email,
+			firstName: form.firstName,
+			lastName: form.lastName,
+			imageUrl: form.imageUrl,
+		});
 	};
 
 	return (
@@ -175,26 +156,52 @@ export default function ProfilePage() {
 								<Button
 									className="w-full mt-2"
 									color="primary"
-									isLoading={loading}
+									isLoading={imageUploading || updateUserLoading}
 									radius="full"
 									startContent={<User size={18} />}
 									type="submit">
 									Update Profile
 								</Button>
-								{error && (
+								{imageError && (
 									<Chip
 										className="w-full justify-center"
 										color="danger"
 										variant="flat">
-										{error}
+										{imageError}
 									</Chip>
 								)}
-								{success && (
+								{imageError && (
+									<Chip
+										className="w-full justify-center"
+										color="danger"
+										variant="flat">
+										{imageError}
+									</Chip>
+								)}
+								{imageSuccess && (
 									<Chip
 										className="w-full justify-center"
 										color="success"
 										variant="flat">
-										{success}
+										{imageSuccess}
+									</Chip>
+								)}
+
+								{updateUserError && (
+									<Chip
+										className="w-full justify-center"
+										color="danger"
+										variant="flat">
+										{updateUserError}
+									</Chip>
+								)}
+
+								{updateUserMessage && (
+									<Chip
+										className="w-full justify-center"
+										color="success"
+										variant="flat">
+										{updateUserMessage}
 									</Chip>
 								)}
 							</form>

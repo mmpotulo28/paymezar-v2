@@ -5,13 +5,19 @@ import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 
 import { useAccount } from "@/context/AccountContext";
+import { useEffect } from "react";
 
 export function AccountOverview() {
 	const { user } = useUser();
 	const { balances, balancesLoading, balancesError, fetchBalances } = useAccount();
 
+	// fetch on mount
+	useEffect(() => {
+		fetchBalances(user?.id || "");
+	}, [fetchBalances, user?.id]);
+
 	const handleRefresh = async () => {
-		await fetchBalances(user?.id || "");
+		await fetchBalances(user?.id || "", true);
 	};
 
 	return (

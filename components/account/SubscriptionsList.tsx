@@ -16,7 +16,7 @@ import {
 import { RefreshCcw } from "lucide-react";
 import { useAccount } from "@/context/AccountContext";
 import { useUser } from "@clerk/nextjs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChangePlanModal } from "./ChangePlanModal";
 import { iSubscription } from "@/types";
 
@@ -36,6 +36,11 @@ export function SubscriptionsList() {
 	const [selectedSub, setSelectedSub] = useState<iSubscription | null>(null);
 	const [showModal, setShowModal] = useState(false);
 	const [cancelConfirmModal, setCancelConfirmModal] = useState(false);
+
+	// fetch on mount
+	useEffect(() => {
+		fetchSubscriptions(user?.id || "");
+	}, [fetchSubscriptions, user?.id]);
 
 	const handleCancel = async (sub: iSubscription) => {
 		setCancelingId(sub.id);

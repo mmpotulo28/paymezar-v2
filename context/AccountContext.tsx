@@ -1,18 +1,25 @@
 "use client";
-import React, { createContext, useContext, useEffect, ReactNode, useState } from "react";
-import { useOrganization, useUser } from "@clerk/nextjs";
+import React, { createContext, useContext, useEffect, ReactNode } from "react";
+import { useUser } from "@clerk/nextjs";
 import {
+	iUseBusiness,
+	iUseLiskBalances,
+	iUseLiskBank,
+	iUseLiskCharges,
+	iUseLiskStaff,
 	iUseLiskTransactions,
+	iUseLiskTransfer,
+	iUseLiskUsers,
+	useLiskBalances,
+	useLiskBank,
+	useLiskBusiness,
+	useLiskCharges,
+	useLiskStaff,
 	useLiskTransactions,
-} from "hooks/stablecoin-hooks/hooks/useLiskTransactions";
-import { iUseLiskBank, useLiskBank } from "hooks/stablecoin-hooks/hooks/useLiskBank";
-import { iUseLiskCharges, useLiskCharges } from "hooks/stablecoin-hooks/hooks/useLiskCharges";
+	useLiskTransfer,
+	useLiskUsers,
+} from "@mmpotulo/stablecoin-hooks";
 import useSubscriptions, { iUseSubscriptions } from "@/hooks/useSubscriptions";
-import { iUseLiskBalances, useLiskBalances } from "hooks/stablecoin-hooks/hooks/useLiskBalances";
-import { iUseBusiness, useLiskBusiness } from "hooks/stablecoin-hooks/hooks/useLiskBusiness";
-import { iUseLiskStaff, useLiskStaff } from "hooks/stablecoin-hooks/hooks/useLiskStaff";
-import { iUseLiskTransfer, useLiskTransfer } from "hooks/stablecoin-hooks/hooks/useLiskTransfer";
-import { iUseLiskUsers, useLiskUsers } from "hooks/stablecoin-hooks/hooks/useLiskUsers";
 
 interface AccountContextProps
 	extends iUseLiskBalances,
@@ -26,6 +33,7 @@ interface AccountContextProps
 		iUseLiskUsers {}
 
 const AccountContext = createContext<AccountContextProps | undefined>(undefined);
+const apiKey = process.env.NEXT_PUBLIC_LISK_API_KEY;
 
 export function useAccount(): AccountContextProps {
 	const context = useContext(AccountContext);
@@ -37,30 +45,11 @@ export function useAccount(): AccountContextProps {
 
 export function AccountProvider({
 	children,
-	mode = "user",
 }: {
 	children: ReactNode;
 	mode?: "user" | "organization";
 }) {
 	const { user } = useUser();
-	const { organization } = useOrganization();
-	const [apiKey, setApiKey] = useState<string | undefined>(undefined);
-
-	useEffect(() => {
-		// Fetch API key
-		const fetchApiKey = () => {
-			const key = (
-				mode === "user"
-					? process.env.NEXT_PUBLIC_LISK_API_KEY
-					: organization?.publicMetadata.apiToken
-			) as string;
-
-			console.log(`fetching api key for user: ${user?.id} in mode: ${mode}`);
-			setApiKey(`Bearer ${key}`);
-		};
-
-		fetchApiKey();
-	}, [user, organization, mode]);
 
 	const { fetchTransactions } = useLiskTransactions({ apiKey });
 	const { fetchBalances } = useLiskBalances({ apiKey });
