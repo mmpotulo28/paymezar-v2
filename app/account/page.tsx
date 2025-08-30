@@ -7,6 +7,7 @@ import { AccountOverview } from "@/components/account/AccountOverview";
 import { BalanceHistory } from "@/components/account/BalanceHistory";
 import { BankAccounts } from "@/components/account/BankAccounts";
 import { SubscriptionsList } from "@/components/account/SubscriptionsList";
+import { CouponsList } from "@/components/account/CouponsList";
 
 export default function AccountPage() {
 	return (
@@ -40,6 +41,12 @@ export default function AccountPage() {
 					className="w-full flex align-center justify-center max-w-2xl"
 					title="Subscriptions">
 					<SubscriptionsList />
+				</Tab>
+				<Tab
+					key="coupons"
+					className="w-full flex align-center justify-center max-w-2xl"
+					title="Coupons">
+					<CouponsList />
 				</Tab>
 				<Tab
 					key="transactions"
