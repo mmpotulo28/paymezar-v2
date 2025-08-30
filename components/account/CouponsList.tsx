@@ -3,6 +3,7 @@ import { Card, CardHeader, CardBody, Button, Chip, Spinner } from "@heroui/react
 import { useAccount } from "@/context/AccountContext";
 import CouponCard from "./CouponCard";
 import { useEffect } from "react";
+import { RefreshCcw } from "lucide-react";
 
 export function CouponsList() {
 	const {
@@ -28,6 +29,7 @@ export function CouponsList() {
 					isLoading={couponsLoading}
 					size="sm"
 					variant="flat"
+					startContent={<RefreshCcw size={16} />}
 					onPress={() => fetchCoupons(true)}>
 					Refresh
 				</Button>
