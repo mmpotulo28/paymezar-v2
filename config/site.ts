@@ -69,7 +69,8 @@ export const siteConfig = {
 		twitter: "https://twitter.com/mmpotulo",
 		docs: "https://paymezar.mpotulo.com/docs",
 		discord: "https://discord.gg/9b6yyZKmH4",
-		sponsor: "https://patreon.com/jrgarciadev",
+		sponsor:
+			"https://patreon.com/mmpotulo?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink",
 	},
 	metadata: {
 		title: {
