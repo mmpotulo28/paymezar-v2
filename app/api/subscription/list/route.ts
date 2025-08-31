@@ -1,9 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-
+// import { auth } from "@clerk/nextjs/server";
 import { supabase } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
 	try {
+		// const { userId, has } = await auth();
+		// console.log("Authenticated request to fetch subscriptions", userId);
+		// if (!userId) {
+		// 	return NextResponse.json(
+		// 		{ error: true, message: "Unauthorized", status: 401 },
+		// 		{ status: 401 },
+		// 	);
+		// }
+		// const canRead = has({ permission: "api:read" });
+		// if (!canRead) {
+		// 	return NextResponse.json(
+		// 		{ error: true, message: "Forbidden", status: 403 },
+		// 		{ status: 403 },
+		// 	);
+		// }
+
 		// get id from query parameters
 		const id = new URL(req.url).searchParams.get("id");
 

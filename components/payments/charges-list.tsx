@@ -37,6 +37,30 @@ export function ChargesList({ className = "" }: { className?: string }) {
 		fetchCharges(user?.id || "");
 	}, [fetchCharges, user?.id]);
 
+	// show errors in toast when they occur
+	useEffect(() => {
+		if (completeChargeError) {
+			addToast({
+				title: "Payment failed",
+				description: completeChargeError,
+				variant: "flat",
+				color: "danger",
+			});
+		}
+	}, [completeChargeError]);
+
+	// show success messages in toast when they occur
+	useEffect(() => {
+		if (completeChargeMessage) {
+			addToast({
+				title: "Payment successful!",
+				description: completeChargeMessage,
+				variant: "flat",
+				color: "success",
+			});
+		}
+	}, [completeChargeMessage]);
+
 	// Filter, sort, and paginate charges
 	const filteredSortedCharges = useMemo(() => {
 		let filtered = charges;
@@ -70,10 +94,11 @@ export function ChargesList({ className = "" }: { className?: string }) {
 
 		addToast({
 			title: "Payment in progress...",
-			description: `Your payment is being processed for charge ${charge.id}.`,
+			description: `Your payment is being processed`,
 			variant: "flat",
-			color: "secondary",
+			color: "default",
 			shouldShowTimeoutProgress: true,
+			size: "sm",
 		});
 
 		console.log("completing charge", charge.id);

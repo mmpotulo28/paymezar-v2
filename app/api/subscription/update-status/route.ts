@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/db";
+// import { auth } from "@clerk/nextjs/server";
 
 export async function PUT(req: NextRequest) {
 	try {
+		// const { userId, has } = await auth();
+		// if (!userId) {
+		// 	return NextResponse.json(
+		// 		{ error: true, message: "Unauthorized", status: 401 },
+		// 		{ status: 401 },
+		// 	);
+		// }
+		// const canUpdate = has({ permission: "api:write" });
+		// if (!canUpdate) {
+		// 	return NextResponse.json(
+		// 		{ error: true, message: "Forbidden", status: 403 },
+		// 		{ status: 403 },
+		// 	);
+		// }
 		const { subscriptionId, status } = await req.json();
 
 		if (!subscriptionId || !status) {

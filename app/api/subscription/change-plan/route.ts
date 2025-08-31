@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/db";
+// import { auth } from "@clerk/nextjs/server";
 
 export async function PUT(req: NextRequest) {
 	try {
+		// const { userId } = await auth();
+		// if (!userId) {
+		// 	return NextResponse.json(
+		// 		{ error: true, message: "Unauthorized", status: 401 },
+		// 		{ status: 401 },
+		// 	);
+		// }
+
 		const { subscriptionId, newPlan, newPeriod } = await req.json();
 		if (!subscriptionId || !newPlan || !newPeriod) {
 			return NextResponse.json(
@@ -10,13 +19,20 @@ export async function PUT(req: NextRequest) {
 				{ status: 400 },
 			);
 		}
+
+		// If changing to free plan, set status to active and do not create a charge
+		const updateData: Record<string, any> = {
+			plan: newPlan,
+			period: newPeriod,
+			updated_at: new Date().toISOString(),
+		};
+		if (newPlan.toLowerCase() === "starter") {
+			updateData.status = "active";
+		}
+
 		const { error } = await supabase
 			.from("subscriptions")
-			.update({
-				plan: newPlan,
-				period: newPeriod,
-				updated_at: new Date().toISOString(),
-			})
+			.update(updateData)
 			.eq("id", subscriptionId);
 
 		if (error) {
@@ -35,8 +51,4 @@ export async function PUT(req: NextRequest) {
 			{ status: 500 },
 		);
 	}
-}
-
-export function GET() {
-	return NextResponse.json({ message: "Method not allowed" }, { status: 405 });
 }

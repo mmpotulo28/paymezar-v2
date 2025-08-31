@@ -1,8 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/db";
+// import { auth } from "@clerk/nextjs/server";
 
 export async function PUT(req: NextRequest) {
 	try {
+		// const { userId, has } = await auth();
+		// if (!userId) {
+		// 	return NextResponse.json(
+		// 		{ error: true, message: "Unauthorized", status: 401 },
+		// 		{ status: 401 },
+		// 	);
+		// }
+		// const canCancel = has({ permission: "org:team_settings:read" });
+		// if (!canCancel) {
+		// 	return NextResponse.json(
+		// 		{ error: true, message: "Forbidden", status: 403 },
+		// 		{ status: 403 },
+		// 	);
+		// }
+
 		const { subscriptionId } = await req.json();
 		if (!subscriptionId) {
 			return NextResponse.json(

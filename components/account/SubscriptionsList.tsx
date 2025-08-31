@@ -12,8 +12,10 @@ import {
 	ModalHeader,
 	ModalBody,
 	ModalFooter,
+	Divider,
+	CardFooter,
 } from "@heroui/react";
-import { RefreshCcw } from "lucide-react";
+import { RefreshCcw, Star, Calendar, Zap, XCircle, Repeat } from "lucide-react";
 import { useAccount } from "@/context/AccountContext";
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
@@ -60,7 +62,6 @@ export function SubscriptionsList() {
 	};
 
 	const openChangeModal = (sub: iSubscription) => {
-		console.log("Opening change modal for subscription:", sub);
 		setSelectedSub(sub);
 		setShowModal(true);
 	};
@@ -122,67 +123,87 @@ export function SubscriptionsList() {
 						variant="bordered"
 					/>
 				)}
-				<div className="flex flex-col gap-3">
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 					{subscriptions.map((sub) => (
-						<div
+						<Card
 							key={sub.id}
-							className="flex items-center justify-between p-3 rounded-lg border border-default-200 bg-default-50">
-							<div className="flex flex-col gap-1">
-								<span className="font-mono text-xs text-default-600">
-									{sub.plan}
-								</span>
-								<span className="text-xs text-default-500">
-									Status: {sub.status}
-								</span>
-							</div>
-							<div className="flex flex-col gap-1">
-								<span className="font-mono text-xs text-default-600">
-									{sub.planDetails?.price[sub.period] || "N/A"} {"ZAR"}
-								</span>
-								<span className="text-xs text-default-500">
-									Period: {sub.period}
-								</span>
-							</div>
-							<span className="text-xs text-default-500">
-								{sub.started_at?.split("T")[0] || "-"}
-							</span>
-							<Chip
-								color={
-									sub.status === "active"
-										? "success"
-										: sub.status === "canceled"
-											? "danger"
-											: "default"
-								}
-								variant="flat">
-								{sub.status}
-							</Chip>
-							{/* Cancel/Change Plan buttons */}
-							{sub.plan === "starter" ? (
+							className="flex flex-col justify-between border border-default-200 shadow-sm rounded-xl p-4 bg-default-50">
+							<CardHeader className="flex items-center gap-2 mb-2 p-0">
+								{sub.plan === "business" && (
+									<Star className="text-warning" size={20} />
+								)}
+								{sub.plan === "pro" && <Zap className="text-primary" size={20} />}
+								{sub.plan === "starter" && (
+									<Repeat className="text-success" size={20} />
+								)}
+								<span className="font-bold text-lg capitalize">{sub.plan}</span>
+								<Chip
+									color={
+										sub.status === "active"
+											? "success"
+											: sub.status === "canceled"
+												? "danger"
+												: "warning"
+									}
+									variant="flat"
+									className="ml-2">
+									{sub.status}
+								</Chip>
 								<span className="text-xs text-success ml-2">Free Plan</span>
-							) : (
-								<div className="flex gap-2 ml-2">
-									<Button
-										size="sm"
-										color="danger"
-										variant="flat"
-										isLoading={cancelingId === sub.id}
-										disabled={cancelingId === sub.id}
-										onPress={() => openCancelConfirmModal(sub)}>
-										Cancel
-									</Button>
-									<Button
-										size="sm"
-										color="secondary"
-										variant="flat"
-										isLoading={changingId === sub.id}
-										disabled={changingId === sub.id}
-										onPress={() => openChangeModal(sub)}>
-										Change Plan
-									</Button>
+							</CardHeader>
+							<Divider className="my-2" />
+							<CardBody className="flex flex-col gap-2 mb-2">
+								<div className="flex items-center gap-2 text-xs text-default-500">
+									<Calendar size={14} />
+									<span>
+										Started:{" "}
+										{sub.started_at ? sub.started_at.split("T")[0] : "-"}
+									</span>
+									{sub.ended_at && (
+										<>
+											<span>|</span>
+											<span>
+												Ended:{" "}
+												{sub.ended_at ? sub.ended_at.split("T")[0] : "-"}
+											</span>
+										</>
+									)}
 								</div>
-							)}
-						</div>
+								<div className="flex items-center gap-2 text-xs text-default-500">
+									<span>Period:</span>
+									<Chip color="secondary" variant="flat" size="sm">
+										{sub.period}
+									</Chip>
+									<span>Price:</span>
+									<Chip color="primary" variant="flat" size="sm">
+										{sub.planDetails?.price[sub.period] || "N/A"} ZAR
+									</Chip>
+								</div>
+							</CardBody>
+							<Divider className="my-2" />
+							<CardFooter className="flex flex-row gap-2 p-0 justify-start">
+								<Button
+									size="sm"
+									color="danger"
+									variant="flat"
+									isLoading={cancelingId === sub.id}
+									disabled={cancelingId === sub.id}
+									startContent={<XCircle size={16} />}
+									onPress={() => openCancelConfirmModal(sub)}>
+									Cancel
+								</Button>
+								<Button
+									size="sm"
+									color="secondary"
+									variant="flat"
+									isLoading={changingId === sub.id}
+									disabled={changingId === sub.id}
+									startContent={<Repeat size={16} />}
+									onPress={() => openChangeModal(sub)}>
+									Change Plan
+								</Button>
+							</CardFooter>
+						</Card>
 					))}
 				</div>
 				<ChangePlanModal

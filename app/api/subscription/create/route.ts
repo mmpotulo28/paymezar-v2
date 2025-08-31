@@ -1,17 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
-
+// import { auth } from "@clerk/nextjs/server";
 import { supabase } from "@/lib/db";
-
-const PLAN_PRICES: Record<string, { monthly: number; yearly: number }> = {
-	starter: { monthly: 0, yearly: 0 },
-	pro: { monthly: 10, yearly: 8 },
-	business: { monthly: 20, yearly: 15 },
-};
+import { PLAN_DETAILS } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
 	try {
-		const { userId, plan, period, amount, paymentId, expires_at } = await req.json();
+		// const { userId, has } = await auth();
+		// if (!userId) {
+		// 	return NextResponse.json(
+		// 		{ error: true, message: "Unauthorized", status: 401 },
+		// 		{ status: 401 },
+		// 	);
+		// }
+		// const canCreate = has({ permission: "api:write" });
+		// if (!canCreate) {
+		// 	return NextResponse.json(
+		// 		{ error: true, message: "Forbidden", status: 403 },
+		// 		{ status: 403 },
+		// 	);
+		// }
+
+		const { plan, period, amount, paymentId, expires_at, userId } = await req.json();
 		// get apiKey from authorization
 		const apiKey = req.headers.get("Authorization")?.replace("Bearer ", "");
 
@@ -76,8 +86,8 @@ export async function POST(req: NextRequest) {
 				typeof amount === "number"
 					? amount
 					: period === "yearly"
-						? (PLAN_PRICES[plan]?.yearly || 0) * 12
-						: PLAN_PRICES[plan]?.monthly || 0;
+						? (PLAN_DETAILS[plan]?.price.yearly || 0) * 12
+						: PLAN_DETAILS[plan]?.price.monthly || 0;
 
 			try {
 				const chargeRes = await axios.post(

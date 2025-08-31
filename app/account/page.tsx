@@ -2,7 +2,6 @@
 import { Tabs, Tab } from "@heroui/tabs";
 
 import { UserProfileCard } from "@/components/user-profile-card";
-import { RecentTransactions } from "@/components/recent-transactions";
 import { AccountOverview } from "@/components/account/AccountOverview";
 import { BalanceHistory } from "@/components/account/BalanceHistory";
 import { BankAccounts } from "@/components/account/BankAccounts";
@@ -53,13 +52,7 @@ export default function AccountPage() {
 					key="coupons"
 					className="w-full flex align-center justify-center max-w-2xl"
 					title="Coupons">
-					<CouponsList />
-				</Tab>
-				<Tab
-					key="transactions"
-					className="w-full flex align-center justify-center max-w-2xl"
-					title="Transactions">
-					<RecentTransactions className="max-w-2xl w-full" />
+					<CouponsList limit={4} />
 				</Tab>
 			</Tabs>
 		</section>

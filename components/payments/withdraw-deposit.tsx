@@ -1,8 +1,33 @@
 import { useEffect, useState } from "react";
-import { Card, CardHeader, CardBody, Chip, Tabs, Tab, Tooltip, Alert } from "@heroui/react";
-import { Input } from "@heroui/input";
-import { Button } from "@heroui/button";
-import { Banknote, BanknoteArrowUp, Wallet, BanknoteArrowDown } from "lucide-react";
+import {
+	Card,
+	CardHeader,
+	CardBody,
+	Chip,
+	Tabs,
+	Tab,
+	Tooltip,
+	Alert,
+	Modal,
+	ModalContent,
+	ModalHeader,
+	ModalBody,
+	ModalFooter,
+	Button,
+	Input,
+	Divider,
+} from "@heroui/react";
+import {
+	Banknote,
+	BanknoteArrowUp,
+	Wallet,
+	BanknoteArrowDown,
+	ShieldCheck,
+	CreditCard,
+	Loader2,
+	Lock,
+	ThumbsUp,
+} from "lucide-react";
 import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { useAccount } from "@/context/AccountContext";
@@ -34,6 +59,14 @@ export function WithdrawDeposit() {
 	} = useAccount();
 	const [withdrawAmount, setWithdrawAmount] = useState<string>("");
 	const [depositAmount, setDepositAmount] = useState<string>("");
+	const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+	const [showDepositModal, setShowDepositModal] = useState(false);
+	const [verifying, setVerifying] = useState(false);
+	const [verifyError, setVerifyError] = useState<string | null>(null);
+
+	const [pendingWithdraw, setPendingWithdraw] = useState<string>("");
+	const [pendingDeposit, setPendingDeposit] = useState<string>("");
+
 	const isTestnet = true;
 
 	useEffect(() => {
@@ -45,14 +78,108 @@ export function WithdrawDeposit() {
 
 	const handleWithdraw = async (e: React.FormEvent) => {
 		e.preventDefault();
-		await withdraw(withdrawAmount);
+		setPendingWithdraw(withdrawAmount);
+		setShowWithdrawModal(true);
 	};
 
 	const handleDeposit = async (e: React.FormEvent) => {
 		e.preventDefault();
-
-		await deposit(depositAmount);
+		setPendingDeposit(depositAmount);
+		setShowDepositModal(true);
 	};
+
+	const simulateBankVerification = async () => {
+		setVerifying(true);
+		setVerifyError(null);
+		return new Promise<boolean>((resolve) => {
+			setTimeout(() => {
+				// Simulate random success/failure
+				const success = Math.random() > 0.15;
+				setVerifying(false);
+				if (!success) setVerifyError("Bank verification failed. Please try again.");
+				resolve(success);
+			}, 1500);
+		});
+	};
+
+	const confirmWithdraw = async () => {
+		const verified = await simulateBankVerification();
+		if (verified) {
+			await withdraw(pendingWithdraw);
+			setShowWithdrawModal(false);
+			setPendingWithdraw("");
+		}
+	};
+
+	const confirmDeposit = async () => {
+		const verified = await simulateBankVerification();
+		if (verified) {
+			await deposit(pendingDeposit);
+			setShowDepositModal(false);
+			setPendingDeposit("");
+		}
+	};
+
+	const getBankIcon = () => {
+		const bank = BANKS.find((b) => b.name.toLowerCase() === bankAccount?.bank?.toLowerCase());
+		return bank?.icon || "";
+	};
+
+	const BankInfo = () => (
+		<div className="flex items-center gap-3 mb-2">
+			<Image
+				src={getBankIcon()}
+				alt={bankAccount?.bank || "Bank"}
+				width={48}
+				height={48}
+				className="rounded-full border border-default-200 bg-white"
+			/>
+			<div>
+				<div className="font-semibold text-base">{bankAccount?.bank}</div>
+				<div className="text-xs text-default-500">
+					Acc: {bankAccount?.accountNumber} <br />
+					Holder: {bankAccount?.accountHolder}
+				</div>
+			</div>
+		</div>
+	);
+
+	const SecureIllustration = () => (
+		<div className="flex flex-col items-center gap-2 my-0">
+			<ShieldCheck size={48} className="text-primary drop-shadow-lg" />
+			<span className="text-sm text-default-500 font-medium">3D Secure Verification</span>
+		</div>
+	);
+
+	const TrustIcons = () => (
+		<div className="flex items-center gap-4 justify-center my-2">
+			<ShieldCheck size={28} className="text-primary drop-shadow" />
+			<Lock size={28} className="text-success drop-shadow" />
+			<CreditCard size={32} className="text-default-400" />
+			<ThumbsUp size={28} className="text-warning drop-shadow" />
+		</div>
+	);
+
+	const TermsAndConditions = () => (
+		<div className="bg-default-100 rounded-lg p-3 mt-0 text-xs text-default-500 border border-default-200">
+			<strong>Terms & Conditions:</strong>
+			<ul className="list-disc ml-4 mt-1">
+				<li>All transactions are simulated for testnet purposes only.</li>
+				<li>Your bank details are securely processed and never stored.</li>
+				<li>
+					Withdrawals and deposits are subject to verification and may be declined if
+					details do not match.
+				</li>
+				<li>
+					By confirming, you agree to our{" "}
+					<a href="/terms" className="text-primary underline">
+						platform terms
+					</a>{" "}
+					and privacy policy.
+				</li>
+			</ul>
+		</div>
+	);
 
 	return (
 		<Card className="w-full max-w-2xl shadow-lg border border-default-200">
@@ -70,7 +197,7 @@ export function WithdrawDeposit() {
 
 				{isTestnet && (
 					<Alert
-						color={"danger"}
+						color={"warning"}
 						description={`Withdrawals and deposits are disabled on testnet.`}
 						title={`Heads Up!`}
 						variant="bordered"
@@ -158,12 +285,12 @@ export function WithdrawDeposit() {
 							<Tooltip
 								showArrow
 								color="warning"
-								content="Withdrawals are disabled on testnet"
+								content="Withdrawals are enabled for testnet with verification"
 								radius="sm">
 								<Button
 									className="w-full"
 									color="primary"
-									disabled={withdrawLoading || isTestnet}
+									disabled={withdrawLoading}
 									isLoading={withdrawLoading}
 									radius="full"
 									startContent={<BanknoteArrowDown size={16} />}
@@ -188,6 +315,80 @@ export function WithdrawDeposit() {
 								</Chip>
 							)}
 						</form>
+						<Modal
+							isOpen={showWithdrawModal}
+							onClose={() => setShowWithdrawModal(false)}>
+							<ModalContent>
+								{(onClose) => (
+									<>
+										<ModalHeader>
+											<div className="flex items-center gap-2">
+												<BanknoteArrowDown
+													className="text-primary"
+													size={24}
+												/>
+												<span className="font-bold text-lg">
+													Withdraw - Bank Verification
+												</span>
+											</div>
+										</ModalHeader>
+										<ModalBody>
+											<BankInfo />
+											<Divider className="my-2" />
+											<div className="flex items-center gap-2 mb-2">
+												<span className="font-semibold text-default-600">
+													Amount:
+												</span>
+												<Chip
+													color="primary"
+													variant="flat"
+													className="font-mono text-lg">
+													{pendingWithdraw} ZAR
+												</Chip>
+											</div>
+											<SecureIllustration />
+											<TrustIcons />
+											<div className="flex flex-col items-center gap-2 mt-2">
+												{verifying && (
+													<div className="flex items-center gap-2">
+														<Loader2
+															size={20}
+															className="animate-spin text-primary"
+														/>
+														<span className="text-default-500">
+															Verifying bank details...
+														</span>
+													</div>
+												)}
+												{verifyError && (
+													<Alert color="danger" variant="flat">
+														{verifyError}
+													</Alert>
+												)}
+											</div>
+											<TermsAndConditions />
+										</ModalBody>
+										<ModalFooter>
+											<Button
+												color="primary"
+												isLoading={verifying || withdrawLoading}
+												disabled={verifying || withdrawLoading}
+												onPress={confirmWithdraw}
+												startContent={<ShieldCheck size={16} />}>
+												Confirm Withdraw
+											</Button>
+											<Button
+												color="secondary"
+												variant="flat"
+												onPress={onClose}
+												disabled={verifying}>
+												Cancel
+											</Button>
+										</ModalFooter>
+									</>
+								)}
+							</ModalContent>
+						</Modal>
 					</Tab>
 					<Tab key="deposit" title="Deposit">
 						<form className="flex flex-col gap-4" onSubmit={handleDeposit}>
@@ -224,11 +425,11 @@ export function WithdrawDeposit() {
 							<Tooltip
 								showArrow
 								color="warning"
-								content="Deposits are disabled on testnet">
+								content="Deposits are enabled for testnet with verification">
 								<Button
 									className="w-full"
 									color="primary"
-									disabled={depositLoading || isTestnet}
+									disabled={depositLoading}
 									isLoading={depositLoading}
 									radius="full"
 									startContent={<BanknoteArrowUp size={16} />}
@@ -253,6 +454,78 @@ export function WithdrawDeposit() {
 								</Chip>
 							)}
 						</form>
+						<Modal isOpen={showDepositModal} onClose={() => setShowDepositModal(false)}>
+							<ModalContent>
+								{(onClose) => (
+									<>
+										<ModalHeader>
+											<div className="flex items-center gap-2">
+												<BanknoteArrowUp
+													className="text-primary"
+													size={24}
+												/>
+												<span className="font-bold text-lg">
+													Deposit - Bank Verification
+												</span>
+											</div>
+										</ModalHeader>
+										<ModalBody>
+											<BankInfo />
+											<Divider className="my-2" />
+											<div className="flex items-center gap-2 mb-2">
+												<span className="font-semibold text-default-600">
+													Amount:
+												</span>
+												<Chip
+													color="primary"
+													variant="flat"
+													className="font-mono text-lg">
+													{pendingDeposit} ZAR
+												</Chip>
+											</div>
+											<SecureIllustration />
+											<TrustIcons />
+											<div className="flex flex-col items-center gap-2 mt-2">
+												{verifying && (
+													<div className="flex items-center gap-2">
+														<Loader2
+															size={20}
+															className="animate-spin text-primary"
+														/>
+														<span className="text-default-500">
+															Verifying bank details...
+														</span>
+													</div>
+												)}
+												{verifyError && (
+													<Alert color="danger" variant="flat">
+														{verifyError}
+													</Alert>
+												)}
+											</div>
+											<TermsAndConditions />
+										</ModalBody>
+										<ModalFooter>
+											<Button
+												color="primary"
+												isLoading={verifying || depositLoading}
+												disabled={verifying || depositLoading}
+												onPress={confirmDeposit}
+												startContent={<ShieldCheck size={16} />}>
+												Confirm Deposit
+											</Button>
+											<Button
+												color="secondary"
+												variant="flat"
+												onPress={onClose}
+												disabled={verifying}>
+												Cancel
+											</Button>
+										</ModalFooter>
+									</>
+								)}
+							</ModalContent>
+						</Modal>
 					</Tab>
 				</Tabs>
 			</CardBody>

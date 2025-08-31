@@ -15,7 +15,11 @@ export default function PayNowPage() {
 			<Suspense fallback={<div>Loading user profile...</div>}>
 				<UserProfileCard className="max-w-2xl" />
 			</Suspense>
-			<Tabs destroyInactiveTabPanel className="w-full max-w-2xl" color="primary">
+			<Tabs
+				destroyInactiveTabPanel
+				className="w-full max-w-2xl"
+				color="primary"
+				variant="bordered">
 				<Tab key="send" className="w-full flex flex-col items-center" title="Send Payment">
 					<SendPayment />
 				</Tab>

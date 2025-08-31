@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
-
+// import { auth } from "@clerk/nextjs/server";
 import { supabase } from "@/lib/db";
 
 /**
@@ -10,6 +10,21 @@ import { supabase } from "@/lib/db";
  */
 export async function PUT(req: NextRequest) {
 	try {
+		// const { userId, has } = await auth();
+		// if (!userId) {
+		// 	return NextResponse.json(
+		// 		{ error: true, message: "Unauthorized", status: 401 },
+		// 		{ status: 401 },
+		// 	);
+		// }
+		// const canUpdate = has({ permission: "api:write" });
+		// if (!canUpdate) {
+		// 	return NextResponse.json(
+		// 		{ error: true, message: "Forbidden", status: 403 },
+		// 		{ status: 403 },
+		// 	);
+		// }
+
 		const { id, liskId, email, firstName, lastName, imageUrl, phone } = await req.json();
 		const isMissingFields = !id || !liskId || !email || !firstName || !lastName;
 
