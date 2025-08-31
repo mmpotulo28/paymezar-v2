@@ -1,3 +1,4 @@
+"use client";
 import { Alert, Card, CardBody, CardHeader, Snippet } from "@heroui/react";
 import { Button } from "@heroui/button";
 import { RefreshCcw } from "lucide-react";
