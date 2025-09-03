@@ -12,7 +12,7 @@ export default function SignUpPage() {
 	// If already authenticated, redirect to account page
 	useEffect(() => {
 		if (user) {
-			router.replace("/account");
+			router.replace("/auth/sign-in");
 		}
 	}, [user, router]);
 

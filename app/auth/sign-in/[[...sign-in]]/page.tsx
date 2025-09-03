@@ -2,21 +2,12 @@
 import { useState, useEffect } from "react";
 import { Alert, Card } from "@heroui/react";
 import { ShieldCheck, Lock, CheckCircle2, KeyRound } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { SignIn, useUser } from "@clerk/nextjs";
 
 export default function SignInPage() {
 	const [message, setMessage] = useState<string | null>(null);
-	const router = useRouter();
 
 	const { user } = useUser();
-
-	useEffect(() => {
-		// If already authenticated, redirect to account page
-		if (user) {
-			router.replace("/account");
-		}
-	}, [user, router]);
 
 	useEffect(() => {
 		// Check for success messages from sign-up
@@ -73,6 +64,11 @@ export default function SignInPage() {
 				<div className="flex-1 flex flex-col justify-center lg:p-8 sm:w-full">
 					{message && <Alert title={message} />}
 					<SignIn
+						initialValues={{
+							emailAddress: user?.primaryEmailAddress?.emailAddress,
+							firstName: user?.firstName as string,
+							lastName: user?.lastName as string,
+						}}
 						oauthFlow="popup"
 						unsafeMetadata={{ apiToken: process.env.NEXT_PUBLIC_LISK_API_KEY }}
 					/>
