@@ -81,9 +81,10 @@ export function AccountProvider({
 			// Only create coupon once per 5x increase
 			createCoupon(user?.id, {
 				title: "Super Transactor!",
-				imageUrl: null,
-				description: "Congrats! You transacted 5x more than when you joined.",
-				code: `SUPER-${user?.id}-${Date.now()}`,
+				imageUrl:
+					"https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvdXBsb2FkZWQvaW1nXzMyOGtaclBjVHFQUFk2UnQ0eDZSWG1JZXZROCJ9?width=96",
+				description: `Congrats ${user.firstName}! You transacted 5x more than when you joined.`,
+				code: `SUPER_PMZ_USER${transactions.length}`,
 				ref: user?.id,
 				validUntil: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString(), // 1 week
 				maxCoupons: 1,
@@ -91,7 +92,7 @@ export function AccountProvider({
 			});
 			setInitialTxCount(transactions.length); // reset baseline
 		}
-	}, [transactions.length, initialTxCount, user?.id, createCoupon]);
+	}, [transactions.length, initialTxCount, user?.id, createCoupon, user?.fullName]);
 
 	// fetch everything initially
 	useEffect(() => {

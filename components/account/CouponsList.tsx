@@ -105,7 +105,7 @@ export function CouponsList({ limit, showAll }: CouponsListProps) {
 	const displayedCoupons = showAll ? filteredCoupons : filteredCoupons.slice(0, limit ?? 4);
 
 	return (
-		<Card className="w-full max-w-2xl">
+		<Card className="w-full max-w-7xl">
 			<CardHeader className="flex items-center justify-between">
 				<span className="text-xl font-bold">Your Coupons</span>
 				<div className="flex gap-2">
@@ -121,16 +121,15 @@ export function CouponsList({ limit, showAll }: CouponsListProps) {
 					</Button>
 					{/* View All button, only show if not already showing all */}
 					{!showAll && (
-						<Link href="/account/coupons" passHref legacyBehavior>
-							<Button
-								color="secondary"
-								variant="flat"
-								size="sm"
-								as="a"
-								aria-label="View all coupons">
-								View All
-							</Button>
-						</Link>
+						<Button
+							href="/account/coupons"
+							color="secondary"
+							variant="flat"
+							size="sm"
+							as={Link}
+							aria-label="View all coupons">
+							View All
+						</Button>
 					)}
 				</div>
 			</CardHeader>
@@ -183,7 +182,7 @@ export function CouponsList({ limit, showAll }: CouponsListProps) {
 				{displayedCoupons.length === 0 && !couponsLoading && (
 					<div className="text-default-400 text-center py-4">No coupons found.</div>
 				)}
-				<div className="grid lg:grid-cols-2 sm:grid-cols-1 gap-4">
+				<div className="grid lg:grid-cols-[repeat(auto-fit,_minmax(250,_1fr))] sm:grid-cols-1 gap-4">
 					{displayedCoupons.map((coupon) => (
 						<CouponCard key={coupon.id} coupon={coupon} />
 					))}
@@ -201,16 +200,15 @@ export function CouponsList({ limit, showAll }: CouponsListProps) {
 				{/* Show "View All" button if not showing all and there are more coupons */}
 				{!showAll && filteredCoupons.length > (limit ?? 4) && (
 					<div className="flex justify-center mt-4">
-						<Link href="/account/coupons" passHref legacyBehavior>
-							<Button
-								color="secondary"
-								variant="flat"
-								size="sm"
-								as="a"
-								aria-label="View all coupons">
-								View All Coupons
-							</Button>
-						</Link>
+						<Button
+							color="secondary"
+							variant="flat"
+							size="sm"
+							as={Link}
+							href="/account/coupons"
+							aria-label="View all coupons">
+							View All Coupons
+						</Button>
 					</div>
 				)}
 			</CardBody>

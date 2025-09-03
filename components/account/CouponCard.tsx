@@ -1,7 +1,7 @@
 import { useAccount } from "@/context/AccountContext";
 import { useUser } from "@clerk/nextjs";
 import { Button } from "@heroui/button";
-import { Card, Chip, Divider } from "@heroui/react";
+import { Card, CardBody, CardFooter, CardHeader, Chip, Divider, Snippet } from "@heroui/react";
 import { iCoupon } from "@mmpotulo/stablecoin-hooks";
 import { Ticket } from "lucide-react";
 import { useState } from "react";
@@ -28,50 +28,64 @@ const CouponCard: React.FC<iCouponCardProps> = ({ coupon }) => {
 	};
 
 	return (
-		<Card key={coupon.id} className="p-4 bg-default-100 shadow rounded-xl max-w-xs">
-			<div className="flex items-center gap-2 mb-2">
-				<Ticket className="text-xl text-primary" />
-				<span className="font-semibold">{coupon.title}</span>
-				<Chip color="secondary" variant="flat" className="ml-2">
+		<Card
+			key={coupon.id}
+			className="p-4 bg-default-100 shadow rounded-xl max-w-xs flex flex-col justify-between gap-2">
+			<CardHeader className="flex items-start gap-2 flex-wrap justify-between p-0">
+				<span className="font-semibold flex gap-2">
+					<Ticket className="text-xl text-primary" />
+					{coupon.title}
+				</span>
+				<Snippet className="bg-secondary-300 py-0" size="sm" hideSymbol title="Coupon Code">
 					{coupon.code}
-				</Chip>
-			</div>
-			<div className="text-default-500 text-sm mb-2">{coupon.description}</div>
-			<div className="flex gap-2 text-xs text-default-400 mb-2">
-				<span>Ref: {coupon.ref}</span>
-				<span>Valid Until: {new Date(coupon.validUntil).toLocaleDateString()}</span>
-			</div>
-			<div className="flex gap-2 items-center mb-2">
-				<Chip color="primary" variant="flat">
-					Max: {coupon.maxCoupons}
-				</Chip>
-				<Chip color="success" variant="flat">
-					Available: {coupon.availableCoupons}
-				</Chip>
-			</div>
-			<Divider className="my-2" />
-			<div className="flex gap-2">
-				<Button
-					size="sm"
-					color="primary"
-					onPress={() => claimCoupon(user?.id || "", coupon.id)}
-					isDisabled={
-						couponsLoading || claimCouponLoading || coupon.availableCoupons < 1
-					}>
-					Claim
-				</Button>
-				<Button
-					size="sm"
-					color="danger"
-					variant="bordered"
-					onPress={() => {
-						setIsDeleteOpen(true);
-						setDeleteCouponId(coupon.id);
-					}}
-					isDisabled={couponsLoading || deleteCouponLoading}>
-					Delete
-				</Button>
-			</div>
+				</Snippet>
+			</CardHeader>
+
+			<CardBody className="p-0 flex flex-col justify-between">
+				<div className="flex gap-2 text-xs text-default-400 flex-col">
+					<div className="text-default-500 text-sm">{coupon.description}</div>
+					<Snippet hideSymbol size="sm" className="overflow-auto w-full flex">
+						{`Ref: ${coupon.ref}`}
+					</Snippet>
+					<span>Valid Until: {new Date(coupon.validUntil).toLocaleDateString()}</span>
+				</div>
+
+				<div className="flex gap-2 items-center">
+					<Chip color="primary" variant="flat">
+						Max: {coupon.maxCoupons}
+					</Chip>
+					<Chip color="success" variant="flat">
+						Available: {coupon.availableCoupons}
+					</Chip>
+				</div>
+			</CardBody>
+
+			<CardFooter className="flex flex-col justify-start items-start	gap-2 p-0">
+				<Divider className="my-2" />
+
+				<div className="flex gap-2">
+					<Button
+						size="sm"
+						color="primary"
+						onPress={() => claimCoupon(user?.id || "", coupon.id)}
+						isDisabled={
+							couponsLoading || claimCouponLoading || coupon.availableCoupons < 1
+						}>
+						Claim
+					</Button>
+					<Button
+						size="sm"
+						color="danger"
+						variant="bordered"
+						onPress={() => {
+							setIsDeleteOpen(true);
+							setDeleteCouponId(coupon.id);
+						}}
+						isDisabled={couponsLoading || deleteCouponLoading}>
+						Delete
+					</Button>
+				</div>
+			</CardFooter>
 
 			<ConfirmModal
 				open={isDeleteOpen}
