@@ -317,7 +317,7 @@ export default function AccountTransactionsPage() {
 								setStatus(key === "all" ? null : String(key))
 							}>
 							<Tab key="all" title="All" />
-							<Tab key="Completed" title="Completed" />
+							<Tab key="Complete" title="Completed" />
 							<Tab key="Pending" title="Pending" />
 						</Tabs>
 
@@ -376,7 +376,7 @@ export default function AccountTransactionsPage() {
 												</span>
 												<Chip
 													color={
-														tx.status === "Completed"
+														tx.status === "Complete"
 															? "success"
 															: tx.status === "Pending"
 																? "warning"

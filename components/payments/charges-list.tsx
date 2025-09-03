@@ -34,7 +34,8 @@ export function ChargesList({ className = "" }: { className?: string }) {
 	const PAGE_SIZE = 5;
 
 	useEffect(() => {
-		fetchCharges(user?.id || "");
+		if (!user?.id) return;
+		fetchCharges(user?.id);
 	}, [fetchCharges, user?.id]);
 
 	// show errors in toast when they occur
