@@ -99,7 +99,7 @@ export default function AccountTransactionsPage() {
 			},
 			pageSize: "A4",
 			pageOrientation: "portrait",
-			pageMargins: [40, 60, 40, 60],
+			pageMargins: [40, 20, 40, 20],
 			watermark: {
 				text: "PayMe-Zar",
 				color: "#6366f1",
@@ -179,7 +179,7 @@ export default function AccountTransactionsPage() {
 							]),
 						],
 					},
-					layout: "lightHorizontalLines",
+					layout: "headerLineOnly",
 					margin: [0, 8, 0, 8],
 				},
 				{
