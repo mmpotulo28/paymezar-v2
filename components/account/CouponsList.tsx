@@ -9,6 +9,8 @@ import {
 	Input,
 	Select,
 	SelectItem,
+	Alert,
+	Divider,
 } from "@heroui/react";
 import { useAccount } from "@/context/AccountContext";
 import CouponCard from "./CouponCard";
@@ -42,7 +44,9 @@ export function CouponsList({ limit, showAll }: CouponsListProps) {
 		couponsLoading,
 		couponsError,
 		claimCouponMessage,
+		claimCouponError,
 		deleteCouponMessage,
+		deleteCouponError,
 		fetchCoupons,
 	} = useAccount();
 
@@ -173,11 +177,29 @@ export function CouponsList({ limit, showAll }: CouponsListProps) {
 						))}
 					</Select>
 				</div>
+				<Alert
+					title="Heads up!"
+					description="Claiming coupons functionality is currently experiencing some issues, issues! if you have any concerns please use the chat bot on the right."
+					variant="bordered"
+					color="warning"
+				/>
+
+				<Divider className="my-4" />
 				{couponsLoading && <Spinner label="Loading coupons..." />}
 				{couponsError && (
-					<Chip color="danger" variant="flat">
+					<Alert color="danger" variant="bordered" title="Error loading coupons">
 						{couponsError}
-					</Chip>
+					</Alert>
+				)}
+				{claimCouponError && (
+					<Alert color="danger" variant="bordered" title="Error claiming coupon">
+						{claimCouponError}
+					</Alert>
+				)}
+				{deleteCouponError && (
+					<Alert color="danger" variant="bordered" title="Error deleting coupon">
+						{deleteCouponError}
+					</Alert>
 				)}
 				{displayedCoupons.length === 0 && !couponsLoading && (
 					<div className="text-default-400 text-center py-4">No coupons found.</div>

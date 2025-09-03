@@ -68,6 +68,7 @@ const CouponCard: React.FC<iCouponCardProps> = ({ coupon }) => {
 						size="sm"
 						color="primary"
 						onPress={() => claimCoupon(user?.id || "", coupon.id)}
+						isLoading={claimCouponLoading || couponsLoading}
 						isDisabled={
 							couponsLoading || claimCouponLoading || coupon.availableCoupons < 1
 						}>
