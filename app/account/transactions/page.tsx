@@ -2,14 +2,45 @@
 import { Card, CardHeader, CardBody, Button, Chip } from "@heroui/react";
 import { Tabs, Tab } from "@heroui/tabs";
 import { Input } from "@heroui/input";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Download, FileText, RefreshCcw } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
 
 import { useAccount } from "@/context/AccountContext";
 import TransactionModal from "@/components/modals/transaction-modal";
 import { iTransaction } from "@/types";
 import { useUser } from "@clerk/nextjs";
+
+import { TDocumentDefinitions } from "pdfmake/interfaces";
+
+pdfMake.vfs = pdfFonts.vfs;
+
+const PAYMEZAR_ADDRESS = "PayMe-Zar, 123 Crypto Lane, Cape Town, 8001, South Africa";
+const PAYMEZAR_EMAIL = "support@paymezar.com";
+const PAYMEZAR_PHONE = "+27 21 123 4567";
+
+function fetchImageAsBase64(url: string): Promise<string> {
+	return fetch(url)
+		.then((response) => response.blob())
+		.then(
+			(blob) =>
+				new Promise<string>((resolve, reject) => {
+					const reader = new FileReader();
+					reader.onloadend = () => {
+						resolve(reader.result as string);
+					};
+					reader.onerror = reject;
+					reader.readAsDataURL(blob);
+				}),
+		);
+}
+
+const getLogoBase64 = async (): Promise<string> => {
+	// Use the public path for the logo
+	return await fetchImageAsBase64("/paymezar-logo.png");
+};
 
 export default function AccountTransactionsPage() {
 	const [search, setSearch] = useState("");
@@ -23,38 +54,231 @@ export default function AccountTransactionsPage() {
 	const [selectedTx, setSelectedTx] = useState<iTransaction | null>(null);
 
 	// Filter transactions by search and status
-	const filtered = transactions.filter((tx) => {
-		const matchesSearch =
-			search === "" ||
-			tx.id.includes(search) ||
-			tx.userId.includes(search) ||
-			(tx.externalId && tx.externalId.includes(search));
-		const matchesStatus = !status || tx.status === status;
+	const filtered = useMemo(
+		() =>
+			transactions.filter((tx) => {
+				const matchesSearch =
+					search === "" ||
+					tx.id.includes(search) ||
+					tx.userId.includes(search) ||
+					(tx.externalId && tx.externalId.includes(search));
+				const matchesStatus = !status || tx.status === status;
 
-		return matchesSearch && matchesStatus;
-	});
+				return matchesSearch && matchesStatus;
+			}),
+		[search, status, transactions],
+	);
 
-	const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-	const paginatedTxs = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+	const totalPages = useMemo(() => Math.ceil(filtered.length / PAGE_SIZE), [filtered]);
+	const paginatedTxs = useMemo(
+		() => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+		[filtered, page],
+	);
 
-	const handleView = (tx: iTransaction) => {
+	const handleView = useCallback((tx: iTransaction) => {
 		setSelectedTx(tx);
 		setModalOpen(true);
-	};
+	}, []);
 
-	const handlePageChange = (newPage: number) => {
+	const handlePageChange = useCallback((newPage: number) => {
 		setPage(newPage);
-	};
+	}, []);
 
-	const handleExportTransactions = () => {
+	const handleExportTransactions = useCallback(() => {
 		// Simulate export
 		alert("Transactions exported!");
-	};
+	}, []);
 
-	const handleDownloadStatement = () => {
-		// Simulate download
-		alert("Statement downloaded!");
-	};
+	const handleDownloadStatement = useCallback(async () => {
+		const logoBase64 = await getLogoBase64();
+
+		const docDefinition: TDocumentDefinitions = {
+			info: {
+				title: "PayMe-Zar Transaction Statement",
+				author: "PayMe-Zar",
+			},
+			pageSize: "A4",
+			pageOrientation: "portrait",
+			pageMargins: [40, 60, 40, 60],
+			watermark: {
+				text: "PayMe-Zar",
+				color: "#6366f1",
+				opacity: 0.08,
+				bold: true,
+				fontSize: 60,
+			},
+			images: {
+				logo: logoBase64,
+			},
+			content: [
+				// Letterhead
+				{
+					columns: [
+						{
+							image: "logo",
+							width: 80,
+							height: 80,
+						},
+						[
+							{
+								text: "PayMe-Zar",
+								style: "letterheadTitle",
+								margin: [10, 0, 0, 0],
+							},
+							{
+								text: PAYMEZAR_ADDRESS,
+								style: "letterheadAddress",
+								margin: [10, 2, 0, 0],
+							},
+							{
+								text: `Email: ${PAYMEZAR_EMAIL} | Tel: ${PAYMEZAR_PHONE}`,
+								style: "letterheadContact",
+								margin: [10, 2, 0, 0],
+							},
+						],
+					],
+					columnGap: 20,
+					margin: [0, 0, 0, 16],
+				},
+				{
+					text: "Transaction Statement",
+					style: "header",
+					margin: [0, 0, 0, 12],
+				},
+				{
+					text: `Generated: ${new Date().toLocaleString()}`,
+					style: "subheader",
+					margin: [0, 0, 0, 8],
+				},
+				{
+					table: {
+						headerRows: 1,
+						widths: ["auto", "*", "auto", "auto", "auto", "auto"],
+						body: [
+							[
+								{ text: "ID", style: "tableHeader" },
+								{ text: "Date", style: "tableHeader" },
+								{ text: "Type", style: "tableHeader" },
+								{ text: "Method", style: "tableHeader" },
+								{ text: "Amount", style: "tableHeader" },
+								{ text: "Status", style: "tableHeader" },
+							],
+							...transactions.map((tx) => [
+								{ text: tx.id, style: "tableCell" },
+								{ text: tx.createdAt.split("T")[0], style: "tableCell" },
+								{ text: tx.txType, style: "tableCell" },
+								{ text: tx.method, style: "tableCell" },
+								{
+									text: tx.value.toLocaleString("en-ZA", {
+										style: "currency",
+										currency: "ZAR",
+									}),
+									style: "tableCell",
+								},
+								{ text: tx.status, style: "tableCell" },
+							]),
+						],
+					},
+					layout: "lightHorizontalLines",
+					margin: [0, 8, 0, 8],
+				},
+				{
+					columns: [
+						{
+							width: "*",
+							text: "",
+						},
+						{
+							width: "auto",
+							stack: [
+								{
+									text: "Signed electronically by:",
+									style: "signedLabel",
+									margin: [0, 24, 0, 2],
+								},
+								{
+									text: "PayMe-Zar Team",
+									style: "signedName",
+								},
+								{
+									text: "support@paymezar.com",
+									style: "signedContact",
+								},
+							],
+						},
+					],
+				},
+				{
+					text: "Thank you for using PayMe-Zar!",
+					style: "footer",
+					margin: [0, 16, 0, 0],
+				},
+			],
+			styles: {
+				letterheadTitle: {
+					fontSize: 22,
+					bold: true,
+					color: "#6366f1",
+				},
+				letterheadAddress: {
+					fontSize: 10,
+					color: "#666",
+				},
+				letterheadContact: {
+					fontSize: 10,
+					color: "#666",
+				},
+				header: {
+					fontSize: 18,
+					bold: true,
+					color: "#6366f1",
+					alignment: "center",
+				},
+				subheader: {
+					fontSize: 12,
+					color: "#666",
+					alignment: "center",
+				},
+				tableHeader: {
+					bold: true,
+					fontSize: 11,
+					color: "#fff",
+					fillColor: "#6366f1",
+					alignment: "center",
+				},
+				tableCell: {
+					fontSize: 10,
+					color: "#222",
+					alignment: "center",
+				},
+				signedLabel: {
+					fontSize: 10,
+					color: "#666",
+					italics: true,
+				},
+				signedName: {
+					fontSize: 12,
+					bold: true,
+					color: "#6366f1",
+				},
+				signedContact: {
+					fontSize: 10,
+					color: "#666",
+				},
+				footer: {
+					fontSize: 12,
+					italics: true,
+					color: "#6366f1",
+					alignment: "center",
+				},
+			},
+			defaultStyle: {
+				font: "Roboto",
+			},
+		};
+
+		pdfMake.createPdf(docDefinition).download("paymezar_statement.pdf");
+	}, [transactions]);
 
 	return (
 		<section className="flex flex-col items-center min-h-[70vh] py-8 gap-8 w-full">
@@ -112,7 +336,7 @@ export default function AccountTransactionsPage() {
 								startContent={<Download size={16} />}
 								variant="flat"
 								onPress={handleDownloadStatement}>
-								Download
+								Download Statement
 							</Button>
 						</div>
 					</div>
